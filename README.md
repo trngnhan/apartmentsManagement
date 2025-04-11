@@ -22,5 +22,5 @@ phù hợp tại chung cư để xử lý.
 - Ban quản trị có thể tạo ra các phiếu khảo sát cho cho cư dẫn về tình hình vệ sinh, cơ 
 sở vật chất, các dịch vụ. Cư dân sẽ thực hiện khảo sát và hệ thống sẽ thống kê kết quả
 khảo sát cho ban quản trị.
-- * Sinh viên nghiên cứu thêm dùng firebase tích hợp chat thời gian thực giữa ban quản 
+- Sinh viên nghiên cứu thêm dùng firebase tích hợp chat thời gian thực giữa ban quản 
 trị và cư dân.
