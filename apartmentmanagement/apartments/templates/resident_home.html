@@ -1,0 +1,6 @@
+{% extends 'base_site.html' %}
+{% block content %}
+    <h2>Xin chào {{ request.user.email }}!</h2>
+    <p>Chào mừng bạn đến với hệ thống quản lý cư dân.</p>
+    <a href="{% url 'upload_avatar' %}">Cập nhật ảnh đại diện</a>
+{% endblock %}
