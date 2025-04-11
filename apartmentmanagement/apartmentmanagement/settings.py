@@ -65,6 +65,8 @@ MIDDLEWARE = [
     'apartments.middlewares.MustChangePasswordMiddleware',
 ]
 
+LOGIN_URL = '/login/'
+
 ROOT_URLCONF = 'apartmentmanagement.urls'
 
 TEMPLATES = [

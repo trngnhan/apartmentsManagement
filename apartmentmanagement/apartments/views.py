@@ -14,19 +14,25 @@ def change_password(request):
 
         if len(new) < 8:
             messages.error(request, 'Mật khẩu mới phải có ít nhất 8 ký tự.')
+            return render(request, 'change_password.html')
+
         if not request.user.check_password(current):
             messages.error(request, 'Mật khẩu hiện tại không đúng.')
-        elif new != confirm:
+            return render(request, 'change_password.html')
+
+        if new != confirm:
             messages.error(request, 'Mật khẩu xác nhận không trùng khớp.')
-        else:
-            request.user.set_password(new)
-            request.user.must_change_password = False
-            request.user.save()
-            update_session_auth_hash(request, request.user)  # tránh logout sau khi đổi mật khẩu
-            messages.success(request, 'Đổi mật khẩu thành công.')
-            return redirect('home')  # hoặc trang chính
+            return render(request, 'change_password.html')
+
+        request.user.set_password(new)
+        request.user.must_change_password = False
+        request.user.save()
+        update_session_auth_hash(request, request.user)  # tránh logout sau khi đổi mật khẩu
+        messages.success(request, 'Đổi mật khẩu thành công.')
+        return redirect('resident_home')
 
     return render(request, 'change_password.html')
+
 
 @login_required
 def upload_avatar(request):
