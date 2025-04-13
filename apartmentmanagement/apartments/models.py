@@ -1,3 +1,4 @@
+from cloudinary.utils import now
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from cloudinary.models import CloudinaryField
@@ -53,7 +54,7 @@ class User(AbstractUser, BaseModel):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=Role.choices, default=Role.RESIDENT)
     phone_number = models.CharField(max_length=15, null=True, blank=True)
-    profile_picture = CloudinaryField('profiles/', null=True, blank=True)
+    profile_picture = CloudinaryField(null=True, blank=True)
     must_change_password = models.BooleanField(default=True)
 
     USERNAME_FIELD = 'email'
@@ -96,10 +97,29 @@ class ApartmentTransferHistory(BaseModel):
 
 # Payment Category
 class PaymentCategory(BaseModel):
-    name = models.CharField(max_length=100)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    is_recurring = models.BooleanField(default=True)
-    description = models.TextField(blank=True, null=True)
+    name = models.CharField(max_length=100)  # Tên loại thanh toán, ví dụ "Phí quản lý", "Phí gửi xe"
+    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Số tiền phải thanh toán
+    is_recurring = models.BooleanField(
+        default=True)  # Liệu đây có phải là loại phí định kỳ không (như hàng tháng, hàng năm...)
+    description = models.TextField(blank=True, null=True)  # Mô tả chi tiết về loại phí
+    FREQUENCY_CHOICES = [
+        ('ONE_TIME', 'Một lần'),
+        ('MONTHLY', 'Hàng tháng'),
+        ('QUARTERLY', 'Hàng quý'),
+        ('YEARLY', 'Hàng năm'),
+    ]
+    frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, default='MONTHLY')  # Tần suất thanh toán
+    tax_percentage = models.DecimalField(max_digits=5, decimal_places=2,
+                                         default=0)  # Phần trăm thuế phải trả cho loại phí này
+    grace_period = models.IntegerField(default=0)  # Thời gian ân hạn sau ngày hết hạn thanh toán (đơn vị: ngày)
+    category_type = models.CharField(
+        max_length=50,
+        choices=[('MAINTENANCE', 'Bảo trì'), ('UTILITY', 'Tiện ích'), ('SERVICE', 'Dịch vụ')],
+        default='MAINTENANCE'
+    )  # Loại phí, ví dụ phí bảo trì, tiện ích, dịch vụ...
+
+    def __str__(self):
+        return f"{self.name} - {self.amount} VND"
 
 # Payment Transaction
 class PaymentTransaction(BaseModel):
@@ -107,15 +127,38 @@ class PaymentTransaction(BaseModel):
         MOMO = 'MOMO', 'MoMo'
         VNPAY = 'VNPAY', 'VNPay'
         BANK = 'BANK', 'Bank Transfer'
+        CASH = 'CASH', 'Cash Payment'
 
     apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name='payments')
-    category = models.ForeignKey(PaymentCategory, on_delete=models.SET_NULL, null=True)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    method = models.CharField(max_length=20, choices=Method.choices)
-    transaction_id = models.CharField(max_length=100, blank=True, null=True)
-    status = models.CharField(max_length=20, default='PENDING')
-    payment_proof = CloudinaryField('payments/', null=True, blank=True)
-    paid_date = models.DateTimeField(null=True, blank=True)
+    category = models.ForeignKey(PaymentCategory, on_delete=models.SET_NULL, null=True)  # Loại phí này thuộc về đâu
+    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Số tiền giao dịch
+    method = models.CharField(max_length=20, choices=Method.choices)  # Phương thức thanh toán (MoMo, VNPay, v.v.)
+    transaction_id = models.CharField(max_length=100, blank=True,
+                                      null=True)  # ID giao dịch (tùy theo phương thức thanh toán)
+    status = models.CharField(max_length=20, default='PENDING')  # Trạng thái thanh toán (Chờ xử lý, Đã thanh toán...)
+    payment_proof = CloudinaryField(null=True, blank=True)  # Hình ảnh chứng từ thanh toán (chứng từ thanh toán)
+    paid_date = models.DateTimeField(null=True, blank=True)  # Thời gian thanh toán (nếu đã thanh toán)
+    transaction_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Phí giao dịch (nếu có)
+
+    STATUS_CHOICES = [
+        ('PENDING', 'Chờ xử lý'),
+        ('COMPLETED', 'Hoàn tất'),
+        ('FAILED', 'Thất bại'),
+        ('REFUNDED', 'Đã hoàn lại'),
+    ]
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES,
+                              default='PENDING')  # Trạng thái giao dịch thanh toán
+
+    def __str__(self):
+        return f"Transaction {self.transaction_id} - {self.status} - {self.amount} VND"
+
+    def process_payment(self):
+        # Phương thức này có thể được sử dụng để xử lý logic thanh toán, ví dụ như chuyển trạng thái giao dịch
+        # từ PENDING sang COMPLETED nếu thanh toán thành công.
+        if self.status == 'PENDING':
+            self.status = 'COMPLETED'
+            self.paid_date = now()
+            self.save()
 
 # Firebase Token
 class FirebaseToken(BaseModel):

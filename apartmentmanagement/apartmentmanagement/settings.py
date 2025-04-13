@@ -40,7 +40,18 @@ INSTALLED_APPS = [
     'rest_framework',
     'apartments',
     'drf_yasg',
+    'oauth2_provider',
 ]
+#Chung thuc user
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'rest_framework.authentication.SessionAuthentication',
+    )
+}
+
+#Them vao React Front-end
+OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
 
 import cloudinary
 import cloudinary.uploader
@@ -65,6 +76,7 @@ MIDDLEWARE = [
     'apartments.middlewares.MustChangePasswordMiddleware',
 ]
 
+PAGE_SIZE = 10
 LOGIN_URL = '/login/'
 
 ROOT_URLCONF = 'apartmentmanagement.urls'
@@ -136,7 +148,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -147,3 +158,6 @@ STATICFILES_DIRS = [BASE_DIR / 'apartments' / 'static']
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+#CLIENT_ID = "X2GaNN6JwmUkW71kmVJxRkd7ldux6oJSB5QEZfYL"
+#CLIENT_SECRET = "uh5sB5SRs7TlskhImDf92r7N8N8XRF4930XzkifXm47aFj69qRE71DkFTVUe3DSA9JpYVI78KjyYT0t9YYBkgyoplpmKDAwNIzJygCHuDl7N6HsznTQsj1FbAAzVZmAQ"
