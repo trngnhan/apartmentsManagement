@@ -50,8 +50,19 @@ REST_FRAMEWORK = {
     )
 }
 
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend', # Đây là backend mặc định để xác thực qua email
+    'oauth2_provider.backends.OAuth2Backend',
+)
+
 #Them vao React Front-end
-OAUTH2_PROVIDER = { 'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore' }
+OAUTH2_PROVIDER = {
+    'OAUTH2_BACKEND_CLASS': 'oauth2_provider.oauth2_backends.JSONOAuthLibCore',
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 36000,
+    'ALLOW_PASSWORD_GRANT': True,
+    'AUTHORIZATION_CODE_EXPIRE_SECONDS': 36000,
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 36000,
+    'CLIENT_ID_GENERATOR_CLASS': 'oauth2_provider.generators.ClientIdGenerator',}
 
 import cloudinary
 import cloudinary.uploader
@@ -159,5 +170,5 @@ STATICFILES_DIRS = [BASE_DIR / 'apartments' / 'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#CLIENT_ID = "X2GaNN6JwmUkW71kmVJxRkd7ldux6oJSB5QEZfYL"
-#CLIENT_SECRET = "uh5sB5SRs7TlskhImDf92r7N8N8XRF4930XzkifXm47aFj69qRE71DkFTVUe3DSA9JpYVI78KjyYT0t9YYBkgyoplpmKDAwNIzJygCHuDl7N6HsznTQsj1FbAAzVZmAQ"
+#CLIENT_ID = "mBaMN8Q81Copd6ABRxJZ2j7YMf9sWjfLxhIJqiso"
+#CLIENT_SECRET = "PiANvqSCY6EnxSh9x76g2KQAL4OWZe4wAxSBiXd309RjMCSk2HxjtwiRbwKAcEXacLzatuPTu2mpgyAQB4Iv0RjB3fzepA7FH5aRL30lg8HI0jy5S2o3sslnMWdmEoCJ"

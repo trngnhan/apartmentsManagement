@@ -119,7 +119,8 @@ class PaymentCategory(BaseModel):
     )  # Loại phí, ví dụ phí bảo trì, tiện ích, dịch vụ...
 
     def __str__(self):
-        return f"{self.name} - {self.amount} VND"
+        formatted_amount = f"{self.amount:,.0f}".replace(',', '.')
+        return f"{self.name} - {formatted_amount} VND"
 
 # Payment Transaction
 class PaymentTransaction(BaseModel):
@@ -150,7 +151,9 @@ class PaymentTransaction(BaseModel):
                               default='PENDING')  # Trạng thái giao dịch thanh toán
 
     def __str__(self):
-        return f"Transaction {self.transaction_id} - {self.status} - {self.amount} VND"
+        # Định dạng số tiền
+        formatted_amount = f"{self.amount:,.0f}".replace(',', '.')
+        return f"Transaction {self.transaction_id} - {self.status} - {formatted_amount} VND"
 
     def process_payment(self):
         # Phương thức này có thể được sử dụng để xử lý logic thanh toán, ví dụ như chuyển trạng thái giao dịch

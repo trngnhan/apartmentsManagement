@@ -3,7 +3,8 @@ from . import views
 from rest_framework.routers import DefaultRouter
 
 from .views import (resident_login_view, resident_home_view, UserViewSet, ResidentViewSet,
-                    ApartmentViewSet, ApartmentTransferHistoryViewSet, PaymentTransactionViewSet, PaymentCategoryViewSet)
+                    ApartmentViewSet, ApartmentTransferHistoryViewSet, PaymentTransactionViewSet, PaymentCategoryViewSet,
+                    FirebaseTokenViewSet, ParcelLockerViewSet)
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='users')
@@ -12,6 +13,8 @@ router.register(r'apartments', ApartmentViewSet, basename='apartments')
 router.register(r'apartmentstranshistory', ApartmentTransferHistoryViewSet, basename='apartmentstranshistory')
 router.register(r'paymenttransactions', PaymentTransactionViewSet, basename='paymenttransactions')
 router.register(r'paymentcategories', PaymentCategoryViewSet, basename='paymentcategories')
+router.register(r'firebasetokens', FirebaseTokenViewSet, basename='firebasetokens')
+router.register(r'parcellockers', ParcelLockerViewSet, basename='parcellockers')
 urlpatterns = [
     path('', include(router.urls)),
 

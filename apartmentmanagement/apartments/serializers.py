@@ -11,11 +11,17 @@ class ItemSerializer(ModelSerializer):
     def to_representation(self, instance):
         data = super().to_representation(instance)
         resident = getattr(instance, 'resident_profile', None)
-        data['profile_picture'] = resident.image.url if resident and resident.image else ''
+        if resident and resident.user and resident.user.profile_picture:
+            data['profile_picture'] = resident.user.profile_picture.url
+        else:
+            data['profile_picture'] = ''
         return data
 
+
 # User Serializer
-class UserSerializer(ItemSerializer):
+class UserSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(read_only=True)
+
     class Meta:
         model = User
         fields = ['username', 'email', 'first_name', 'last_name', 'profile_picture']
@@ -25,24 +31,26 @@ class UserSerializer(ItemSerializer):
         }
 
     def create(self, validated_data):
-            password = validated_data.pop('password', None)
-            user = User.objects.create(**validated_data)
-            if password:
-                user.set_password(password)
-                user.save()
-            return user
+        password = validated_data.pop('password', None)
+        user = User.objects.create(**validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
 
     def update(self, instance, validated_data):
-            password = validated_data.pop('password', None)
-            user = super().update(instance, validated_data)
-            if password:
-                user.set_password(password)
-                user.save()
-            return user
+        password = validated_data.pop('password', None)
+        user = super().update(instance, validated_data)
+        if password:
+            user.set_password(password)
+            user.save()
+        return user
+
 
 # Resident Serializer
-class ResidentSerializer(ItemSerializer):
+class ResidentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
+    image = serializers.ImageField(source='user.profile_picture', read_only=True)  # Trực tiếp lấy ảnh từ User
     user_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source='user',
@@ -51,8 +59,9 @@ class ResidentSerializer(ItemSerializer):
 
     class Meta:
         model = Resident
-        fields =['id', 'user', 'user_id']
+        fields = ['id', 'user', 'user_id', 'image']
         read_only_fields = ['created_date', 'updated_date']
+
 
 # Apartment Serializer
 class ApartmentSerializer(serializers.ModelSerializer):

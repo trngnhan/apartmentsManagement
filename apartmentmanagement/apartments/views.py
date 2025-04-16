@@ -14,7 +14,7 @@ from .pagination import ApartmentPagination
 from apartments import serializers
 
 from apartments.serializers import UserSerializer, ResidentSerializer, ApartmentSerializer, \
-    ApartmentTransferHistorySerializer
+    ApartmentTransferHistorySerializer, FirebaseTokenSerializer, ParcelItemSerializer, ParcelLockerSerializer
 from .models import (
     Resident, Apartment, ApartmentTransferHistory, PaymentCategory,
     PaymentTransaction, FirebaseToken, ParcelLocker, ParcelItem,
@@ -411,3 +411,83 @@ class PaymentTransactionViewSet(viewsets.ViewSet,
         transaction.save()
 
         return Response(self.get_serializer(transaction).data)
+
+# Firebase Token ViewSet
+class FirebaseTokenViewSet(viewsets.ViewSet):
+    queryset = FirebaseToken.objects.filter(active=True)
+    serializer_class = FirebaseTokenSerializer
+
+    def get_permissions(self):
+        #Xác định quyền truy cập cho các action.
+        if self.action in ['list', 'retrieve']:
+            return [permissions.IsAdminUser()]  # Chỉ cho phép Admin xem danh sách hoặc chi tiết
+        return [permissions.IsAuthenticated()]  # Các hành động khác yêu cầu người dùng đã xác thực
+
+    @action(methods=['post'], detail=False, url_path='update-token')
+    def update_token(self, request):
+        #Cập nhật token Firebase cho người dùng hiện tại
+        token = request.data.get('token')
+        if not token:
+            return Response(
+                {"detail": "Token không được cung cấp."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Cập nhật hoặc tạo mới token Firebase cho người dùng hiện tại
+        token_obj, created = FirebaseToken.objects.update_or_create(
+            user=request.user,
+            defaults={'token': token}
+        )
+
+        # Trả về dữ liệu token đã được cập nhật hoặc tạo mới
+        serializer = self.get_serializer(token_obj)
+        return Response({
+            'created': created,
+            'data': serializer.data
+        }, status=status.HTTP_200_OK)
+
+# Parcel Locker ViewSet
+class ParcelLockerViewSet(viewsets.ModelViewSet):
+    queryset = ParcelLocker.objects.filter(active=True)
+    serializer_class = ParcelLockerSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['resident', 'active']
+
+    def get_permissions(self):
+        if self.action in ['create', 'destroy', 'update', 'partial_update']:
+            return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        #Nếu người dùng không phải admin, chỉ hiển thị các tủ đồ của họ
+        query = super().get_queryset()
+        if not self.request.user.is_staff:
+            query = query.filter(resident__user=self.request.user)
+        return query
+
+    @action(methods=['get'], detail=False, url_path='my-locker')
+    def my_locker(self, request):
+        #Trả về tủ đồ của người dùng hiện tại
+        try:
+            resident = Resident.objects.get(user=request.user)
+            locker = ParcelLocker.objects.get(resident=resident)
+            serializer = self.get_serializer(locker)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Resident.DoesNotExist:
+            return Response(
+                {"detail": "Cư dân không tồn tại."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ParcelLocker.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy tủ đồ cho người dùng này."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(methods=['get'], detail=True, url_path='items')
+    def get_items(self, request, pk=None):
+        #Trả về danh sách đồ trong tủ
+        locker = self.get_object()
+        items = locker.items.all()  # Quan hệ related_name='items' từ model
+        serializer = ParcelItemSerializer(items, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
