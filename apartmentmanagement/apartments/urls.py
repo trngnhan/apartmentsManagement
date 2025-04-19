@@ -4,17 +4,19 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (resident_login_view, resident_home_view, UserViewSet, ResidentViewSet,
                     ApartmentViewSet, ApartmentTransferHistoryViewSet, PaymentTransactionViewSet, PaymentCategoryViewSet,
-                    FirebaseTokenViewSet, ParcelLockerViewSet)
+                    FirebaseTokenViewSet, ParcelLockerViewSet, FeedbackViewSet)
 
 router = DefaultRouter()
-router.register(r'users', UserViewSet, basename='users')
-router.register(r'residents', ResidentViewSet, basename='residents')
-router.register(r'apartments', ApartmentViewSet, basename='apartments')
-router.register(r'apartmentstranshistory', ApartmentTransferHistoryViewSet, basename='apartmentstranshistory')
-router.register(r'paymenttransactions', PaymentTransactionViewSet, basename='paymenttransactions')
-router.register(r'paymentcategories', PaymentCategoryViewSet, basename='paymentcategories')
-router.register(r'firebasetokens', FirebaseTokenViewSet, basename='firebasetokens')
-router.register(r'parcellockers', ParcelLockerViewSet, basename='parcellockers')
+router.register(r'users', UserViewSet, basename='user')
+router.register(r'residents', ResidentViewSet, basename='resident')
+router.register(r'apartments', ApartmentViewSet, basename='apartment')
+router.register(r'apartmentstranshistories', ApartmentTransferHistoryViewSet, basename='apartmentstranshistory')
+router.register(r'paymentcategories', PaymentCategoryViewSet, basename='payment')
+router.register(r'paymenttransactions', PaymentTransactionViewSet, basename='paymenttransaction')
+router.register(r'paymentcategories', PaymentCategoryViewSet, basename='paymentcategory')
+router.register(r'firebasetokens', FirebaseTokenViewSet, basename='firebasetoken')
+router.register(r'parcellockers', ParcelLockerViewSet, basename='parcellocker')
+router.register(r'feedbacks', FeedbackViewSet, basename='feedback')
 urlpatterns = [
     path('', include(router.urls)),
 

@@ -25,26 +25,22 @@ def seed():
         }
     )
     if created:
-        admin_user.set_password('admin123')
+        admin_user.set_password('1')
         admin_user.save()
 
     # Tạo resident user
     resident_user, created = User.objects.get_or_create(
-        email='resident@example.com',
+        email='admin@gmail.com',
         defaults={'password': 'resident123', 'role': 'RESIDENT'}
     )
     if created:
-        resident_user.set_password('ngoc123')
+        resident_user.set_password('1')
         resident_user.save()
 
     if not hasattr(resident_user, 'resident_profile'):
-        Resident.objects.create(user=resident_user, id_number='123456789', relationship_status='Chủ hộ')
-
-    # Căn hộ
-    apartment, _ = Apartment.objects.get_or_create(
-        code='B202',
-        defaults={'building': 'B', 'floor': 2, 'number': '02', 'owner': resident_user}
-    )
+        admin_profile = Resident.objects.create(user=resident_user, id_number='123456789', relationship_status='Admin')
+    else:
+        admin_profile = resident_user.resident_profile
 
     # Loại phí
     mgmt_fee, _ = PaymentCategory.objects.get_or_create(
@@ -58,37 +54,8 @@ def seed():
         }
     )
 
-    # Giao dịch thanh toán
-    PaymentTransaction.objects.get_or_create(
-        apartment=apartment,
-        category=mgmt_fee,
-        transaction_id='TXN001',
-        defaults={
-            'amount': 300000,
-            'method': 'BANK',
-            'status': 'COMPLETED',
-            'paid_date': datetime.now(),
-            'transaction_fee': 0
-        }
-    )
-
     # Firebase Token
     FirebaseToken.objects.get_or_create(user=resident_user, defaults={'token': 'fake_token_123'})
-
-    # Locker & Parcel
-    locker, _ = ParcelLocker.objects.get_or_create(resident=resident_user.resident_profile)
-    ParcelItem.objects.get_or_create(
-        locker=locker,
-        name='Gói hàng Shopee',
-        defaults={'status': 'PENDING', 'note': 'Chờ cư dân nhận'}
-    )
-
-    # Feedback
-    Feedback.objects.get_or_create(
-        resident=resident_user.resident_profile,
-        title='Đèn hành lang bị hỏng',
-        defaults={'content': 'Xin kiểm tra và sửa chữa đèn ở hành lang tầng 2', 'status': 'NEW'}
-    )
 
     # Khảo sát
     survey, _ = Survey.objects.get_or_create(
@@ -101,20 +68,6 @@ def seed():
 
     option1, _ = SurveyOption.objects.get_or_create(survey=survey, option_text='Hài lòng')
     option2, _ = SurveyOption.objects.get_or_create(survey=survey, option_text='Không hài lòng')
-
-    SurveyResponse.objects.get_or_create(
-        survey=survey,
-        option=option1,
-        resident=resident_user.resident_profile
-    )
-
-    # Xe khách
-    VisitorVehicleRegistration.objects.get_or_create(
-        resident=resident_user.resident_profile,
-        visitor_name='Nguyễn Văn A',
-        vehicle_number='51A-12345',
-        defaults={'approved': True}
-    )
 
     # === Cư dân: Ngọc ===
     user_ngoc, created = User.objects.get_or_create(
@@ -689,44 +642,6 @@ def seed():
     else:
         bao_profile = user_bao.resident_profile
 
-    apt_bao, _ = Apartment.objects.get_or_create(
-        code='D101',
-        defaults={'building': 'D', 'floor': 1, 'number': '01', 'owner': user_bao}
-    )
-
-    PaymentTransaction.objects.get_or_create(
-        apartment=apt_bao,
-        category=mgmt_fee,
-        transaction_id='TXN012',
-        defaults={
-            'amount': 350000,
-            'method': 'BANK_TRANSFER',
-            'status': 'PENDING',
-            'paid_date': datetime.now(),
-            'transaction_fee': 2000
-        }
-    )
-
-    locker_bao, _ = ParcelLocker.objects.get_or_create(resident=bao_profile)
-    ParcelItem.objects.get_or_create(
-        locker=locker_bao,
-        name='Laptop Dell giao từ FPT Shop',
-        defaults={'status': 'PENDING', 'note': 'Tủ đồ tầng 4'}
-    )
-
-    Feedback.objects.get_or_create(
-        resident=bao_profile,
-        title='Hệ thống chiếu sáng khu vực hành lang không đủ',
-        defaults={'content': 'Cần kiểm tra và thay thế đèn chiếu sáng khu hành lang, hiện tại rất tối.',
-                  'status': 'NEW'}
-    )
-
-    SurveyResponse.objects.get_or_create(
-        survey=survey,
-        option=option1,
-        resident=bao_profile
-    )
-
     # === Nhân viên: Lâm ===
     user_lam, created = User.objects.get_or_create(
         email='lam@gmail.com',
@@ -740,43 +655,6 @@ def seed():
         lam_profile = Resident.objects.create(user=user_lam, id_number='554433221', relationship_status='Nhân viên')
     else:
         lam_profile = user_lam.resident_profile
-
-    apt_lam, _ = Apartment.objects.get_or_create(
-        code='E202',
-        defaults={'building': 'E', 'floor': 2, 'number': '02', 'owner': user_lam}
-    )
-
-    PaymentTransaction.objects.get_or_create(
-        apartment=apt_lam,
-        category=mgmt_fee,
-        transaction_id='TXN013',
-        defaults={
-            'amount': 400000,
-            'method': 'VNPAY',
-            'status': 'PENDING',
-            'paid_date': datetime.now(),
-            'transaction_fee': 1800
-        }
-    )
-
-    locker_lam, _ = ParcelLocker.objects.get_or_create(resident=lam_profile)
-    ParcelItem.objects.get_or_create(
-        locker=locker_lam,
-        name='Điện thoại iPhone 13 giao từ Lazada',
-        defaults={'status': 'PENDING', 'note': 'Tủ đồ tầng 5'}
-    )
-
-    Feedback.objects.get_or_create(
-        resident=lam_profile,
-        title='Điều hòa không hoạt động',
-        defaults={'content': 'Cần bảo trì điều hòa trong căn hộ. Hiện tại không mát.', 'status': 'NEW'}
-    )
-
-    SurveyResponse.objects.get_or_create(
-        survey=survey,
-        option=option2,
-        resident=lam_profile
-    )
 
     print("✅ Đã seed đầy đủ dữ liệu mẫu thành công!")
 

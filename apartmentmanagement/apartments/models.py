@@ -95,7 +95,7 @@ class ApartmentTransferHistory(BaseModel):
     transfer_date = models.DateField(default=datetime.now)
     note = models.TextField(blank=True, null=True)
 
-# Payment Category
+# Payment Category: định nghĩa, quản lý các loại phí
 class PaymentCategory(BaseModel):
     name = models.CharField(max_length=100)  # Tên loại thanh toán, ví dụ "Phí quản lý", "Phí gửi xe"
     amount = models.DecimalField(max_digits=10, decimal_places=2)  # Số tiền phải thanh toán

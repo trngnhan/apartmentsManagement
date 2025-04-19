@@ -7,14 +7,17 @@ from django.urls import reverse
 from django.views.generic import detail
 from rest_framework import viewsets, generics, permissions, status, parsers, renderers
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from .pagination import ApartmentPagination
+from .pagination import Pagination
 from apartments import serializers
 
 from apartments.serializers import UserSerializer, ResidentSerializer, ApartmentSerializer, \
-    ApartmentTransferHistorySerializer, FirebaseTokenSerializer, ParcelItemSerializer, ParcelLockerSerializer
+    ApartmentTransferHistorySerializer, FirebaseTokenSerializer, ParcelItemSerializer, ParcelLockerSerializer, \
+    FeedbackSerializer
 from .models import (
     Resident, Apartment, ApartmentTransferHistory, PaymentCategory,
     PaymentTransaction, FirebaseToken, ParcelLocker, ParcelItem,
@@ -102,11 +105,7 @@ class IsAdminOrOwner(permissions.IsAuthenticated):
 #RetrieveAPIView: Trả về thông tin chi tiết của 1 người dùng (/users/1/)
 #CreateAPIView, UpdateAPIView: Cho phép tạo và cập nhật người dùng.
 
-class UserViewSet(viewsets.GenericViewSet,
-                  generics.RetrieveAPIView,
-                  generics.ListAPIView,
-                  generics.CreateAPIView,
-                  generics.UpdateAPIView):
+class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = User.objects.filter(is_active=True)
     serializer_class = UserSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -115,7 +114,7 @@ class UserViewSet(viewsets.GenericViewSet,
     parser_classes = [parsers.MultiPartParser]
 
     def get_permissions(self):
-        if self.action in ['create', 'destroy']:
+        if self.action in ['create']:
             return [permissions.IsAdminUser()]
         elif self.action in ['update', 'partial_update', 'retrieve']:
             return [IsAdminOrSelf()]
@@ -137,11 +136,7 @@ class UserViewSet(viewsets.GenericViewSet,
 
         return Response(serializers.UserSerializer(u).data)
 
-class ResidentViewSet(viewsets.GenericViewSet,
-                      generics.ListAPIView,
-                      generics.RetrieveAPIView,
-                      generics.CreateAPIView,
-                      generics.UpdateAPIView):
+class ResidentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = Resident.objects.filter(active=True)
     serializer_class = ResidentSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -149,7 +144,7 @@ class ResidentViewSet(viewsets.GenericViewSet,
     search_fields = ['user__email', 'user__first_name', 'user__last_name', 'id_number']
 
     def get_permissions(self):
-        if self.action in ['create', 'destroy']:
+        if self.action in ['create']:
             return [permissions.IsAdminUser()]
         elif self.action in ['update', 'partial_update', 'retrieve']:
             return [IsAdminOrSelf()]
@@ -175,14 +170,10 @@ class ResidentViewSet(viewsets.GenericViewSet,
         return Response(serializer.data)
 
 # Apartment ViewSet
-class ApartmentViewSet(viewsets.ViewSet,
-                       generics.ListAPIView,
-                       generics.RetrieveAPIView,
-                       generics.CreateAPIView,
-                       generics.UpdateAPIView):
+class ApartmentViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Apartment.objects.filter(active=True)
     serializer_class = ApartmentSerializer
-    pagination_class = ApartmentPagination
+    pagination_class = Pagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['building', 'floor', 'active']
     search_fields = ['code', 'building', 'number', 'owner__email']
@@ -195,7 +186,7 @@ class ApartmentViewSet(viewsets.ViewSet,
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
-        query = self.queryset
+        query = self.queryset.filter(active=True)
 
         building = self.request.query_params.get('building')
         if building:
@@ -207,7 +198,7 @@ class ApartmentViewSet(viewsets.ViewSet,
 
         return query
 
-    @action(methods=['get'], detail=False, url_path='get-apartments')
+    @action(methods=['get'], detail=False, url_path='get-apartment')
     def get_apartments(self, request):
         apartments = Apartment.objects.filter(owner=request.user, active=True)
         page = self.paginate_queryset(apartments)
@@ -218,7 +209,7 @@ class ApartmentViewSet(viewsets.ViewSet,
         serializer = self.get_serializer(apartments, many=True)
         return Response(serializer.data)
 
-    @action(methods=['post'], detail=True, url_path='transfer', permission_classes=[permissions.IsAdminUser])
+    @action(methods=['post'], detail=True, url_path='transfer', permission_classes=[IsAdminUser])
     def transfer_apartment(self, request, pk=None):
         apartment = self.get_object()
 
@@ -246,9 +237,9 @@ class ApartmentViewSet(viewsets.ViewSet,
             return Response({"detail": "Người nhận không tồn tại."},
                             status=status.HTTP_404_NOT_FOUND)
 
-        # Kiểm tra xem người nhận có phải là chủ sở hữu hiện tại căn khác không
+        # Kiểm tra xem người nhận có phải là chủ sở hữu hiện tại căn hộ khác không
         if new_owner == apartment.owner:
-            return Response({"detail": "Người nhận đã là chủ sở hữu căn hộ khác."},
+            return Response({"detail": "Người nhận đã là chủ sở hữu căn hộ này."},
                             status=status.HTTP_400_BAD_REQUEST)
 
         # Tạo lịch sử chuyển nhượng căn hộ
@@ -270,27 +261,18 @@ class ApartmentViewSet(viewsets.ViewSet,
             "new_owner": UserSerializer(new_owner).data
         }, status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=True, url_path='payment-history')
-    def payment_history(self, request, pk):
-        apartment = self.get_object()
-        payments = apartment.payments.all()
-        return Response(serializers.PaymentTransactionSerializer(payments, many=True).data)
-
 
 # Apartment Transfer History ViewSet
-class ApartmentTransferHistoryViewSet(viewsets.ViewSet,
-                                      generics.ListAPIView,
-                                      generics.RetrieveAPIView,
-                                      generics.CreateAPIView):
+class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = ApartmentTransferHistory.objects.filter(active=True)
     serializer_class = ApartmentTransferHistorySerializer
-    pagination_class = ApartmentPagination  # Phân trang
+    pagination_class = Pagination  # Phân trang
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['apartment', 'previous_owner', 'new_owner', 'active']
     ordering_fields = ['transfer_date', 'created_date']
 
     def get_permissions(self):
-        if self.action in ['create', 'destroy', 'update', 'partial_update']:
+        if self.action in ['create', 'update', 'partial_update']:
             return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
@@ -337,11 +319,7 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet,
 
 
 # Payment Category ViewSet
-class PaymentCategoryViewSet(viewsets.ViewSet,
-                             generics.ListAPIView,
-                             generics.RetrieveAPIView,
-                             generics.CreateAPIView,
-                             generics.UpdateAPIView):
+class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = PaymentCategory.objects.filter(active=True)
     serializer_class = serializers.PaymentCategorySerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
@@ -349,17 +327,13 @@ class PaymentCategoryViewSet(viewsets.ViewSet,
     search_fields = ['name', 'description']
 
     def get_permissions(self):
-        if self.action in ['create', 'destroy', 'update', 'partial_update']:
+        if self.action in ['create', 'update', 'partial_update']:
             return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
 
 # Payment Transaction ViewSet
-class PaymentTransactionViewSet(viewsets.ViewSet,
-                                generics.ListAPIView,
-                                generics.RetrieveAPIView,
-                                generics.CreateAPIView,
-                                generics.UpdateAPIView):
+class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = PaymentTransaction.objects.filter(active=True)
     serializer_class = serializers.PaymentTransactionSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -367,7 +341,7 @@ class PaymentTransactionViewSet(viewsets.ViewSet,
     ordering_fields = ['paid_date', 'created_date', 'amount']
 
     def get_permissions(self):
-        if self.action in ['create', 'destroy', 'update', 'partial_update']:
+        if self.action in ['create', 'update', 'partial_update']:
             return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
@@ -412,6 +386,24 @@ class PaymentTransactionViewSet(viewsets.ViewSet,
 
         return Response(self.get_serializer(transaction).data)
 
+    @action(methods=['patch'], detail=True, url_path='update-payment', permission_classes=[IsAdminUser])
+    def mark_completed(self, request, pk=None):
+        transaction = self.get_object()
+
+        if transaction.status == 'COMPLETED':
+            return Response(
+                {"detail": "Giao dịch này đã hoàn tất."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        transaction.status = 'COMPLETED'
+        transaction.save()
+
+        return Response(
+            {"detail": "Giao dịch đã được đánh dấu là hoàn tất."},
+            status=status.HTTP_200_OK
+        )
+
 # Firebase Token ViewSet
 class FirebaseTokenViewSet(viewsets.ViewSet):
     queryset = FirebaseToken.objects.filter(active=True)
@@ -447,28 +439,38 @@ class FirebaseTokenViewSet(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
 # Parcel Locker ViewSet
-class ParcelLockerViewSet(viewsets.ModelViewSet):
+class ParcelLockerViewSet(viewsets.ViewSet):
     queryset = ParcelLocker.objects.filter(active=True)
     serializer_class = ParcelLockerSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['resident', 'active']
 
     def get_permissions(self):
-        if self.action in ['create', 'destroy', 'update', 'partial_update']:
+        if self.action in ['create', 'update', 'partial_update']:
             return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
-        #Nếu người dùng không phải admin, chỉ hiển thị các tủ đồ của họ
-        query = super().get_queryset()
+        queryset = ParcelLocker.objects.all()
         if not self.request.user.is_staff:
-            query = query.filter(resident__user=self.request.user)
-        return query
+            queryset = queryset.filter(resident__user=self.request.user)
+        return queryset
+
+    def get_serializer(self, *args, **kwargs):
+        return self.serializer_class(*args, **kwargs)
+
+    def get_object(self):
+        try:
+            # Lấy đối tượng từ queryset bằng cách sử dụng pk từ URL
+            return self.queryset.get(pk=self.kwargs["pk"])
+        except ParcelLocker.DoesNotExist:
+            raise NotFound("Không tìm thấy tủ đồ với ID này.")
 
     @action(methods=['get'], detail=False, url_path='my-locker')
     def my_locker(self, request):
-        #Trả về tủ đồ của người dùng hiện tại
+        # Trả về tủ đồ của người dùng hiện tại
         try:
+            # Tìm cư dân của người dùng hiện tại
             resident = Resident.objects.get(user=request.user)
             locker = ParcelLocker.objects.get(resident=resident)
             serializer = self.get_serializer(locker)
@@ -486,8 +488,162 @@ class ParcelLockerViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get'], detail=True, url_path='items')
     def get_items(self, request, pk=None):
-        #Trả về danh sách đồ trong tủ
+        # Trả về danh sách đồ trong tủ
         locker = self.get_object()
         items = locker.items.all()  # Quan hệ related_name='items' từ model
         serializer = ParcelItemSerializer(items, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=['patch'], detail=True, url_path='update-items')
+    def update_item_status(self, request, pk=None):
+        #Cập nhật trạng thái của món đồ trong tủ đồ.
+        #Chỉ cho phép admin cập nhật trạng thái từ PENDING sang trạng thái khác.
+        if not request.user.is_staff:
+            return Response(
+                {"detail": "Bạn không có quyền thực hiện hành động này."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        item_id = request.data.get('item_id')
+        new_status = request.data.get('status')
+
+        if new_status not in ['PENDING', 'RECEIVED']:
+            return Response(
+                {"detail": "Trạng thái không hợp lệ."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            locker = self.get_object()  # Lấy tủ đồ hiện tại
+            item = locker.items.get(id=item_id)  # Tìm món đồ trong tủ đồ
+
+            if item.status != 'PENDING':
+                return Response(
+                    {"detail": "Chỉ có thể chuyển trạng thái từ PENDING sang trạng thái khác."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Cập nhật trạng thái món đồ
+            item.status = new_status
+            item.save()
+
+            # Trả về dữ liệu đã cập nhật
+            serializer = ParcelItemSerializer(item)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except ParcelItem.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy món đồ này."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ParcelLocker.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy tủ đồ này."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+# Feedback ViewSet
+class FeedbackViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = Feedback.objects.all()
+    serializer_class = FeedbackSerializer
+    pagination_class = Pagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['resident', 'status', 'active']
+    search_fields = ['title', 'content']
+    ordering_fields = ['created_date', 'updated_date']
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.IsAuthenticated()]
+        elif self.action in ['destroy']:
+            return [permissions.IsAdminUser()]
+        elif self.action in ['update', 'partial_update']:
+            return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        #Nếu người dùng không phải admin, chỉ hiển thị các phản hồi của họ
+        query = self.queryset
+        if not self.request.user.is_staff:
+            query = query.filter(resident__user=self.request.user)
+        return query
+
+    def create(self, request, *args, **kwargs):
+        #Tạo phản hồi mới
+        try:
+            resident = Resident.objects.get(user=request.user)
+        except Resident.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy thông tin cư dân cho người dùng này."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(resident=resident)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['get'], detail=False, url_path='my-feedbacks')
+    def my_feedbacks(self, request):
+        #Trả về danh sách phản hồi của người dùng hiện tại
+        feedbacks = Feedback.objects.filter(resident__user=request.user)
+        serializer = self.get_serializer(feedbacks, many=True)
+        return Response(serializer.data)
+
+    @action(methods=['patch'], detail=True, url_path='update-my-feedback')
+    def update_my_feedback(self, request, pk=None):
+        #Cho phép cư dân cập nhật nội dung phản hồi của chính họ.
+        try:
+            feedback = self.get_queryset().get(pk=pk)
+        except Feedback.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy phản hồi."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Kiểm tra quyền: phải là cư dân sở hữu phản hồi
+        if not request.user.is_staff and feedback.resident.user != request.user:
+            return Response(
+                {"detail": "Bạn không có quyền chỉnh sửa phản hồi này."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = self.get_serializer(feedback, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=['delete'], detail=True, url_path='delete-my-feedback')
+    def soft_delete(self, request, pk=None):
+        """
+        Xoá mềm phản hồi (đặt active=False).
+        - Cư dân chỉ được xoá phản hồi của chính họ.
+        - Admin được xoá tất cả phản hồi.
+        """
+        try:
+            feedback = self.get_queryset().get(pk=pk)
+        except Feedback.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy phản hồi."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Kiểm tra quyền sở hữu nếu không phải admin
+        if not request.user.is_staff:
+            if feedback.resident.user != request.user:
+                return Response(
+                    {"detail": "Bạn không có quyền xoá phản hồi này."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        # Xoá mềm: thay vì xoá ra khỏi database ta sử dụng ẩn các feedback khỏi giao diện
+        feedback.active = False
+        feedback.save()
+
+        return Response(
+            {"detail": "Phản hồi đã được xoá."},
+            status=status.HTTP_204_NO_CONTENT
+        )

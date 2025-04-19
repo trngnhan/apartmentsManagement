@@ -6,9 +6,9 @@ from drf_yasg import openapi
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Course API",
+        title="Apartment API",
         default_version='v1',
-        description="APIs for CourseApp",
+        description="APIs for ApartmentManagementApp",
         contact=openapi.Contact(email="kingtrngnhan@gmail.com"),
         license=openapi.License(name="Tran Trong Nhan@2025"),
     ),

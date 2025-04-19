@@ -20,7 +20,7 @@ class ItemSerializer(ModelSerializer):
 
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
-    profile_picture = serializers.ImageField(read_only=True)
+    profile_picture = serializers.ImageField(required=False, allow_null=True, use_url=True)
 
     class Meta:
         model = User
