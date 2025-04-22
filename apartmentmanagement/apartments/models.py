@@ -1,4 +1,5 @@
 from cloudinary.utils import now
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from cloudinary.models import CloudinaryField
@@ -48,6 +49,7 @@ class UserManager(BaseUserManager):
 class User(AbstractUser, BaseModel):
     class Role(models.TextChoices):
         ADMIN = 'ADMIN', 'Admin'
+        MANAGEMENT = 'MANAGEMENT', 'Management'
         RESIDENT = 'RESIDENT', 'Resident'
 
     username = None
@@ -78,9 +80,15 @@ class Resident(BaseModel):
 
 # Apartment
 class Apartment(BaseModel):
+    class Building(models.TextChoices):
+        A = 'A', 'Tòa A'
+        B = 'B', 'Tòa B'
+        C = 'C', 'Tòa C'
+        D = 'D', 'Tòa D'
+
     code = models.CharField(max_length=20, unique=True)
-    building = models.CharField(max_length=50)
-    floor = models.IntegerField()
+    building = models.CharField(max_length=1, choices=Building.choices)
+    floor = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)])
     number = models.CharField(max_length=10)
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='owned_apartments')
 

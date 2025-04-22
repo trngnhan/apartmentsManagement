@@ -4,7 +4,8 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (resident_login_view, resident_home_view, UserViewSet, ResidentViewSet,
                     ApartmentViewSet, ApartmentTransferHistoryViewSet, PaymentTransactionViewSet, PaymentCategoryViewSet,
-                    FirebaseTokenViewSet, ParcelLockerViewSet, FeedbackViewSet)
+                    FirebaseTokenViewSet, ParcelLockerViewSet, FeedbackViewSet, SurveyViewSet, SurveyOptionViewSet,
+                    SurveyResponseViewSet, VisitorVehicleRegistrationViewSet)
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -17,6 +18,10 @@ router.register(r'paymentcategories', PaymentCategoryViewSet, basename='paymentc
 router.register(r'firebasetokens', FirebaseTokenViewSet, basename='firebasetoken')
 router.register(r'parcellockers', ParcelLockerViewSet, basename='parcellocker')
 router.register(r'feedbacks', FeedbackViewSet, basename='feedback')
+router.register(r'surveys', SurveyViewSet, basename='survey')
+router.register(r'surveyoptions', SurveyOptionViewSet, basename='surveyoption')
+router.register(r'surveyresponses', SurveyResponseViewSet, basename='surveyresponse')
+router.register(r'visitorvehicleregistrations', VisitorVehicleRegistrationViewSet, basename='visitorvehicleregistration')
 urlpatterns = [
     path('', include(router.urls)),
 

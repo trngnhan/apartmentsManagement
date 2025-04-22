@@ -9,6 +9,7 @@ from rest_framework import viewsets, generics, permissions, status, parsers, ren
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.permissions import IsAdminUser
+from .permissions import IsAdminRole, IsAdminOrSelf, IsAdminOrManagement
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -17,7 +18,8 @@ from apartments import serializers
 
 from apartments.serializers import UserSerializer, ResidentSerializer, ApartmentSerializer, \
     ApartmentTransferHistorySerializer, FirebaseTokenSerializer, ParcelItemSerializer, ParcelLockerSerializer, \
-    FeedbackSerializer
+    FeedbackSerializer, SurveySerializer, SurveyOptionSerializer, SurveyResponseSerializer, \
+    VisitorVehicleRegistrationSerializer
 from .models import (
     Resident, Apartment, ApartmentTransferHistory, PaymentCategory,
     PaymentTransaction, FirebaseToken, ParcelLocker, ParcelItem,
@@ -89,17 +91,6 @@ def resident_login_view(request):
 def resident_home_view(request):
     return render(request, 'resident_home.html')
 
-# Custom Permissions
-#Cho phép truy cập neu đó là Admin hoặc Staff hoặc chính người dùng đó đã đăng nhập
-# Khi dùng để kiểm soát update, retrieve của user hoặc resident profile.
-class IsAdminOrSelf(permissions.IsAuthenticated):
-    def has_object_permission(self, request, view, obj):
-        return request.user.is_staff or obj == request.user or getattr(obj, 'user', None) == request.user
-#Cho phép truy cập neu đó là Admin hoặc chính người dùng đó đã đăng nhập
-class IsAdminOrOwner(permissions.IsAuthenticated):
-    def has_object_permission(self, request, view, obj):
-        return request.user.is_staff or obj.owner == request.user
-
 #ViewSet: Cho phép định nghĩa các hành động như list, retrieve, create, update...
 #ListAPIView: Trả về danh sách người dùng.
 #RetrieveAPIView: Trả về thông tin chi tiết của 1 người dùng (/users/1/)
@@ -114,8 +105,8 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     parser_classes = [parsers.MultiPartParser]
 
     def get_permissions(self):
-        if self.action in ['create']:
-            return [permissions.IsAdminUser()]
+        if self.action in ['create', 'list', 'retrieve']:
+            return [IsAdminRole()]
         elif self.action in ['update', 'partial_update', 'retrieve']:
             return [IsAdminOrSelf()]
         return [permissions.IsAuthenticated()]
@@ -145,7 +136,7 @@ class ResidentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
     def get_permissions(self):
         if self.action in ['create']:
-            return [permissions.IsAdminUser()]
+            return [IsAdminRole()]
         elif self.action in ['update', 'partial_update', 'retrieve']:
             return [IsAdminOrSelf()]
         return [permissions.IsAuthenticated()]
@@ -180,10 +171,12 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListAPIView):
     ordering_fields = ['building', 'floor', 'number']
 
     def get_permissions(self):
-        # Chỉ quản trị viên mới có quyền tạo, xóa và cập nhật căn hộ
-        if self.action in ['create', 'destroy', 'update', 'partial_update']:
-            return [permissions.IsAdminUser()]
-        return [permissions.IsAuthenticated()]
+        # Cấp quyền cho admin với quyền xem, tạo, cập nhật và chuyển nhượng căn hộ
+        if self.action in ['create', 'destroy', 'update', 'partial_update', 'transfer_apartment']:
+            return [IsAdminUser()]  # Admin chỉ có quyền này
+        elif self.action in ['get_apartments']: #Management có quyền xem căn hộ
+            return [IsAdminOrManagement()]  # Admin và Management có quyền
+        return [permissions.IsAuthenticated()]  # Mọi người đều có quyền xem căn hộ
 
     def get_queryset(self):
         query = self.queryset.filter(active=True)
@@ -209,16 +202,9 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListAPIView):
         serializer = self.get_serializer(apartments, many=True)
         return Response(serializer.data)
 
-    @action(methods=['post'], detail=True, url_path='transfer', permission_classes=[IsAdminUser])
+    @action(methods=['post'], detail=True, url_path='transfer')
     def transfer_apartment(self, request, pk=None):
         apartment = self.get_object()
-
-        # Kiểm tra xem người thực hiện có phải là quản trị viên không
-        if not request.user.is_staff:
-            return Response(
-                {"detail": "Chỉ quản trị viên mới có quyền chuyển nhượng căn hộ."},
-                status=status.HTTP_403_FORBIDDEN
-            )
 
         # Lấy ID người nhận căn hộ mới và ghi chú chuyển nhượng từ request
         new_owner_id = request.data.get("new_owner_id")
@@ -273,7 +259,7 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update']:
-            return [permissions.IsAdminUser()]
+            return [IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
@@ -327,13 +313,13 @@ class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     search_fields = ['name', 'description']
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return [permissions.IsAdminUser()]
-        return [permissions.IsAuthenticated()]
+        if self.action in ['create', 'update', 'partial_update', 'list']:
+            return [IsAdminUser()]
+        return [IsAdminOrManagement]
 
 
 # Payment Transaction ViewSet
-class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
+class PaymentTransactionViewSet(viewsets.ViewSet):
     queryset = PaymentTransaction.objects.filter(active=True)
     serializer_class = serializers.PaymentTransactionSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -342,7 +328,9 @@ class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update']:
-            return [permissions.IsAdminUser()]
+            return [IsAdminUser()]
+        if self.action in ['list', 'retrieve']:
+            return [IsAdminOrManagement()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
@@ -439,7 +427,7 @@ class FirebaseTokenViewSet(viewsets.ViewSet):
         }, status=status.HTTP_200_OK)
 
 # Parcel Locker ViewSet
-class ParcelLockerViewSet(viewsets.ViewSet):
+class ParcelLockerViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = ParcelLocker.objects.filter(active=True)
     serializer_class = ParcelLockerSerializer
     filter_backends = [DjangoFilterBackend]
@@ -447,7 +435,9 @@ class ParcelLockerViewSet(viewsets.ViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update']:
-            return [permissions.IsAdminUser()]
+            return [IsAdminRole]
+        if self.action in ['add-item', 'update-item-status']:  # Management và Admin có thể đánh dấu đã nhận
+            return [IsAdminOrManagement()]  # Quyền cho cả Admin và Management
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
@@ -494,7 +484,19 @@ class ParcelLockerViewSet(viewsets.ViewSet):
         serializer = ParcelItemSerializer(items, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(methods=['patch'], detail=True, url_path='update-items')
+    # Thêm món đồ vào tủ đồ của cư dân
+    @action(methods=['post'], detail=True, url_path='add-item')
+    def add_item(self, request, pk=None):
+        locker = self.get_object()
+        item_name = request.data.get('item_name')
+        if not item_name:
+            return Response({"detail": "Tên món đồ là bắt buộc."}, status=status.HTTP_400_BAD_REQUEST)
+
+        item = locker.items.create(name=item_name)
+        serializer = ParcelItemSerializer(item)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['patch'], detail=True, url_path='update-item-status')
     def update_item_status(self, request, pk=None):
         #Cập nhật trạng thái của món đồ trong tủ đồ.
         #Chỉ cho phép admin cập nhật trạng thái từ PENDING sang trạng thái khác.
@@ -506,6 +508,11 @@ class ParcelLockerViewSet(viewsets.ViewSet):
 
         item_id = request.data.get('item_id')
         new_status = request.data.get('status')
+
+        print("Request method:", request.method)
+        print("Request content-type:", request.content_type)
+        print("Request body:", request.body)
+        print("Parsed data:", request.data)
 
         if new_status not in ['PENDING', 'RECEIVED']:
             return Response(
@@ -545,7 +552,7 @@ class ParcelLockerViewSet(viewsets.ViewSet):
 
 # Feedback ViewSet
 class FeedbackViewSet(viewsets.ViewSet, generics.ListAPIView):
-    queryset = Feedback.objects.all()
+    queryset = Feedback.objects.filter(active=True)
     serializer_class = FeedbackSerializer
     pagination_class = Pagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -555,12 +562,12 @@ class FeedbackViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     def get_permissions(self):
         if self.action == 'create':
-            return [permissions.IsAuthenticated()]
+            return [permissions.IsAuthenticated()]  # Cư dân gửi phản ánh
         elif self.action in ['destroy']:
-            return [permissions.IsAdminUser()]
-        elif self.action in ['update', 'partial_update']:
-            return [permissions.IsAdminUser()]
-        return [permissions.IsAuthenticated()]
+            return [IsAdminRole]  # Chỉ admin mới được xóa
+        elif self.action in ['update', 'partial_update', 'list']:
+            return [IsAdminOrManagement]  # Admin + Management được sửa, xem tất cả
+        return [permissions.IsAuthenticated()]  # Mặc định các quyền khác
 
     def get_queryset(self):
         #Nếu người dùng không phải admin, chỉ hiển thị các phản hồi của họ
@@ -647,3 +654,212 @@ class FeedbackViewSet(viewsets.ViewSet, generics.ListAPIView):
             {"detail": "Phản hồi đã được xoá."},
             status=status.HTTP_204_NO_CONTENT
         )
+
+
+# Survey ViewSet: Phiếu khảo sát: hiển thị phiếu khảo sát và tạo khảo sát
+class SurveyViewSet(viewsets.ViewSet):
+    queryset = Survey.objects.filter(active=True)
+    serializer_class = SurveySerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['active']
+    search_fields = ['title', 'description']
+    ordering_fields = ['deadline', 'created_date']
+
+    def get_permissions(self):
+        if self.action in ['create', 'destroy', 'update', 'partial_update', 'list', 'retrieve', 'post']:
+            return [IsAdminOrManagement]  # Cho cả Admin và Management
+        elif self.action in ['get-responses']:
+            return [IsAdminOrManagement]
+        return [permissions.IsAuthenticated()]  # Cư dân có thể tham gia khảo sát
+
+    def get_object(self):
+        try:
+            return Survey.objects.get(pk=self.kwargs["pk"])
+        except Survey.DoesNotExist:
+            raise NotFound("Không tìm thấy phiếu khảo sát.")
+
+    def create(self, request, *args, **kwargs):
+        #Tạo khảo sát với các tùy chọn
+        options_data = request.data.pop('options', [])
+        serializer = self.get_serializer(data=request.data, context={'options': options_data})
+        serializer.is_valid(raise_exception=True)
+        survey = serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # Trả về danh sách tùy chọn (VD: Hai long or Khong hai long) của khảo sát
+    @action(methods=['get'], detail=True, url_path='get-options')
+    def get_options(self, request, pk):
+        survey = self.get_object()
+        options = survey.options.filter(active=True)
+        return Response(SurveyOptionSerializer(options, many=True).data)
+
+    # Trả về danh sách phản hồi của khảo sát (chỉ dành cho admin)
+    @action(methods=['get'], detail=True, url_path='get-responses')
+    def get_responses(self, request, pk):
+        if not request.user.is_staff:
+            return Response(
+                {"detail": "Bạn không có quyền thực hiện hành động này."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        survey = self.get_object()
+        responses = SurveyResponse.objects.filter(survey=survey)
+        return Response(SurveyResponseSerializer(responses, many=True).data)
+
+
+# Survey Option ViewSet: Hiển thị các lựa chọn và tạo các lựa chọn trong khảo sát
+class SurveyOptionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView):
+    queryset = SurveyOption.objects.filter(active=True)
+    serializer_class = SurveyOptionSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['survey', 'active']
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return [IsAdminOrManagement]
+        if self.action in ['destroy']:
+            return [IsAdminRole]
+        return [permissions.IsAuthenticated()]
+
+
+# Survey Response ViewSet: Phản hồi của cư dân khi tham gia khảo sát
+class SurveyResponseViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = SurveyResponse.objects.filter(active=True)
+    serializer_class = SurveyResponseSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['survey', 'option', 'resident', 'active']
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [permissions.IsAuthenticated()]
+        elif self.action in ['destroy']:
+            return [IsAdminRole]
+        elif self.action in ['update', 'partial_update', 'list', 'retrieve']:
+            return [IsAdminOrManagement()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        #Nếu người dùng không phải admin, chỉ hiển thị các phản hồi khảo sát của họ
+        query = self.queryset
+        if not self.request.user.is_staff:
+            query = query.filter(resident__user=self.request.user)
+        return query
+
+    def create(self, request, *args, **kwargs):
+        #Tạo phản hồi khảo sát mới
+        try:
+            resident = Resident.objects.get(user=request.user)
+        except Resident.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy thông tin cư dân cho người dùng này."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Kiểm tra xem người dùng đã phản hồi khảo sát này chưa
+        survey_id = request.data.get('survey')
+        existing_response = SurveyResponse.objects.filter(survey_id=survey_id, resident=resident).first()
+        if existing_response:
+            return Response(
+                {"detail": "Bạn đã phản hồi khảo sát này rồi."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(resident=resident)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['get'], detail=False, url_path='my-responses')
+    def my_responses(self, request):
+        #Trả về danh sách phản hồi khảo sát của người dùng hiện tại
+        responses = SurveyResponse.objects.filter(resident__user=request.user)
+        serializer = self.get_serializer(responses, many=True)
+        return Response(serializer.data)
+
+
+# Visitor Vehicle Registration ViewSet
+class VisitorVehicleRegistrationViewSet(viewsets.ViewSet, generics.ListAPIView):
+    queryset = VisitorVehicleRegistration.objects.filter(active=True)
+    serializer_class = VisitorVehicleRegistrationSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['resident', 'approved', 'active']
+    search_fields = ['visitor_name', 'vehicle_number']
+    ordering_fields = ['registration_date', 'created_date']
+
+    def get_permissions(self):
+        if self.action in ['create', 'list', 'retrieve', 'my_registrations']:
+            # Cư dân và quản lý đều có quyền tạo và xem
+            return [permissions.IsAuthenticated()]
+        elif self.action in ['approve', 'reject', 'update', 'partial_update', 'destroy']:
+            # Chỉ admin hoặc management mới có quyền duyệt, từ chối hoặc chỉnh sửa
+            return [IsAdminOrManagement()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        #Nếu người dùng không phải admin, chỉ hiển thị các đăng ký xe của họ
+        query = self.queryset
+        if not self.request.user.is_staff:
+            query = query.filter(resident__user=self.request.user)
+        return query
+
+    def create(self, request, *args, **kwargs):
+        #Tạo đăng ký xe mới
+        try:
+            resident = Resident.objects.get(user=request.user)
+        except Resident.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy thông tin cư dân cho người dùng này."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(resident=resident)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['post'], detail=True, url_path='approve')
+    def approve(self, request, pk):
+        try:
+            registration = self.get_object()
+        except VisitorVehicleRegistration.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy đăng ký xe."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        if not request.user.is_staff:
+            return Response(
+                {"detail": "Bạn không có quyền thực hiện hành động này."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        registration.approved = True
+        registration.save()
+        serializer = self.get_serializer(registration)
+        return Response(serializer.data)
+
+    @action(methods=['post'], detail=True, url_path='reject')
+    def reject(self, request, pk):
+        #Từ chối đăng ký giữ xe (chỉ dành cho admin hoặc management)
+        registration = self.get_object()
+
+        # Kiểm tra quyền
+        if not request.user.is_staff and getattr(request.user, 'role', '') != 'MANAGEMENT':
+            return Response(
+                {"detail": "Bạn không có quyền thực hiện hành động này."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        registration.approved = False
+        registration.save()
+
+        serializer = self.get_serializer(registration)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=False, url_path='my-registrations')
+    def my_registrations(self, request):
+        #Trả về danh sách đăng ký xe của người dùng hiện tại
+        registrations = VisitorVehicleRegistration.objects.filter(resident__user=request.user)
+        serializer = self.get_serializer(registrations, many=True)
+        return Response(serializer.data)

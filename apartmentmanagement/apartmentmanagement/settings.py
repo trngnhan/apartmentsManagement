@@ -170,5 +170,5 @@ STATICFILES_DIRS = [BASE_DIR / 'apartments' / 'static']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#CLIENT_ID = "FcL4e7nhtal8PQRjFDKsrIdxB6ZorwpiGrlMgMjO"
-#CLIENT_SECRET = "XsmTvNjKaw6phpAKalPlJOk3H0GRTg1rF6nsx5nmjqDajlHfT2BxBMAoZQQ3a60vY3N9RMX85BWq0J9pLVqadoAWghyguHO3z7sq4J70LigYtel0K9kUPDsFjBYdn1vf"
+#CLIENT_ID = "aRgWqcaZzcRboHVnz6xZp5VR30eeiV4gBTC3cud6"
+#CLIENT_SECRET = "jwA8QVO1jqScm0taMdfbTDLBfqovrqvQKXQo0L8fbd9CzEJWdbRfww4yFMpSSZjt3e9jG9V3S8fHcKFnrTo8lUwbFyAliMAsKAdgmXzccGZiwGFCzyt0DyFNz6jHHYRB"

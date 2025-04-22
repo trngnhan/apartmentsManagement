@@ -490,8 +490,8 @@ def seed():
         xuan_profile = user_xuan.resident_profile
 
     apt_xuan, _ = Apartment.objects.get_or_create(
-        code='E105',
-        defaults={'building': 'E', 'floor': 1, 'number': '05', 'owner': user_xuan}
+        code='A105',
+        defaults={'building': 'A', 'floor': 1, 'number': '05', 'owner': user_xuan}
     )
 
     PaymentTransaction.objects.get_or_create(
@@ -541,8 +541,8 @@ def seed():
         huy_profile = user_huy.resident_profile
 
     apt_huy, _ = Apartment.objects.get_or_create(
-        code='F208',
-        defaults={'building': 'F', 'floor': 2, 'number': '08', 'owner': user_huy}
+        code='C208',
+        defaults={'building': 'C', 'floor': 2, 'number': '08', 'owner': user_huy}
     )
 
     PaymentTransaction.objects.get_or_create(

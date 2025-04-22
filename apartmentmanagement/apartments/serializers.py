@@ -59,7 +59,7 @@ class ResidentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Resident
-        fields = ['id', 'user', 'user_id', 'image']
+        fields = ['user', 'user_id', 'image']
         read_only_fields = ['created_date', 'updated_date']
 
 
@@ -69,7 +69,7 @@ class ApartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Apartment
-        fields = ['id', 'code', 'building', 'floor', 'number', 'owner', 'owner_email']
+        fields = ['code', 'building', 'floor', 'number', 'owner', 'owner_email']
         read_only_fields = ['created_date', 'updated_date']
 
 # Apartment Transfer History Serializer
@@ -80,7 +80,7 @@ class ApartmentTransferHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApartmentTransferHistory
-        fields = ['id', 'apartment', 'apartment_code', 'previous_owner', 'previous_owner_email',
+        fields = ['apartment', 'apartment_code', 'previous_owner', 'previous_owner_email',
                   'new_owner', 'new_owner_email', 'transfer_date']
         read_only_fields = ['created_date', 'updated_date']
 
@@ -89,7 +89,7 @@ class ApartmentTransferHistorySerializer(serializers.ModelSerializer):
 class PaymentCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentCategory
-        fields = ['id', 'name', 'amount', 'is_recurring', 'description']
+        fields = ['name', 'amount', 'is_recurring', 'description']
         read_only_fields = ['created_date', 'updated_date']
 
     def validate_amount(self, value):
@@ -113,7 +113,7 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PaymentTransaction
-        fields = ['id', 'apartment', 'apartment_code', 'category', 'category_name',
+        fields = ['apartment', 'apartment_code', 'category', 'category_name',
                   'amount', 'method', 'transaction_id', 'status', 'payment_proof',
                   'payment_proof_url', 'paid_date']
         read_only_fields = ['created_date', 'updated_date']
@@ -145,7 +145,7 @@ class FirebaseTokenSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FirebaseToken
-        fields = ['id', 'user', 'user_email', 'token', 'active', 'created_date', 'updated_date']
+        fields = ['user', 'user_email', 'token', 'created_date', 'updated_date']
         read_only_fields = ['created_date', 'updated_date']
 
 
@@ -153,19 +153,16 @@ class FirebaseTokenSerializer(serializers.ModelSerializer):
 class ParcelItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = ParcelItem
-        fields = ['id', 'locker', 'name', 'status', 'note',
-                  'active', 'created_date', 'updated_date']
+        fields = ['id', 'locker', 'name', 'status', 'note']
         read_only_fields = ['created_date', 'updated_date']
 
 
 class ParcelLockerSerializer(serializers.ModelSerializer):
-    items = ParcelItemSerializer(many=True, read_only=True)
     resident_email = serializers.EmailField(source='resident.user.email', read_only=True)
 
     class Meta:
         model = ParcelLocker
-        fields = ['id', 'resident', 'resident_email', 'items',
-                  'active', 'created_date', 'updated_date']
+        fields = ['resident', 'resident_email']
         read_only_fields = ['created_date', 'updated_date']
 
 
@@ -175,8 +172,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Feedback
-        fields = ['id', 'resident', 'resident_email', 'title', 'content', 'status',
-                  'active', 'created_date', 'updated_date']
+        fields = ['resident_email', 'title', 'content', 'status']
         read_only_fields = ['created_date', 'updated_date']
 
 
@@ -184,7 +180,7 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class SurveyOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = SurveyOption
-        fields = ['id', 'survey', 'option_text', 'active', 'created_date', 'updated_date']
+        fields = ['survey', 'option_text']
         read_only_fields = ['created_date', 'updated_date']
 
 
@@ -194,8 +190,7 @@ class SurveyResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SurveyResponse
-        fields = ['id', 'survey', 'option', 'option_text', 'resident', 'resident_email',
-                  'active', 'created_date', 'updated_date']
+        fields = ['id', 'survey', 'option', 'option_text', 'resident', 'resident_email']
         read_only_fields = ['created_date', 'updated_date']
 
 
@@ -204,8 +199,7 @@ class SurveySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Survey
-        fields = ['id', 'title', 'description', 'deadline', 'options',
-                  'active', 'created_date', 'updated_date']
+        fields = ['id', 'title', 'description', 'deadline', 'options']
         read_only_fields = ['created_date', 'updated_date']
 
     def create(self, validated_data):
@@ -224,6 +218,6 @@ class VisitorVehicleRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VisitorVehicleRegistration
-        fields = ['id', 'resident', 'resident_email', 'visitor_name', 'vehicle_number',
-                  'registration_date', 'approved', 'active', 'created_date', 'updated_date']
+        fields = ['resident', 'resident_email', 'visitor_name', 'vehicle_number',
+                  'registration_date', 'approved']
         read_only_fields = ['registration_date', 'created_date', 'updated_date']
