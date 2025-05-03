@@ -33,7 +33,7 @@ const ResidentHome = () => {
                         const fetchApartments = async (token) => {
                             try {
                                 const response = await fetch(
-                                    "https://trngnhan.pythonanywhere.com/apartments/",
+                                    "https://trngnhan.pythonanywhere.com/apartments/get-apartment/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
