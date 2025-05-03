@@ -8,6 +8,7 @@ from django.views.generic import detail
 from rest_framework import viewsets, generics, permissions, status, parsers, renderers
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAdminUser
 from .permissions import IsAdminRole, IsAdminOrSelf, IsAdminOrManagement
 from rest_framework.response import Response
@@ -102,7 +103,7 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ['email', 'first_name', 'last_name', 'phone_number']
     ordering_fields = ['email', 'date_joined']
-    parser_classes = [parsers.MultiPartParser]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_permissions(self):
         if self.action in ['create', 'list', 'retrieve']:
@@ -116,12 +117,18 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
     def get_current_user(self, request):
         u = request.user
-        if request.method.__eq__('PATCH'):
+        if request.method == 'PATCH':
             for k, v in request.data.items():
                 if k in ['first_name', 'last_name']:
                     setattr(u, k, v)
-                elif k.__eq__('password'):
+                elif k == 'password':
                     u.set_password(v)
+                elif k == 'must_change_password':  # Xử lý must_change_password
+                    u.must_change_password = v.lower() == 'true' if isinstance(v, str) else bool(v)
+
+            # Xử lý file ảnh
+            if 'profile_picture' in request.FILES:
+                u.profile_picture = request.FILES['profile_picture']
 
             u.save()
 
