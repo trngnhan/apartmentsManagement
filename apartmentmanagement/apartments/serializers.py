@@ -218,6 +218,6 @@ class VisitorVehicleRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = VisitorVehicleRegistration
-        fields = ['resident', 'resident_email', 'visitor_name', 'vehicle_number',
+        fields = ['resident_id', 'resident_email', 'visitor_name', 'vehicle_number',
                   'registration_date', 'approved']
         read_only_fields = ['registration_date', 'created_date', 'updated_date']

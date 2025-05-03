@@ -15,6 +15,7 @@ import Apis, { authApis, endpoints } from "../../configs/Apis";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MyDispatchContext } from "../../configs/MyContexts";
+import { LinearGradient } from "expo-linear-gradient";
 
 const Login = () => {
     const info = [
@@ -112,7 +113,7 @@ const Login = () => {
                 });
 
                 // Điều hướng đến trang chủ (hoặc trang khác sau khi login thành công)
-                nav.navigate("UpdateProfile");
+                nav.navigate("UpdateProfile"); //cần sửa lại
             } catch (ex) {
                 console.error("Lỗi đăng nhập:", ex);
                 setMsg("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
@@ -132,8 +133,22 @@ const Login = () => {
     };
 
     return (
-        <View>
+        <LinearGradient
+            colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
+            style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+        >
+            <View>
             <ScrollView>
+                <Image
+                    source={require("../../assets/logo.png")} // Đường dẫn đến hình ảnh logo
+                    style={{
+                        marginTop: 50,
+                        width: 300,
+                        height: 150,
+                        borderRadius: 20,
+                        alignSelf: "center",
+                    }}
+                />
                 <HelperText type="error" visible={msg}>
                     {msg}
                 </HelperText>
@@ -155,11 +170,26 @@ const Login = () => {
                     loading={loading}
                     onPress={login}
                     mode="contained"
+                    style={{
+                        backgroundColor: "#FF6F61", // Màu nền nút
+                        borderRadius: 15, // Bo góc
+                        paddingVertical: 2, // Khoảng cách trên dưới
+                        width: 350,
+                        alignSelf: "center", // Căn giữa
+                        elevation: 5, // Đổ bóng
+                        marginTop: 20, // Khoảng cách phía trên
+                    }}
+                    labelStyle={{
+                        color: "white", // Màu chữ
+                        fontSize: 16, // Kích thước chữ
+                        fontWeight: "bold", // Đậm chữ
+                    }}
                 >
                     Đăng nhập
                 </Button>
             </ScrollView>
         </View>
+        </LinearGradient>   
     );
 };
 

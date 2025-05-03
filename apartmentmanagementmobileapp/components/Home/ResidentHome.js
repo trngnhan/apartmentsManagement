@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Button, ScrollView } from "react-native";
+import { View, Text, Button, ScrollView, TouchableOpacity, Image } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { Card, Title, Paragraph } from "react-native-paper";
 import MyStyles from "../../styles/MyStyles";
+import { LinearGradient } from "expo-linear-gradient";
 
 const ResidentHome = () => {
     const [user, setUser] = useState(null);
     const [apartments, setApartments] = useState([]); // State lưu căn hộ
+    const [registrations, setRegistrations] = useState([]); // State lưu đăng ký giữ xe
     const nav = useNavigation();
 
     useEffect(() => {
@@ -55,8 +57,33 @@ const ResidentHome = () => {
                             }
                         };
 
+                        // Gọi API lấy danh sách đăng ký giữ xe
+                        const fetchRegistrations = async () => {
+                          try {
+                              const response = await fetch(
+                                  "https://trngnhan.pythonanywhere.com/visitorvehicleregistrations/my-registrations/",
+                                  {
+                                      headers: {
+                                          Authorization: `Bearer ${token}`,
+                                      },
+                                  }
+                              );
+                      
+                              if (response.ok) {
+                                  const data = await response.json();
+                                  console.log("Dữ liệu trả về từ API:", data); // Log dữ liệu trả về
+                                  setRegistrations(data); // Lưu danh sách đăng ký giữ xe vào state
+                              } else {
+                                  console.error("Lỗi khi lấy danh sách đăng ký giữ xe:", response.status);
+                              }
+                          } catch (error) {
+                              console.error("Lỗi khi gọi API đăng ký giữ xe:", error);
+                          }
+                      };
+
                         // GỌI API ở đây!
                         await fetchApartments(token);
+                        await fetchRegistrations();
                         //---
                         // Kiểm tra nếu người dùng phải thay đổi mật khẩu
                         if (parsedUser.must_change_password === true) {
@@ -98,26 +125,93 @@ const ResidentHome = () => {
     // };
 
     return (
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-            <Text style={[MyStyles.text, MyStyles.padding]}>
-                Welcome, {user.first_name} {user.last_name}
-            </Text>
-            {apartments.length === 0 ? (
-                <Text>Bạn chưa sở hữu căn hộ nào.</Text>
-            ) : (
-                apartments.map((apartment, index) => (
-                    <Card key={index} style={{ marginBottom: 12 }}>
-                        <Card.Content>
-                            <Title>Căn hộ: {apartment.code}</Title>
-                            <Paragraph>Tòa: {apartment.building}</Paragraph>
-                            <Paragraph>Tầng: {apartment.floor}</Paragraph>
-                            <Paragraph>Số: {apartment.number}</Paragraph>
-                        </Card.Content>
-                    </Card>
-                ))
-            )}
-            <Button title="Logout" onPress={logout} />
-        </ScrollView>
+      <LinearGradient
+      colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
+      style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+      >
+          <ScrollView contentContainerStyle={{ padding: 16 }}>
+              <Text style={[MyStyles.text, MyStyles.padding]}>
+                  Welcome, {user.first_name} {user.last_name}
+              </Text>
+              <Text style={MyStyles.padding}>Căn hộ của bạn:</Text>
+              {apartments.length === 0 ? (
+                  <Text>Bạn chưa sở hữu căn hộ nào.</Text>
+              ) : (
+                  apartments.map((apartment, index) => (
+                      <Card key={index} style={{ marginBottom: 12 }}>
+                          <Card.Content>
+                              <Title>Căn hộ: {apartment.code}</Title>
+                              <Paragraph>Tòa: {apartment.building}</Paragraph>
+                              <Paragraph>Tầng: {apartment.floor}</Paragraph>
+                              <Paragraph>Số: {apartment.number}</Paragraph>
+                          </Card.Content>
+                      </Card>
+                  ))
+              )}
+
+              {/* Các chức năng chuyển trang để ở đây */}
+              <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
+              {/* Hình ảnh để chuyển đến trang RegisterVehicle */}
+              <TouchableOpacity onPress={() => nav.navigate("RegisterVehicle")}>
+                  <View style={{ alignItems: "center" }}>
+                      <Image
+                          source={require("../../assets/register_vehicle.png")} // Đường dẫn đến hình ảnh
+                          style={MyStyles.image}
+                      />
+                      <Text style={[MyStyles.padding, MyStyles.textSmall]}>Đăng ký xe cho người thân</Text>
+                  </View>
+              </TouchableOpacity>
+
+              {/* Hình ảnh: Sửa vô đây*/}
+              <TouchableOpacity onPress={() => nav.navigate("AnotherScreen")}>
+                  <View style={{ alignItems: "center" }}>
+                      <Image
+                          source={require("../../assets/logo.png")} // Đường dẫn đến hình ảnh
+                          style={MyStyles.image}
+                      />
+                      <Text style={[MyStyles.padding, MyStyles.textSmall]}>Chức năng khác</Text>
+                  </View>
+              </TouchableOpacity>
+              
+              </View>
+
+              {/* Hiển thị danh sách đăng ký giữ xe */}
+              <Text style={MyStyles.sectionTitle}>Danh sách đăng ký giữ xe:</Text>
+                {registrations.length === 0 ? (
+                    <Text style={MyStyles.padding}>Bạn chưa có đăng ký giữ xe nào.</Text>
+                ) : (
+                    registrations.map((registration, index) => (
+                        <Card key={index} style={MyStyles.card}>
+                            <Card.Content>
+                                <Title>Khách: {registration.visitor_name}</Title>
+                                <Paragraph>Biển số xe: {registration.vehicle_number}</Paragraph>
+                                <Paragraph>Ngày đăng ký: {registration.registration_date}</Paragraph>
+                                <Paragraph>
+                                    Trạng thái: {registration.approved ? "Đã duyệt" : "Chưa duyệt"}
+                                </Paragraph>
+                            </Card.Content>
+                        </Card>
+                    ))
+                )}
+
+              <Button
+              style={{
+                backgroundColor: "#FF6F61", // Màu nền nút
+                borderRadius: 15, // Bo góc
+                paddingVertical: 2, // Khoảng cách trên dưới
+                width: 350,
+                alignSelf: "center", // Căn giữa
+                elevation: 5, // Đổ bóng
+                marginTop: 20, // Khoảng cách phía trên
+              }}
+              labelStyle={{
+                  color: "white", // Màu chữ
+                  fontSize: 16, // Kích thước chữ
+                  fontWeight: "bold", // Đậm chữ
+              }}
+              title="Logout" onPress={logout} />
+          </ScrollView>
+      </LinearGradient>
     );
 };
 

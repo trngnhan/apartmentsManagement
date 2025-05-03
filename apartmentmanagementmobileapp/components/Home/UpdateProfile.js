@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MyStyles from '../../styles/MyStyles';
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from 'expo-linear-gradient';
 
 const UpdateProfile = () => {
   const [photo, setPhoto] = useState(null);
@@ -93,7 +94,11 @@ const UpdateProfile = () => {
   
 
   return (
-    <View style={[MyStyles.container, MyStyles.center]}>
+    <LinearGradient
+    colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
+    style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+    >
+      <View style={[MyStyles.container, MyStyles.center]}>
       <Text style={MyStyles.title}>Update Your Profile</Text>
 
       {msg && <Text style={{ color: 'red', marginBottom: 10 }}>{msg}</Text>}
@@ -110,6 +115,7 @@ const UpdateProfile = () => {
 
       <Button title="Update Profile" onPress={handleUpdateProfile} />
     </View>
+    </LinearGradient>
   );
 };
 

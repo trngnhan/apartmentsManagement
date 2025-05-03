@@ -4,7 +4,6 @@ export default StyleSheet.create({
     container: {
         flex: 1,
         padding: 10,
-        backgroundColor: "#fff",
         justifyContent: "center",
         alignItems: "center"
       },
@@ -20,16 +19,21 @@ export default StyleSheet.create({
         marginVertical: 10,
       },
       button: {
-        backgroundColor: '#ccc', 
-        padding: 10, 
-        marginTop: 10 
+        backgroundColor: "#FF6F61", // Màu nền nút
+        borderRadius: 15, // Bo góc
+        paddingVertical: 2, // Khoảng cách trên dưới
+        width: 350,
+        alignSelf: "center", // Căn giữa
+        elevation: 5, // Đổ bóng
+        marginTop: 20, // Khoảng cách phía trên
       },
       errorText: {
         color: "red",
         marginVertical: 4,
       },
       text: {
-        fontSize: 20
+        fontSize: 20,
+        fontStyle: "bold",
       },
       padding: {
         padding: 10
@@ -64,5 +68,24 @@ export default StyleSheet.create({
       },
       scrollView: {
         width: "80%"
+      },
+      sectionTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginVertical: 10,
+      },
+      card: {
+          marginBottom: 12,
+      },
+      textSmall: {
+        fontSize: 10,
+        marginBottom: 5,
+      },
+      image: {
+        width: 60, // Chiều rộng hình ảnh
+        height: 60, // Chiều cao hình ảnh
+        alignSelf: "center", // Căn giữa hình ảnh
+        marginTop: 20, // Khoảng cách phía trên
+        borderRadius: 10, // Bo góc hình ảnh
       },
 });

@@ -6,6 +6,7 @@ import Home from './components/Home/Home';
 import { MyProvider } from './configs/MyContexts';
 import ResidentHome from './components/Home/ResidentHome';
 import UpdateProfile from './components/Home/UpdateProfile';
+import RegisterVehicle from './components/Home/RegisterVehicle';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,6 +19,7 @@ export default function App() {
           <Stack.Screen name="Home" component={Home} />
           <Stack.Screen name='ResidentHome' component={ResidentHome}/>
           <Stack.Screen name='UpdateProfile' component={UpdateProfile}/>
+          <Stack.Screen name="RegisterVehicle" component={RegisterVehicle} />
         </Stack.Navigator>
       </NavigationContainer>
     </MyProvider>
