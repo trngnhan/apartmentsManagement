@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './components/User/Login';
 import Home from './components/Home/Home';
-import { MyProvider } from './configs/MyContexts'; // Import MyProvider
+import { MyProvider } from './configs/MyContexts';
 import ResidentHome from './components/Home/ResidentHome';
 import UpdateProfile from './components/Home/UpdateProfile';
 

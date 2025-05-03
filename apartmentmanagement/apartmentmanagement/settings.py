@@ -40,10 +40,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'apartments',
     'drf_yasg',
+    'django_filters',
     'oauth2_provider',
 ]
 #Chung thuc user
 REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
         'rest_framework.authentication.SessionAuthentication',

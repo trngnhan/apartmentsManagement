@@ -181,7 +181,7 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListAPIView):
         # Cấp quyền cho admin với quyền xem, tạo, cập nhật và chuyển nhượng căn hộ
         if self.action in ['create', 'destroy', 'update', 'partial_update', 'transfer_apartment']:
             return [IsAdminUser()]  # Admin chỉ có quyền này
-        elif self.action in ['get_apartments']: #Management có quyền xem căn hộ
+        elif self.action in ['list', 'retrieve']: #Management có quyền xem căn hộ
             return [IsAdminOrManagement()]  # Admin và Management có quyền
         return [permissions.IsAuthenticated()]  # Mọi người đều có quyền xem căn hộ
 
@@ -573,7 +573,7 @@ class FeedbackViewSet(viewsets.ViewSet, generics.ListAPIView):
         elif self.action in ['destroy']:
             return [IsAdminRole]  # Chỉ admin mới được xóa
         elif self.action in ['update', 'partial_update', 'list']:
-            return [IsAdminOrManagement]  # Admin + Management được sửa, xem tất cả
+            return [IsAdminOrManagement()]  # Admin + Management được sửa, xem tất cả
         return [permissions.IsAuthenticated()]  # Mặc định các quyền khác
 
     def get_queryset(self):
@@ -674,9 +674,9 @@ class SurveyViewSet(viewsets.ViewSet):
 
     def get_permissions(self):
         if self.action in ['create', 'destroy', 'update', 'partial_update', 'list', 'retrieve', 'post']:
-            return [IsAdminOrManagement]  # Cho cả Admin và Management
+            return [IsAdminOrManagement()]  # Cho cả Admin và Management
         elif self.action in ['get-responses']:
-            return [IsAdminOrManagement]
+            return [IsAdminOrManagement()]
         return [permissions.IsAuthenticated()]  # Cư dân có thể tham gia khảo sát
 
     def get_object(self):
