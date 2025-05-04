@@ -109,20 +109,16 @@ const ResidentHome = () => {
     const logout = async () => {
         await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("user");
-        nav.navigate("Home");
+
+        nav.reset({
+            index: 0,
+            routes: [{ name: "Login" }],
+        });
     };
 
     if (!user) {
         return <Text>Loading...</Text>; // Hoặc có thể thêm Spinner tại đây
     }
-
-    //   return (
-    //     <View>
-    //       <Text style={[MyStyles.text, MyStyles.padding]} >Welcome, {user.first_name} {user.last_name}</Text>
-    //       <Button title="Logout" onPress={logout} />
-    //     </View>
-    //   );
-    // };
 
     return (
       <LinearGradient
