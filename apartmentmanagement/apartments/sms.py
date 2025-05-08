@@ -12,7 +12,7 @@ def send_sms(to_phone_number, message):
     try:
         sms = client.messages.create(
             body=message,
-            from_='+16169208375',  # Số điện thoại Twilio
+            from_='',  # Số điện thoại Twilio
             to=to_phone_number
         )
         print("SMS sent successfully:", sms.sid)
