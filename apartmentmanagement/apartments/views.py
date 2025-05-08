@@ -10,6 +10,8 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAdminUser
+from rest_framework.views import APIView
+
 from .permissions import IsAdminRole, IsAdminOrSelf, IsAdminOrManagement
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -26,6 +28,7 @@ from .models import (
     PaymentTransaction, FirebaseToken, ParcelLocker, ParcelItem,
     Feedback, Survey, SurveyOption, SurveyResponse, VisitorVehicleRegistration
 )
+from .sms import send_sms
 
 User = get_user_model()
 
@@ -113,17 +116,19 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         return [permissions.IsAuthenticated()]
 
     @action(methods=['get', 'patch'], url_path='current-user', detail=False,
-            permission_classes=[permissions.IsAuthenticated])
-
+            permission_classes=[permissions.IsAuthenticated],
+            parser_classes=[MultiPartParser, FormParser])
     def get_current_user(self, request):
         u = request.user
+
+        # Xử lý PATCH nếu cần
         if request.method == 'PATCH':
             for k, v in request.data.items():
                 if k in ['first_name', 'last_name']:
                     setattr(u, k, v)
                 elif k == 'password':
                     u.set_password(v)
-                elif k == 'must_change_password':  # Xử lý must_change_password
+                elif k == 'must_change_password':
                     u.must_change_password = v.lower() == 'true' if isinstance(v, str) else bool(v)
 
             # Xử lý file ảnh
@@ -132,7 +137,9 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
             u.save()
 
-        return Response(serializers.UserSerializer(u).data)
+        # Sử dụng UserSerializer để trả về dữ liệu
+        serializer = UserSerializer(u)
+        return Response(serializer.data)
 
 class ResidentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = Resident.objects.filter(active=True)
@@ -151,6 +158,7 @@ class ResidentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     @action(methods=['get', 'patch'], url_path='current-resident', detail=False,
             permission_classes=[permissions.IsAuthenticated])
     def get_current_resident(self, request):
+        # Lấy thông tin cư dân liên kết với người dùng hiện tại
         resident = Resident.objects.filter(user=request.user).first()
         if not resident:
             return Response(
@@ -158,12 +166,14 @@ class ResidentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if request.method.__eq__('PATCH'):
+        # Xử lý PATCH nếu cần
+        if request.method == 'PATCH':
             serializer = self.get_serializer(resident, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
 
+        # Trả về thông tin cư dân
         serializer = self.get_serializer(resident)
         return Response(serializer.data)
 
@@ -322,7 +332,7 @@ class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'list']:
             return [IsAdminUser()]
-        return [IsAdminOrManagement]
+        return [IsAdminOrManagement()]
 
 
 # Payment Transaction ViewSet
@@ -433,8 +443,15 @@ class FirebaseTokenViewSet(viewsets.ViewSet):
             'data': serializer.data
         }, status=status.HTTP_200_OK)
 
+def notify_resident_about_new_item(resident, item_name):
+    print(f"Gửi thông báo SMS đến: {resident.user.phone_number}")
+    message = f"Xin chào {resident.user.first_name}, bạn có món hàng mới trong tủ đồ: {item_name}. Vui lòng đến nhận sớm."
+    if resident.user.phone_number:
+        send_sms(resident.user.phone_number, message)
+    else:
+        print("Số điện thoại không tồn tại.")
 # Parcel Locker ViewSet
-class ParcelLockerViewSet(viewsets.ViewSet, generics.ListAPIView):
+class ParcelLockerViewSet(viewsets.ViewSet, generics.ListAPIView, APIView):
     queryset = ParcelLocker.objects.filter(active=True)
     serializer_class = ParcelLockerSerializer
     filter_backends = [DjangoFilterBackend]
@@ -442,8 +459,8 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update']:
-            return [IsAdminRole]
-        if self.action in ['add-item', 'update-item-status']:  # Management và Admin có thể đánh dấu đã nhận
+            return [IsAdminRole()]
+        if self.action in ['add-item', 'update-item-status', 'list', 'retrieve']:  # Management và Admin có thể đánh dấu đã nhận
             return [IsAdminOrManagement()]  # Quyền cho cả Admin và Management
         return [permissions.IsAuthenticated()]
 
@@ -500,8 +517,28 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response({"detail": "Tên món đồ là bắt buộc."}, status=status.HTTP_400_BAD_REQUEST)
 
         item = locker.items.create(name=item_name)
+        notify_resident_about_new_item(locker.resident, item_name)
         serializer = ParcelItemSerializer(item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['post'], detail=False, url_path='send-sms')
+    def send_sms(self, request):
+        """
+        API để gửi SMS.
+        """
+        phone_number = request.data.get('phone_number')
+        message = request.data.get('message')
+
+        if not phone_number or not message:
+            return Response({"detail": "Số điện thoại và nội dung tin nhắn là bắt buộc."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Gửi SMS (giả sử bạn đã có hàm send_sms)
+            send_sms(phone_number, message)
+            return Response({"detail": "SMS đã được gửi thành công."}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(methods=['patch'], detail=True, url_path='update-item-status')
     def update_item_status(self, request, pk=None):

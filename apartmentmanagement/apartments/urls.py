@@ -30,4 +30,5 @@ urlpatterns = [
     path('change-password/', views.change_password, name='change_password'),
     path('upload-avatar/', views.upload_avatar, name='upload_avatar'),
     path('home/', resident_home_view, name='resident_home'),
+    path('send-sms/', ParcelLockerViewSet.as_view({'post': 'send_sms'}), name='send-sms'),
 ]

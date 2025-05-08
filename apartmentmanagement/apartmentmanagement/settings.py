@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-)b0@!tu5=&x5na4goscy(2e8+zyjs-vnbmwx^dke^b=39qf_zq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'django_filters',
     'oauth2_provider',
+    'corsheaders',
 ]
 #Chung thuc user
 REST_FRAMEWORK = {
@@ -87,7 +88,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apartments.middlewares.MustChangePasswordMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+CORS_ALLOW_ALL_ORIGINS  = True
 
 PAGE_SIZE = 10
 LOGIN_URL = '/login/'

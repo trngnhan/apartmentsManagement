@@ -49,7 +49,7 @@ const UpdateProfile = () => {
         formData.append('password', password);
         formData.append('must_change_password', 'False');
 
-        const response = await fetch('https://trngnhan.pythonanywhere.com/users/current-user/', {
+        const response = await fetch('http://192.168.44.103:8000/users/current-user/', {
           method: 'PATCH',
           headers: {
             Authorization: `Bearer ${parsedUser.token}`,
@@ -74,7 +74,12 @@ const UpdateProfile = () => {
           };
   
           await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-          nav.navigate('ResidentHome');
+          // nav.navigate('ResidentHome');
+          if (parsedUser.is_superuser) {
+            nav.navigate("AdminHome"); // Điều hướng đến trang admin
+          } else {
+            nav.navigate("ResidentHome"); // Điều hướng đến ResidentHome
+          }
         } else {
           alert(`Failed to update profile: ${responseJson.detail || 'Unknown error'}`);
         }

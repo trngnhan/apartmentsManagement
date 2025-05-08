@@ -71,9 +71,11 @@ const Login = () => {
                 // Gửi yêu cầu đăng nhập
                 let res = await Apis.post(endpoints["login"], {
                     ...user,
-                    client_id: "BV96e0rWzsGyZU0MFMjT1u19m5j0MXrJVCQaEQAZ",
+                    // client_id: "BV96e0rWzsGyZU0MFMjT1u19m5j0MXrJVCQaEQAZ",
+                    client_id: "aRgWqcaZzcRboHVnz6xZp5VR30eeiV4gBTC3cud6",
                     // client_id: "2tlsvZ3q5MfAWqn4GLgCUVAZ38dJd3ecqrRwEX6a",
-                    client_secret: "9ciZz1wa06Tju9rOfY49828GDvFRHc30RfS9wOJfrTfa2sukERvhpI4T7JHgeZaO1jxTfXsDjfeSDm9vLiQdcHtPl7ZefwvlpBthKY3doWfL8jF09BcKhOQjUE7h3CK0",
+                    // client_secret: "9ciZz1wa06Tju9rOfY49828GDvFRHc30RfS9wOJfrTfa2sukERvhpI4T7JHgeZaO1jxTfXsDjfeSDm9vLiQdcHtPl7ZefwvlpBthKY3doWfL8jF09BcKhOQjUE7h3CK0",
+                    client_secret: "jwA8QVO1jqScm0taMdfbTDLBfqovrqvQKXQo0L8fbd9CzEJWdbRfww4yFMpSSZjt3e9jG9V3S8fHcKFnrTo8lUwbFyAliMAsKAdgmXzccGZiwGFCzyt0DyFNz6jHHYRB",
                     // client_secret: "DOSM65owa6pzbsOfCktyCKfRDYqGm865aSWMXpvb937ieSxV67enkzYq6K1TPknk4hlMdgz0Z36cDkKO40ZvZlVievR1Djz7tvxrPiPLlzGeA8FBI1YzE8r6Y6KxvgGy",
                     grant_type: "password",
                 });
@@ -87,13 +89,14 @@ const Login = () => {
                 let u = await authApis(res.data.access_token).get(
                     endpoints["current-user"]
                 );
-                console.info(u.data);
+                console.info("Dữ liệu người dùng từ API: ", u.data);
 
                 // Lưu dữ liệu người dùng và token vào AsyncStorage
                 await AsyncStorage.setItem(
                     "user",
                     JSON.stringify({
                         token: res.data.access_token,
+                        resident_id: u.data.resident_id, // Đảm bảo lưu resident_id
                         ...u.data,
                     })
                 );
@@ -112,8 +115,14 @@ const Login = () => {
                     payload: u.data,
                 });
 
-                // Điều hướng đến trang chủ (hoặc trang khác sau khi login thành công)
-                nav.navigate("UpdateProfile"); //cần sửa lại
+                // Điều hướng dựa trên quyền của người dùng
+                if (u.data.must_change_password) {
+                    nav.navigate("UpdateProfile"); // Điều hướng đến UpdateProfile nếu cần đổi mật khẩu
+                } else if (u.data.is_superuser) {
+                    nav.navigate("AdminHome"); // Điều hướng đến trang admin
+                } else {
+                    nav.navigate("ResidentHome"); // Điều hướng đến ResidentHome
+                }
             } catch (ex) {
                 console.error("Lỗi đăng nhập:", ex);
                 setMsg("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
@@ -123,14 +132,14 @@ const Login = () => {
         }
     };
 
-    const logout = async () => {
-        // Xóa token và dispatch logout action
-        await AsyncStorage.removeItem("token");
-        dispatch({
-            type: "logout",
-        });
-        nav.navigate("Login"); // Điều hướng về màn hình đăng nhập
-    };
+    // const logout = async () => {
+    //     // Xóa token và dispatch logout action
+    //     await AsyncStorage.removeItem("token");
+    //     dispatch({
+    //         type: "logout",
+    //     });
+    //     nav.popToTop("Login"); // Điều hướng về màn hình đăng nhập
+    // };
 
     return (
         <LinearGradient

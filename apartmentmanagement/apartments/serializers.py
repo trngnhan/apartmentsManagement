@@ -21,10 +21,12 @@ class ItemSerializer(ModelSerializer):
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True, use_url=True)
+    resident_id = serializers.SerializerMethodField()  # Thêm trường resident_id
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'first_name', 'last_name', 'profile_picture']
+        fields = ['username', 'email', 'password', 'first_name', 'last_name', 'profile_picture',
+                  'must_change_password', 'resident_id', 'phone_number', 'is_superuser', 'is_staff', 'active']
         read_only_fields = ['date_joined']
         extra_kwargs = {
             'password': {'write_only': True}
@@ -46,6 +48,13 @@ class UserSerializer(serializers.ModelSerializer):
             user.save()
         return user
 
+    def get_resident_id(self, obj):
+        # Lấy resident_id từ Resident liên kết với User
+        try:
+            return obj.resident_profile.id  # Truy cập quan hệ resident_profile
+        except AttributeError:
+            return None  # Trả về None nếu không có Resident liên kết
+
 
 # Resident Serializer
 class ResidentSerializer(serializers.ModelSerializer):
@@ -59,17 +68,19 @@ class ResidentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Resident
-        fields = ['user', 'user_id', 'image']
+        fields = ['id', 'user', 'user_id', 'image']
         read_only_fields = ['created_date', 'updated_date']
 
 
 # Apartment Serializer
 class ApartmentSerializer(serializers.ModelSerializer):
     owner_email = serializers.EmailField(source='owner.email', read_only=True)
+    first_name = serializers.CharField(source='owner.first_name', read_only=True)
+    last_name = serializers.CharField(source='owner.last_name', read_only=True)
 
     class Meta:
         model = Apartment
-        fields = ['code', 'building', 'floor', 'number', 'owner', 'owner_email']
+        fields = ['code', 'building', 'floor', 'number', 'owner', 'owner_email', 'active', 'first_name', 'last_name']
         read_only_fields = ['created_date', 'updated_date']
 
 # Apartment Transfer History Serializer
@@ -151,9 +162,11 @@ class FirebaseTokenSerializer(serializers.ModelSerializer):
 
 # Parcel Locker Serializer
 class ParcelItemSerializer(serializers.ModelSerializer):
+    resident_id = serializers.IntegerField(source='resident.id', read_only=True)
+
     class Meta:
         model = ParcelItem
-        fields = ['id', 'locker', 'name', 'status', 'note']
+        fields = ['id', 'locker', 'name', 'status', 'note', 'resident_id', 'created_date', 'updated_date']
         read_only_fields = ['created_date', 'updated_date']
 
 
@@ -162,7 +175,7 @@ class ParcelLockerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ParcelLocker
-        fields = ['resident', 'resident_email']
+        fields = ['id', 'resident_id', 'resident_email']
         read_only_fields = ['created_date', 'updated_date']
 
 

@@ -8,8 +8,10 @@ import { LinearGradient } from "expo-linear-gradient";
 
 const ResidentHome = () => {
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true); // State hiển thị trạng thái loading
     const [apartments, setApartments] = useState([]); // State lưu căn hộ
     const [registrations, setRegistrations] = useState([]); // State lưu đăng ký giữ xe
+    const [lockerItems, setLockerItems] = useState([]); // State lưu danh sách món hàng trong tủ đồ
     const nav = useNavigation();
 
     useEffect(() => {
@@ -35,7 +37,7 @@ const ResidentHome = () => {
                         const fetchApartments = async (token) => {
                             try {
                                 const response = await fetch(
-                                    "https://trngnhan.pythonanywhere.com/apartments/get-apartment/",
+                                    "http://192.168.44.103:8000/apartments/get-apartment/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
@@ -61,7 +63,7 @@ const ResidentHome = () => {
                         const fetchRegistrations = async () => {
                           try {
                               const response = await fetch(
-                                  "https://trngnhan.pythonanywhere.com/visitorvehicleregistrations/my-registrations/",
+                                  "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
                                   {
                                       headers: {
                                           Authorization: `Bearer ${token}`,
@@ -79,19 +81,12 @@ const ResidentHome = () => {
                           } catch (error) {
                               console.error("Lỗi khi gọi API đăng ký giữ xe:", error);
                           }
-                      };
+                        };
 
                         // GỌI API ở đây!
                         await fetchApartments(token);
                         await fetchRegistrations();
                         //---
-                        // Kiểm tra nếu người dùng phải thay đổi mật khẩu
-                        if (parsedUser.must_change_password === true) {
-                            console.log(
-                                "User needs to update profile, redirecting to UpdateProfile"
-                            );
-                            nav.navigate("UpdateProfile"); // Chuyển hướng đến trang UpdateProfile
-                        }
                     } catch (error) {
                         console.error("Error parsing user data:", error);
                         nav.navigate("Login");
@@ -109,20 +104,16 @@ const ResidentHome = () => {
     const logout = async () => {
         await AsyncStorage.removeItem("token");
         await AsyncStorage.removeItem("user");
-        nav.navigate("Home");
+
+        nav.reset({
+            index: 0,
+            routes: [{ name: "Login" }],
+        });
     };
 
     if (!user) {
         return <Text>Loading...</Text>; // Hoặc có thể thêm Spinner tại đây
     }
-
-    //   return (
-    //     <View>
-    //       <Text style={[MyStyles.text, MyStyles.padding]} >Welcome, {user.first_name} {user.last_name}</Text>
-    //       <Button title="Logout" onPress={logout} />
-    //     </View>
-    //   );
-    // };
 
     return (
       <LinearGradient
@@ -140,10 +131,10 @@ const ResidentHome = () => {
                   apartments.map((apartment, index) => (
                       <Card key={index} style={{ marginBottom: 12 }}>
                           <Card.Content>
-                              <Title>Căn hộ: {apartment.code}</Title>
+                              <Title style={MyStyles.text}>Căn hộ: {apartment.code}</Title>
                               <Paragraph>Tòa: {apartment.building}</Paragraph>
                               <Paragraph>Tầng: {apartment.floor}</Paragraph>
-                              <Paragraph>Số: {apartment.number}</Paragraph>
+                              <Paragraph>Căn số: {apartment.number}</Paragraph>
                           </Card.Content>
                       </Card>
                   ))
@@ -162,16 +153,16 @@ const ResidentHome = () => {
                   </View>
               </TouchableOpacity>
 
-              {/* Hình ảnh: Sửa vô đây*/}
-              <TouchableOpacity onPress={() => nav.navigate("AnotherScreen")}>
-                  <View style={{ alignItems: "center" }}>
-                      <Image
-                          source={require("../../assets/logo.png")} // Đường dẫn đến hình ảnh
-                          style={MyStyles.image}
-                      />
-                      <Text style={[MyStyles.padding, MyStyles.textSmall]}>Chức năng khác</Text>
-                  </View>
-              </TouchableOpacity>
+              {/* Hình ảnh để chuyển đến trang LockerItems*/}
+              <TouchableOpacity onPress={() => nav.navigate("LockerItems")}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/locker_items.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Tủ đồ</Text>
+                    </View>
+                </TouchableOpacity>
               
               </View>
 

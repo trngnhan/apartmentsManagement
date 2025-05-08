@@ -33,7 +33,7 @@ export default StyleSheet.create({
       },
       text: {
         fontSize: 20,
-        fontStyle: "bold",
+        fontWeight: "bold",
       },
       padding: {
         padding: 10
@@ -87,5 +87,8 @@ export default StyleSheet.create({
         alignSelf: "center", // Căn giữa hình ảnh
         marginTop: 20, // Khoảng cách phía trên
         borderRadius: 10, // Bo góc hình ảnh
+      },
+      imageContainer: {
+        alignItems: "center",
       },
 });

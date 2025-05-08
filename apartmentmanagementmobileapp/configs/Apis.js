@@ -1,8 +1,8 @@
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BASE_URL = "https://trngnhan.pythonanywhere.com/";
-// const BASE_URL = "http://127.0.0.1:8000/";
+// const BASE_URL = "https://trngnhan.pythonanywhere.com/";
+const BASE_URL = "http://192.168.44.103:8000/";
 
 export const endpoints = {
     login: "/o/token/",
