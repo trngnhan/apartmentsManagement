@@ -6,8 +6,8 @@ from twilio.rest import Client
 
 def send_sms(to_phone_number, message):
     print(f"Đang gửi SMS đến: {to_phone_number} với nội dung: {message}")
-    account_sid = 'AC9c0c7c35b5c55b0ef6a4f40b49f9ee97'
-    auth_token = '58e3b1f70799d77236755f561060a080'
+    account_sid = ''
+    auth_token = ''
     client = Client(account_sid, auth_token)
 
     try:
