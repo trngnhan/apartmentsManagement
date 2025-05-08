@@ -1,8 +1,7 @@
-Account_SID = "AC9c0c7c35b5c55b0ef6a4f40b49f9ee97"
-Auth_Token = "58e3b1f70799d77236755f561060a080"
-"+18777804236"
-"16169208375"
 from twilio.rest import Client
+import os
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID")
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN")
 
 def send_sms(to_phone_number, message):
     print(f"Đang gửi SMS đến: {to_phone_number} với nội dung: {message}")
