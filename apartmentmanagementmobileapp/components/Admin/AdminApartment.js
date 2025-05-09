@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Button } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 
 const AdminApartment = () => {
     const [apartments, setApartments] = useState([]); // State lưu danh sách apartment
@@ -12,7 +13,7 @@ const AdminApartment = () => {
     const nav = useNavigation(); // Điều hướng
 
     // Hàm gọi API để lấy danh sách apartment
-    const fetchApartments = async (url = "http://192.168.44.103:8000/apartments/") => {
+    const fetchApartments = async (url = "http://10.17.50.31:8000/apartments/") => {
         try {
             if (!nextPage) setLoading(true); // Bật trạng thái tải dữ liệu ban đầu
             const token = await AsyncStorage.getItem("token");
@@ -100,7 +101,11 @@ const AdminApartment = () => {
     );
 
     return (
-        <View style={styles.container}>
+        <LinearGradient
+        colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
+        style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+        >
+            <View style={styles.container}>
             <Text style={styles.header}>Danh sách Apartment</Text>
 
             {loading ? (
@@ -126,6 +131,7 @@ const AdminApartment = () => {
                 color="#FF6F61"
             />
         </View>
+        </LinearGradient>
     );
 };
 
@@ -133,7 +139,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
-        backgroundColor: "#fff",
     },
     header: {
         fontSize: 24,

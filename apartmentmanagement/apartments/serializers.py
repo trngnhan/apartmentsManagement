@@ -193,17 +193,19 @@ class FeedbackSerializer(serializers.ModelSerializer):
 class SurveyOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = SurveyOption
-        fields = ['survey', 'option_text']
+        fields = ['id', 'survey', 'option_text']
         read_only_fields = ['created_date', 'updated_date']
 
 
 class SurveyResponseSerializer(serializers.ModelSerializer):
     resident_email = serializers.EmailField(source='resident.user.email', read_only=True)
+    first_name = serializers.CharField(source='resident.user.first_name', read_only=True)
+    last_name = serializers.CharField(source='resident.user.last_name', read_only=True)
     option_text = serializers.CharField(source='option.option_text', read_only=True)
 
     class Meta:
         model = SurveyResponse
-        fields = ['id', 'survey', 'option', 'option_text', 'resident', 'resident_email']
+        fields = ['id', 'survey', 'option', 'option_text', 'resident', 'resident_email', 'first_name', 'last_name']
         read_only_fields = ['created_date', 'updated_date']
 
 
@@ -212,7 +214,7 @@ class SurveySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Survey
-        fields = ['id', 'title', 'description', 'deadline', 'options']
+        fields = ['id', 'title', 'description', 'deadline', 'options', 'created_date', 'updated_date']
         read_only_fields = ['created_date', 'updated_date']
 
     def create(self, validated_data):

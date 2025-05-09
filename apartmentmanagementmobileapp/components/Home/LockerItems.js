@@ -28,7 +28,7 @@ const LockerItems = () => {
                 }
 
                 const response = await fetch(
-                    `http://192.168.44.103:8000/parcellockers/${user.resident_id}/items/`,
+                    `http://10.17.50.31:8000/parcellockers/${user.resident_id}/items/`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -48,40 +48,7 @@ const LockerItems = () => {
             }
         };
 
-        
-
-        const sendSMS = async (phoneNumber, message) => {
-            try {
-                const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
-        
-                const response = await fetch("http://192.168.44.103:8000/parcellockers/send-sms/", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        phone_number: phoneNumber,
-                        message: message,
-                    }),
-                });
-        
-                if (response.ok) {
-                    console.log("SMS đã được gửi thành công.");
-                    Alert.alert("Thành công", "SMS đã được gửi.");
-                } else {
-                    const errorData = await response.json();
-                    console.error("Lỗi khi gửi SMS:", errorData);
-                    Alert.alert("Lỗi", errorData.detail || "Không thể gửi SMS.");
-                }
-            } catch (error) {
-                console.error("Lỗi khi gọi API gửi SMS:", error);
-                Alert.alert("Lỗi", "Đã xảy ra lỗi. Vui lòng thử lại.");
-            }
-        };
-
         fetchLockerItems();
-        sendSMS(user.phone_number, "Đây là tin nhắn thử nghiệm."); // Gọi hàm gửi SMS với số điện thoại và nội dung tin nhắn
     }, []);
 
     return (

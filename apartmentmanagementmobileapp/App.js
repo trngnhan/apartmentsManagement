@@ -11,6 +11,8 @@ import LockerItems from './components/Home/LockerItems';
 import AdminHome from './components/Admin/AdminHome';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AdminApartment from './components/Admin/AdminApartment';
+import AdminSurvey from './components/Admin/AdminSurvey';
+import AdminSurveyResponses from './components/Admin/AdminSurveyResponses';
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +30,8 @@ export default function App() {
             <Stack.Screen name="LockerItems" component={LockerItems} />
             <Stack.Screen name="AdminHome" component={AdminHome} />
             <Stack.Screen name="AdminApartment" component={AdminApartment} />
+            <Stack.Screen name="AdminSurvey" component={AdminSurvey} />
+            <Stack.Screen name="AdminSurveyResponses" component={AdminSurveyResponses} />
           </Stack.Navigator>
         </NavigationContainer>
       </MyProvider>

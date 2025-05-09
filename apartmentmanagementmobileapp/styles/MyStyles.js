@@ -5,7 +5,7 @@ export default StyleSheet.create({
         flex: 1,
         padding: 10,
         justifyContent: "center",
-        alignItems: "center"
+        alignItems: "center",
       },
       m: {
         marginVertical: 8,
@@ -75,7 +75,15 @@ export default StyleSheet.create({
         marginVertical: 10,
       },
       card: {
-          marginBottom: 12,
+        backgroundColor: "#f9f9f9",
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 15,
+        elevation: 5, // Hiệu ứng shadow trên Android
+        shadowColor: "#000", // Màu shadow trên iOS
+        shadowOffset: { width: 0, height: 2 }, // Độ lệch shadow trên iOS
+        shadowOpacity: 0.2, // Độ mờ của shadow trên iOS
+        shadowRadius: 5, // Bán kính của shadow trên iOS
       },
       textSmall: {
         fontSize: 10,
@@ -91,4 +99,62 @@ export default StyleSheet.create({
       imageContainer: {
         alignItems: "center",
       },
+      error: {
+        fontSize: 16,
+        color: "red",
+        textAlign: "center",
+      },
+      description: {
+        fontSize: 14,
+        color: "#555",
+        marginBottom: 5,
+      },
+      date: {
+          fontSize: 12,
+          color: "#999",
+      },
+      noData: {
+        fontSize: 16,
+        textAlign: "center",
+        color: "#999",
+      },
+      optionsHeader: {
+        fontSize: 14,
+        fontWeight: "bold",
+        marginBottom: 5,
+        color: "#333",
+      },
+      option: {
+          fontSize: 14,
+          color: "#555",
+      },
+      resident: {
+        fontSize: 16,
+        fontWeight: "bold",
+        marginBottom: 5,
+      },
+      response: {
+          fontSize: 14,
+          color: "#555",
+      },
+      modalContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+      },
+      modalContent: {
+          width: "90%",
+          backgroundColor: "#fff",
+          padding: 20,
+          borderRadius: 10,
+          elevation: 5,
+      },
+      modalTitle: {
+          fontSize: 20,
+          fontWeight: "bold",
+          marginBottom: 15,
+          textAlign: "center",
+      },
 });
+

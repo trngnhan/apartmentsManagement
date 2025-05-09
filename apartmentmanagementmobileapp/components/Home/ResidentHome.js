@@ -37,7 +37,7 @@ const ResidentHome = () => {
                         const fetchApartments = async (token) => {
                             try {
                                 const response = await fetch(
-                                    "http://192.168.44.103:8000/apartments/get-apartment/",
+                                    "http://10.17.50.31:8000/apartments/get-apartment/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
@@ -63,7 +63,7 @@ const ResidentHome = () => {
                         const fetchRegistrations = async () => {
                           try {
                               const response = await fetch(
-                                  "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
+                                  "http://10.17.50.31:8000/visitorvehicleregistrations/my-registrations/",
                                   {
                                       headers: {
                                           Authorization: `Bearer ${token}`,

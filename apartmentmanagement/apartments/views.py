@@ -1,7 +1,7 @@
 from cloudinary.utils import now
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash, authenticate, login, get_user_model
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse
 from django.views.generic import detail
@@ -701,12 +701,12 @@ class FeedbackViewSet(viewsets.ViewSet, generics.ListAPIView):
 
 
 # Survey ViewSet: Phiếu khảo sát: hiển thị phiếu khảo sát và tạo khảo sát
-class SurveyViewSet(viewsets.ViewSet):
+class SurveyViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Survey.objects.filter(active=True)
     serializer_class = SurveySerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     filterset_fields = ['active']
-    search_fields = ['title', 'description']
+    search_fields = ['title', 'description', 'deadline']
     ordering_fields = ['deadline', 'created_date']
 
     def get_permissions(self):
@@ -753,7 +753,7 @@ class SurveyViewSet(viewsets.ViewSet):
 
 
 # Survey Option ViewSet: Hiển thị các lựa chọn và tạo các lựa chọn trong khảo sát
-class SurveyOptionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView, generics.CreateAPIView):
+class SurveyOptionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
     queryset = SurveyOption.objects.filter(active=True)
     serializer_class = SurveyOptionSerializer
     filter_backends = [DjangoFilterBackend]
@@ -761,10 +761,23 @@ class SurveyOptionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.Retri
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update']:
-            return [IsAdminOrManagement]
+            return [IsAdminOrManagement()]
         if self.action in ['destroy']:
             return [IsAdminRole]
         return [permissions.IsAuthenticated()]
+
+    def create(self, request, *args, **kwargs):
+        survey_id = request.data.get('id') or request.data.get('surveyId')
+        option_text = request.data.get('option_text')
+
+        if not survey_id or not option_text:
+            return Response({"error": "Thiếu thông tin bắt buộc."}, status=400)
+
+        survey = get_object_or_404(Survey, id=survey_id)
+        option = SurveyOption.objects.create(survey=survey, option_text=option_text)
+        print("Dữ liệu nhận được:", request.data)
+        print("Token nhận được:", request.headers.get('Authorization'))
+        return Response(SurveyOptionSerializer(option).data, status=201)
 
 
 # Survey Response ViewSet: Phản hồi của cư dân khi tham gia khảo sát
