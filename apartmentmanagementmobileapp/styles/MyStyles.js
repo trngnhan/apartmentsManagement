@@ -53,8 +53,7 @@ export default StyleSheet.create({
       },
       input: {
         borderWidth: 1,
-        borderColor: "#ccc",
-        padding: 10,
+        borderColor: "#fff",
         marginVertical: 10,
         borderRadius: 5,
         width: "100%",
@@ -65,6 +64,17 @@ export default StyleSheet.create({
         borderRadius: 5,
         alignItems: "center",
         width: "100%",
+      },
+      createButton: {
+        padding: 10,
+        borderRadius: 5,
+        alignItems: "center",
+        marginVertical: 10,
+      },
+      createButtonText: {
+          color: "#fff",
+          fontWeight: "bold",
+          fontSize: 16,
       },
       scrollView: {
         width: "80%"
@@ -144,17 +154,68 @@ export default StyleSheet.create({
         backgroundColor: "rgba(0, 0, 0, 0.5)",
       },
       modalContent: {
-          width: "90%",
-          backgroundColor: "#fff",
-          padding: 20,
-          borderRadius: 10,
-          elevation: 5,
+        width: "90%",
+        backgroundColor: "#fff",
+        padding: 20,
+        borderRadius: 10,
+        elevation: 5,
       },
       modalTitle: {
-          fontSize: 20,
-          fontWeight: "bold",
-          marginBottom: 15,
-          textAlign: "center",
+        fontSize: 20,
+        fontWeight: "bold",
+        marginBottom: 15,
+        textAlign: "center",
       },
+      modalButtonContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: "100%",
+      },
+      modalOverlay: {
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "rgba(192, 181, 181, 0)", // Làm mờ nền
+      },
+      name: {
+        fontSize: 16,
+        fontWeight: "bold",
+        marginBottom: 5,
+      },
+      email: {
+          fontSize: 14,
+          color: "#555",
+      },
+      role: {
+          fontSize: 14,
+          color: "#555",
+      },
+      containerr: {
+        flex: 1,
+        padding: 20,
+      },
+      buttonText: {
+        color: "#000",
+        fontWeight: "bold",
+      },
+      buttonn: {
+        padding: 10,
+        borderRadius: 7,
+        alignItems: "center",
+        marginTop: 15,
+      },
+      buttonCancel: {
+        padding: 12,
+        borderRadius: 8,
+        alignItems: "center",
+        width: "48%",
+        backgroundColor: "#999",
+      },
+      buttonnn: {
+        padding: 12,
+        borderRadius: 8,
+        alignItems: "center",
+        width: "48%",
+        backgroundColor: "#FF6F61",
+    },
 });
 

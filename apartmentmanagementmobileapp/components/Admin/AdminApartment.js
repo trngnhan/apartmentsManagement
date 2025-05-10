@@ -13,7 +13,7 @@ const AdminApartment = () => {
     const nav = useNavigation(); // Điều hướng
 
     // Hàm gọi API để lấy danh sách apartment
-    const fetchApartments = async (url = "http://10.17.50.31:8000/apartments/") => {
+    const fetchApartments = async (url = "http://192.168.44.103:8000/apartments/") => {
         try {
             if (!nextPage) setLoading(true); // Bật trạng thái tải dữ liệu ban đầu
             const token = await AsyncStorage.getItem("token");

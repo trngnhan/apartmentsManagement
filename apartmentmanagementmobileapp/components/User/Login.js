@@ -1,4 +1,5 @@
 import {
+    Alert,
     Image,
     KeyboardAvoidingView,
     Platform,
@@ -91,6 +92,16 @@ const Login = () => {
                 );
                 console.info("Dữ liệu người dùng từ API: ", u.data);
 
+                // Kiểm tra nếu tài khoản bị khóa
+                if (u.data.active === false) {
+                    Alert.alert(
+                        "Tài khoản bị khóa",
+                        "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ."
+                    );
+                    setLoading(false);
+                    return; // Dừng quá trình đăng nhập
+                }
+
                 // Lưu dữ liệu người dùng và token vào AsyncStorage
                 await AsyncStorage.setItem(
                     "user",
@@ -131,15 +142,6 @@ const Login = () => {
             }
         }
     };
-
-    // const logout = async () => {
-    //     // Xóa token và dispatch logout action
-    //     await AsyncStorage.removeItem("token");
-    //     dispatch({
-    //         type: "logout",
-    //     });
-    //     nav.popToTop("Login"); // Điều hướng về màn hình đăng nhập
-    // };
 
     return (
         <LinearGradient

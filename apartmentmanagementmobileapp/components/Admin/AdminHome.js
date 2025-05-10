@@ -9,7 +9,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const AdminHome = () => {
     const nav = useNavigation(); // Điều hướng
 
-    // Hàm điều hướng đến AdminApartment
+    // Hàm điều hướng
+    const navigateToAdminUser = () => {
+            nav.navigate("AdminUser"); // Điều hướng đến trang AdminUser
+    };
+
     const navigateToAdminApartment = () => {
         nav.navigate("AdminApartment"); // Điều hướng đến trang AdminApartment
     };
@@ -18,6 +22,8 @@ const AdminHome = () => {
         nav.navigate("AdminSurvey"); // Điều hướng đến trang AdminSurvey
     };
 
+    // Hàm đăng xuất
+    // Xóa token và thông tin người dùng khỏi AsyncStorage
     const logout = async () => {
         try {
             await AsyncStorage.removeItem("token");
@@ -37,14 +43,36 @@ const AdminHome = () => {
             colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
             style={{flex: 1, padding: 10}} // Đảm bảo gradient bao phủ toàn màn hình
         >
-            <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-around"}}>
+                <TouchableOpacity onPress={navigateToAdminUser} style={MyStyles.imageContainer}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/user.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý Tài khoản</Text>
+                    </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={navigateToAdminSurvey} style={MyStyles.imageContainer}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/survey.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý...</Text>
+                    </View>
+                </TouchableOpacity>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-around"}}>
                 <TouchableOpacity onPress={navigateToAdminApartment} style={MyStyles.imageContainer}>
                     <View style={{ alignItems: "center" }}>
                         <Image
                             source={require("../../assets/apartment.png")} // Đường dẫn đến hình ảnh
                             style={MyStyles.image}
                         />
-                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý căn hộ</Text>
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý Căn hộ</Text>
                     </View>
                 </TouchableOpacity>
 
@@ -54,19 +82,9 @@ const AdminHome = () => {
                             source={require("../../assets/survey.png")} // Đường dẫn đến hình ảnh
                             style={MyStyles.image}
                         />
-                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý khảo sát</Text>
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý Khảo sát</Text>
                     </View>
-                </TouchableOpacity>
-
-                <TouchableOpacity onPress={navigateToAdminSurvey} style={MyStyles.imageContainer}>
-                    <View style={{ alignItems: "center" }}>
-                        <Image
-                            source={require("../../assets/survey.png")} // Đường dẫn đến hình ảnh
-                            style={MyStyles.image}
-                        />
-                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Chức năng khác</Text>
-                    </View>
-                </TouchableOpacity>
+                </TouchableOpacity>     
             </View>
 
             <Button

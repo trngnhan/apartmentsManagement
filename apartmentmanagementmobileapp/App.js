@@ -13,6 +13,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import AdminApartment from './components/Admin/AdminApartment';
 import AdminSurvey from './components/Admin/AdminSurvey';
 import AdminSurveyResponses from './components/Admin/AdminSurveyResponses';
+import AdminUser from './components/Admin/AdminUser';
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +30,7 @@ export default function App() {
             <Stack.Screen name="RegisterVehicle" component={RegisterVehicle} />
             <Stack.Screen name="LockerItems" component={LockerItems} />
             <Stack.Screen name="AdminHome" component={AdminHome} />
+            <Stack.Screen name="AdminUser" component={AdminUser} />
             <Stack.Screen name="AdminApartment" component={AdminApartment} />
             <Stack.Screen name="AdminSurvey" component={AdminSurvey} />
             <Stack.Screen name="AdminSurveyResponses" component={AdminSurveyResponses} />

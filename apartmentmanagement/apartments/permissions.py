@@ -13,11 +13,13 @@ class IsAdminRole(BasePermission):
         )
 
 class IsAdminOrSelf(BasePermission):
-    def has_permission(self, request, view, obj):
-        if request.user.is_staff:
-            return True
+    def has_permission(self, request, view):
+        # Cho phép nếu người dùng là admin
+        return request.user.is_authenticated and request.user.is_staff
 
-        return obj == request.user
+    def has_object_permission(self, request, view, obj):
+        # Cho phép nếu người dùng là admin hoặc chính họ
+        return request.user.is_authenticated and (request.user.is_staff or obj == request.user)
 
 class IsAdminOrOwner(IsAuthenticated):
     def has_object_permission(self, request, view, obj):

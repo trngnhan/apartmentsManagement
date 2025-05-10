@@ -8,7 +8,7 @@ from django.views.generic import detail
 from rest_framework import viewsets, generics, permissions, status, parsers, renderers
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, NotFound
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 
@@ -100,13 +100,13 @@ def resident_home_view(request):
 #RetrieveAPIView: Trả về thông tin chi tiết của 1 người dùng (/users/1/)
 #CreateAPIView, UpdateAPIView: Cho phép tạo và cập nhật người dùng.
 
-class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
-    queryset = User.objects.filter(is_active=True)
+class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ['email', 'first_name', 'last_name', 'phone_number']
     ordering_fields = ['email', 'date_joined']
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get_permissions(self):
         if self.action in ['create', 'list', 'retrieve']:
@@ -114,6 +114,14 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         elif self.action in ['update', 'partial_update', 'retrieve']:
             return [IsAdminOrSelf()]
         return [permissions.IsAuthenticated()]
+
+    def partial_update(self, request, *args, **kwargs):
+        user = self.get_object()
+        if 'active' in request.data:
+            user.active = request.data['active']
+        user.save()
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)
 
     @action(methods=['get', 'patch'], url_path='current-user', detail=False,
             permission_classes=[permissions.IsAuthenticated],
