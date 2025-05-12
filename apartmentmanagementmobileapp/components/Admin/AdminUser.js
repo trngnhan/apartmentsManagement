@@ -50,7 +50,7 @@ const AdminUser = () => {
     const fetchUsers = async () => {
         try {
             const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
-            const response = await fetch("http://192.168.44.103:8000/users/", {
+            const response = await fetch("http://192.168.44.101:8000/users/", {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -77,7 +77,8 @@ const AdminUser = () => {
     const lockUser = async (userId) => {
         try {
             const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
-            const response = await fetch(`http://192.168.44.103:8000/users/${userId}/`, {
+            // const response = await fetch(`http://192.168.44.103:8000/users/${userId}/`, {
+            const response = await fetch(`http://192.168.44.101:8000/users/${userId}/`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",

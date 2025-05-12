@@ -74,10 +74,8 @@ const Login = () => {
                     ...user,
                     // client_id: "BV96e0rWzsGyZU0MFMjT1u19m5j0MXrJVCQaEQAZ",
                     client_id: "aRgWqcaZzcRboHVnz6xZp5VR30eeiV4gBTC3cud6",
-                    // client_id: "2tlsvZ3q5MfAWqn4GLgCUVAZ38dJd3ecqrRwEX6a",
-                    // client_secret: "9ciZz1wa06Tju9rOfY49828GDvFRHc30RfS9wOJfrTfa2sukERvhpI4T7JHgeZaO1jxTfXsDjfeSDm9vLiQdcHtPl7ZefwvlpBthKY3doWfL8jF09BcKhOQjUE7h3CK0",
+                    //client_id: "1nYlsTyukqBsyGyb7dhLVQcly1KeT4dmTObAf4lk",
                     client_secret: "jwA8QVO1jqScm0taMdfbTDLBfqovrqvQKXQo0L8fbd9CzEJWdbRfww4yFMpSSZjt3e9jG9V3S8fHcKFnrTo8lUwbFyAliMAsKAdgmXzccGZiwGFCzyt0DyFNz6jHHYRB",
-                    // client_secret: "DOSM65owa6pzbsOfCktyCKfRDYqGm865aSWMXpvb937ieSxV67enkzYq6K1TPknk4hlMdgz0Z36cDkKO40ZvZlVievR1Djz7tvxrPiPLlzGeA8FBI1YzE8r6Y6KxvgGy",
                     grant_type: "password",
                 });
 

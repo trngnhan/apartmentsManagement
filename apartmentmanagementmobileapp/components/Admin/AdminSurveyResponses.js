@@ -14,7 +14,8 @@ const AdminSurveyResponses = ({ route }) => {
     const fetchResponses = async () => {
         try {
             const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
-            const response = await fetch(`http://192.168.44.103:8000/surveys/${surveyId}/get-responses/`, {
+            // const response = await fetch(`http://192.168.44.103:8000/surveys/${surveyId}/get-responses/`, {
+            const response = await fetch(`http://192.168.44.101:8000/surveys/${surveyId}/get-responses/`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
