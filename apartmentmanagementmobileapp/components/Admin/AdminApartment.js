@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, FlatList, ActivityIndicator, Button } from "react-native";
+import { View, Text, StyleSheet, FlatList, ActivityIndicator, Button, TouchableOpacity, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
+import MyStyles from "../../styles/MyStyles";
+import { Modal, TextInput } from "react-native-paper";
+import { Picker } from "@react-native-picker/picker";
 
 const AdminApartment = () => {
     const [apartments, setApartments] = useState([]); // State lưu danh sách apartment
@@ -10,6 +13,11 @@ const AdminApartment = () => {
     const [user, setUser] = useState(null); // State lưu thông tin người dùng
     const [nextPage, setNextPage] = useState(null); // URL của trang tiếp theo
     const [loadingMore, setLoadingMore] = useState(false); // Trạng thái tải thêm dữ liệu
+    const [selectedApartment, setSelectedApartment] = useState(null); // Căn hộ được chọn để chuyển nhượng
+    const [newOwnerId, setNewOwnerId] = useState(""); // ID người nhận
+    const [note, setNote] = useState(""); // Ghi chú chuyển nhượng
+    const [modalVisible, setModalVisible] = useState(false); // Trạng thái hiển thị Modal
+    const [residents, setResidents] = useState([]); // Danh sách cư dân chưa có căn hộ
     const nav = useNavigation(); // Điều hướng
 
     // Hàm gọi API để lấy danh sách apartment
@@ -70,6 +78,69 @@ const AdminApartment = () => {
         });
     };
 
+    const fetchResidentsWithoutApartment = async () => {
+        try {
+            const token = await AsyncStorage.getItem("token");
+            const response = await fetch("http://192.168.44.103:8000/apartments/resident-without-apartment/", {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Danh sách cư dân từ API chưa có căn hộ:", data); // Log dữ liệu trả về
+                setResidents(data); // Lưu danh sách cư dân vào state
+            } else {
+                console.error("Lỗi khi lấy danh sách cư dân:", response.status);
+            }
+        } catch (error) {
+            console.error("Lỗi khi gọi API cư dân:", error);
+        }
+    };
+
+    // Hàm xử lý chuyển nhượng căn hộ
+    const handleTransfer = async () => {
+        if (!newOwnerId) {
+            Alert.alert("Lỗi", "Vui lòng nhập ID người nhận.");
+            return;
+        }
+
+        try {
+            const token = await AsyncStorage.getItem("token");
+            const response = await fetch(
+                `http://192.168.44.103:8000/apartments/${selectedApartment.id}/transfer/`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        new_owner_id: newOwnerId,
+                        note: note,
+                    }),
+                }
+            );
+
+            const data = await response.json();
+            console.log("Phản hồi JSON:", data);
+
+            if (response.ok) {
+                Alert.alert("Thành công", data.detail);
+                setModalVisible(false); // Đóng Modal
+                setNewOwnerId(""); // Reset trường nhập liệu
+                setNote("");
+            } else {
+                Alert.alert("Lỗi", data.detail || "Không thể chuyển nhượng căn hộ.");
+            }
+        } catch (error) {
+            console.error("Lỗi khi chuyển nhượng căn hộ:", error);
+            Alert.alert("Lỗi", "Đã xảy ra lỗi khi chuyển nhượng căn hộ.");
+        }
+    };
+
     // Gọi API khi component được render
     useEffect(() => {
         const fetchUser = async () => {
@@ -81,7 +152,10 @@ const AdminApartment = () => {
 
         fetchUser(); // Gọi hàm lấy thông tin người dùng
         fetchApartments(); // Gọi API để tải dữ liệu ban đầu
-    }, []);
+        if (modalVisible) {
+            fetchResidentsWithoutApartment(); // Gọi API khi Modal mở
+        }
+    }, [modalVisible]);
 
     // Render từng apartment
     const renderApartment = ({ item }) => (
@@ -97,6 +171,18 @@ const AdminApartment = () => {
             </Text>
             <Text>Email: {item.owner_email}</Text>
             <Text>Trạng thái: {item.active ? "Hoạt động" : "Không hoạt động"}</Text>
+
+            {/* Nút chuyển nhượng */}
+            <TouchableOpacity
+                onPress={() => {
+                    setSelectedApartment(item); // Lưu căn hộ được chọn
+                    setModalVisible(true); // Hiển thị Modal
+                }}
+                style={[MyStyles.button, { backgroundColor: "#FFCC33", marginTop: 10 }]}
+            >
+                <Text style={MyStyles.buttonText}>Chuyển nhượng</Text>
+            </TouchableOpacity>
+            
         </View>
     );
 
@@ -125,11 +211,61 @@ const AdminApartment = () => {
                     }
                 />
             )}
+
+            {/* Modal chuyển nhượng */}
+                <Modal
+                    visible={modalVisible}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => setModalVisible(false)}
+                >
+                    <View style={MyStyles.modalOverlay}>
+                        <View style={MyStyles.modalContent}>
+                            <Text style={MyStyles.modalTitle}>Chuyển nhượng căn hộ</Text>
+                            <Picker
+                                selectedValue={newOwnerId}
+                                onValueChange={(itemValue) => setNewOwnerId(itemValue)}
+                                style={MyStyles.input}
+                            >
+                                <Picker.Item label="Chọn cư dân" value="" />
+                                {residents.map((resident) => (
+                                    <Picker.Item
+                                        key={resident.id}
+                                        label={`${resident.first_name} ${resident.last_name} (${resident.email})`}
+                                        value={resident.id}
+                                    />
+                                ))}
+                            </Picker>
+                            <TextInput
+                                placeholder="Ghi chú (tuỳ chọn)"
+                                value={note}
+                                onChangeText={setNote}
+                                style={MyStyles.input}
+                            />
+                            <View style={MyStyles.modalButtonContainer}>
+                                <TouchableOpacity
+                                    onPress={() => setModalVisible(false)}
+                                    style={MyStyles.buttonCancel}
+                                >
+                                    <Text style={MyStyles.buttonText}>Hủy</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={handleTransfer}
+                                    style={MyStyles.buttonnn}
+                                >
+                                    <Text style={MyStyles.buttonText}>Chuyển</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+
             <Button
                 title="Logout"
                 onPress={logout}
                 color="#FF6F61"
             />
+            
         </View>
         </LinearGradient>
     );

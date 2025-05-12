@@ -1,3 +1,5 @@
+from pickle import FALSE
+
 from cloudinary.utils import now
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash, authenticate, login, get_user_model
@@ -11,7 +13,7 @@ from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
-
+from django.utils.timezone import now
 from .permissions import IsAdminRole, IsAdminOrSelf, IsAdminOrManagement
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -204,7 +206,7 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListAPIView):
         return [permissions.IsAuthenticated()]  # Mọi người đều có quyền xem căn hộ
 
     def get_queryset(self):
-        query = self.queryset.filter(active=True)
+        query = self.queryset.filter()
 
         building = self.request.query_params.get('building')
         if building:
@@ -215,6 +217,26 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListAPIView):
             query = query.filter(floor=floor)
 
         return query
+
+    @action(methods=['get'], detail=False, url_path='resident-without-apartment')
+    def get_resident_without_apartment(self, request):
+        # Lọc cư dân chưa sở hữu căn hộ
+        residents = User.objects.filter(owned_apartments__isnull=True, role=User.Role.RESIDENT, active=True)
+
+        # Serialize dữ liệu
+        data = [
+            {
+                "id": resident.id,
+                "first_name": resident.first_name,
+                "last_name": resident.last_name,
+                "email": resident.email,
+            }
+            for resident in residents
+        ]
+
+        # Trả về danh sách cư dân
+        return Response(data, status=status.HTTP_200_OK)
+
 
     @action(methods=['get'], detail=False, url_path='get-apartment')
     def get_apartments(self, request):

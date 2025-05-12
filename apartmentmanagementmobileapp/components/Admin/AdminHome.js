@@ -18,6 +18,10 @@ const AdminHome = () => {
         nav.navigate("AdminApartment"); // Điều hướng đến trang AdminApartment
     };
 
+    const navigateToAdminApartmentTransferHistorys = () => {
+        nav.navigate("AdminApartmentTransferHistorys"); // Điều hướng đến trang AdminApartmentTransferHistorys
+    };
+
     const navigateToAdminSurvey = () => {
         nav.navigate("AdminSurvey"); // Điều hướng đến trang AdminSurvey
     };
@@ -57,10 +61,10 @@ const AdminHome = () => {
                 <TouchableOpacity onPress={navigateToAdminSurvey} style={MyStyles.imageContainer}>
                     <View style={{ alignItems: "center" }}>
                         <Image
-                            source={require("../../assets/survey.png")} // Đường dẫn đến hình ảnh
+                            source={require("../../assets/resident.png")} // Đường dẫn đến hình ảnh
                             style={MyStyles.image}
                         />
-                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý...</Text>
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý Cư dân</Text>
                     </View>
                 </TouchableOpacity>
             </View>
@@ -76,6 +80,18 @@ const AdminHome = () => {
                     </View>
                 </TouchableOpacity>
 
+                <TouchableOpacity onPress={navigateToAdminApartmentTransferHistorys} style={MyStyles.imageContainer}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/apartment-transfer-historys.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Lịch sử chuyển nhượng</Text>
+                    </View>
+                </TouchableOpacity>     
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-around"}}>
                 <TouchableOpacity onPress={navigateToAdminSurvey} style={MyStyles.imageContainer}>
                     <View style={{ alignItems: "center" }}>
                         <Image
@@ -84,7 +100,17 @@ const AdminHome = () => {
                         />
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý Khảo sát</Text>
                     </View>
-                </TouchableOpacity>     
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={navigateToAdminSurvey} style={MyStyles.imageContainer}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/survey.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý Phản ánh</Text>
+                    </View>
+                </TouchableOpacity>
             </View>
 
             <Button

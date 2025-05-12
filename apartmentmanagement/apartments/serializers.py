@@ -80,7 +80,7 @@ class ApartmentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Apartment
-        fields = ['code', 'building', 'floor', 'number', 'owner', 'owner_email', 'active', 'first_name', 'last_name']
+        fields = ['id', 'code', 'building', 'floor', 'number', 'owner', 'owner_email', 'active', 'first_name', 'last_name']
         read_only_fields = ['created_date', 'updated_date']
 
 # Apartment Transfer History Serializer
