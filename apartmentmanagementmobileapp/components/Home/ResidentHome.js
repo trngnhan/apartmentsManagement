@@ -38,6 +38,7 @@ const ResidentHome = () => {
                             try {
                                 const response = await fetch(
                                     "http://192.168.44.103:8000/apartments/get-apartment/",
+                                    // "http://192.168.44.101:8000/apartments/get-apartment/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
@@ -64,6 +65,7 @@ const ResidentHome = () => {
                           try {
                               const response = await fetch(
                                   "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
+                                //   "http://192.168.44.101:8000/visitorvehicleregistrations/my-registrations/",
                                   {
                                       headers: {
                                           Authorization: `Bearer ${token}`,
@@ -164,6 +166,16 @@ const ResidentHome = () => {
                     </View>
                 </TouchableOpacity>
               
+                {/* Hình ảnh để chuyển đến trang SubmitFeedback*/}
+                <TouchableOpacity onPress={() => nav.navigate("SubmitFeedback")}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/feedback.png")}
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Gửi phản hồi</Text>
+                    </View>
+                </TouchableOpacity>
               </View>
 
               {/* Hiển thị danh sách đăng ký giữ xe */}

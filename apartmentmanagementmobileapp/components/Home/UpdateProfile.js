@@ -50,6 +50,7 @@ const UpdateProfile = () => {
         formData.append('must_change_password', 'False');
 
         const response = await fetch('http://192.168.44.103:8000/users/current-user/', {
+        // const response = await fetch('http://192.168.44.101:8000/users/current-user/', {
           method: 'PATCH',
           headers: {
             Authorization: `Bearer ${parsedUser.token}`,

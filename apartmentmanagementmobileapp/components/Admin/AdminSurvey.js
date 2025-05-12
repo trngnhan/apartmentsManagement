@@ -52,7 +52,8 @@ const AdminSurvey = () => {
     const createSurvey = async () => {
         try {
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch("http://10.17.50.31:8000/surveys/", {
+            const response = await fetch("http://192.168.44.103:8000/surveys/", {
+            // const response = await fetch("http://192.168.44.101:8000/surveys/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
