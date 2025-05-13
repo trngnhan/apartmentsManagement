@@ -178,6 +178,11 @@ class ResidentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
             return [IsAdminOrSelf()]
         return [permissions.IsAuthenticated()]
 
+    @action(detail=False, methods=['get'], url_path='count-resident')
+    def count_resident(self, request):
+        count = Resident.objects.filter(active=True).count()
+        return Response({'count': count}, status=status.HTTP_200_OK)
+
     @action(methods=['get', 'patch'], url_path='current-resident', detail=False,
             permission_classes=[permissions.IsAuthenticated])
     def get_current_resident(self, request):
@@ -230,6 +235,11 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListAPIView):
             query = query.filter(floor=floor)
 
         return query
+
+    @action(detail=False, methods=['get'], url_path='total-apartments')
+    def total_apartments(self, request):
+        total_apartments = Apartment.objects.filter(active=True).count()
+        return Response({"count": total_apartments}, status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=False, url_path='resident-without-apartment')
     def get_resident_without_apartment(self, request):
@@ -782,6 +792,22 @@ class SurveyViewSet(viewsets.ViewSet, generics.ListAPIView):
         survey = serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'], url_path='response-rate')
+    def response_rate(self, request, pk=None):
+        # Lấy khảo sát theo ID
+        survey = self.get_object()
+
+        # Số lượng người tham gia khảo sát (phản hồi khảo sát)
+        total_responses = SurveyResponse.objects.filter(survey=survey).count()
+
+        # Số lượng cư dân (hoặc tổng số người mời khảo sát)
+        total_invited = Resident.objects.count()
+
+        # Tính tỷ lệ phản hồi
+        response_rate = (total_responses / total_invited) * 100 if total_invited else 0
+
+        return Response({'response_rate': response_rate})
 
     # Trả về danh sách tùy chọn (VD: Hai long or Khong hai long) của khảo sát
     @action(methods=['get'], detail=True, url_path='get-options')

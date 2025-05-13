@@ -135,7 +135,8 @@ const SurveyListScreen = () => {
     // Gọi API danh sách khảo sát
     const fetchSurveys = async (tokenParam) => {
         try {
-            const res = await fetch("http://192.168.44.101:8000/surveys/", {
+            // const res = await fetch("http://192.168.44.101:8000/surveys/", {
+            const res = await fetch("http://192.168.44.103:8000/surveys/", {
                 headers: { Authorization: `Bearer ${tokenParam}` },
             });
 
@@ -153,6 +154,7 @@ const SurveyListScreen = () => {
     // Gọi API phản hồi khảo sát của người dùng
     const fetchMyResponses = async (tokenParam) => {
         try {
+            // const res = await fetch("http://192.168.44.101:8000/surveyresponses/my-responses/", {
             const res = await fetch("http://192.168.44.101:8000/surveyresponses/my-responses/", {
                 headers: { Authorization: `Bearer ${tokenParam}` },
             });
@@ -199,7 +201,8 @@ const SurveyListScreen = () => {
     // Gửi phản hồi
     const submitResponse = async (surveyId, optionId) => {
         try {
-            const res = await fetch("http://192.168.44.101:8000/surveyresponses/", {
+            // const res = await fetch("http://192.168.44.101:8000/surveyresponses/", {
+            const res = await fetch("http://192.168.44.103:8000/surveyresponses/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

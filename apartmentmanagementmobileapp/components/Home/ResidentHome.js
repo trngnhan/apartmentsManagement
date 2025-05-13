@@ -37,8 +37,8 @@ const ResidentHome = () => {
                         const fetchApartments = async (token) => {
                             try {
                                 const response = await fetch(
-                                    "http://192.168.44.101:8000/apartments/get-apartment/",
-                                    // "http://192.168.44.103:8000/apartments/get-apartment/",
+                                    // "http://192.168.44.101:8000/apartments/get-apartment/",
+                                    "http://192.168.44.103:8000/apartments/get-apartment/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
@@ -64,8 +64,8 @@ const ResidentHome = () => {
                         const fetchRegistrations = async () => {
                           try {
                               const response = await fetch(
-                                  "http://192.168.44.101:8000/visitorvehicleregistrations/my-registrations/",
-                                //   "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
+                                //   "http://192.168.44.101:8000/visitorvehicleregistrations/my-registrations/",
+                                  "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
                                   {
                                       headers: {
                                           Authorization: `Bearer ${token}`,
@@ -80,9 +80,9 @@ const ResidentHome = () => {
                               } else {
                                   console.error("Lỗi khi lấy danh sách đăng ký giữ xe:", response.status);
                               }
-                          } catch (error) {
-                              console.error("Lỗi khi gọi API đăng ký giữ xe:", error);
-                          }
+                            } catch (error) {
+                                console.error("Lỗi khi gọi API đăng ký giữ xe:", error);
+                            }
                         };
 
                         // GỌI API ở đây!
