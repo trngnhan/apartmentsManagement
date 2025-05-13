@@ -14,6 +14,10 @@ const AdminHome = () => {
             nav.navigate("AdminUser"); // Điều hướng đến trang AdminUser
     };
 
+    const navigateToAdminResident = () => {
+            nav.navigate("AdminResident"); // Điều hướng đến trang AdminResident
+    };
+
     const navigateToAdminApartment = () => {
         nav.navigate("AdminApartment"); // Điều hướng đến trang AdminApartment
     };
@@ -24,6 +28,10 @@ const AdminHome = () => {
 
     const navigateToAdminSurvey = () => {
         nav.navigate("AdminSurvey"); // Điều hướng đến trang AdminSurvey
+    };
+
+    const navigateToAdminFeedback = () => {
+        nav.navigate("AdminFeedback"); // Điều hướng đến trang AdminFeedback
     };
 
     // Hàm đăng xuất
@@ -58,7 +66,7 @@ const AdminHome = () => {
                     </View>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={navigateToAdminSurvey} style={MyStyles.imageContainer}>
+                <TouchableOpacity onPress={navigateToAdminResident} style={MyStyles.imageContainer}>
                     <View style={{ alignItems: "center" }}>
                         <Image
                             source={require("../../assets/resident.png")} // Đường dẫn đến hình ảnh
@@ -105,7 +113,7 @@ const AdminHome = () => {
                 <TouchableOpacity onPress={navigateToAdminSurvey} style={MyStyles.imageContainer}>
                     <View style={{ alignItems: "center" }}>
                         <Image
-                            source={require("../../assets/survey.png")} // Đường dẫn đến hình ảnh
+                            source={require("../../assets/admin-feedback.png")} // Đường dẫn đến hình ảnh
                             style={MyStyles.image}
                         />
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý Phản ánh</Text>

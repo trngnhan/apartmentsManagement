@@ -144,19 +144,19 @@ const ResidentHome = () => {
 
               {/* Các chức năng chuyển trang để ở đây */}
               <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
-              {/* Hình ảnh để chuyển đến trang RegisterVehicle */}
-              <TouchableOpacity onPress={() => nav.navigate("RegisterVehicle")}>
-                  <View style={{ alignItems: "center" }}>
-                      <Image
-                          source={require("../../assets/register_vehicle.png")} // Đường dẫn đến hình ảnh
-                          style={MyStyles.image}
-                      />
-                      <Text style={[MyStyles.padding, MyStyles.textSmall]}>Đăng ký xe cho người thân</Text>
-                  </View>
-              </TouchableOpacity>
+                {/* Hình ảnh để chuyển đến trang RegisterVehicle */}
+                <TouchableOpacity onPress={() => nav.navigate("RegisterVehicle")}>
+                    <View style={{ alignItems: "flex-start" }}>
+                        <Image
+                            source={require("../../assets/register_vehicle.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Đăng ký xe cho người thân</Text>
+                    </View>
+                </TouchableOpacity>
 
-              {/* Hình ảnh để chuyển đến trang LockerItems*/}
-              <TouchableOpacity onPress={() => nav.navigate("LockerItems")}>
+                {/* Hình ảnh để chuyển đến trang LockerItems*/}
+                <TouchableOpacity onPress={() => nav.navigate("LockerItems")}>
                     <View style={{ alignItems: "center" }}>
                         <Image
                             source={require("../../assets/locker_items.png")} // Đường dẫn đến hình ảnh
@@ -168,7 +168,7 @@ const ResidentHome = () => {
               
                 {/* Hình ảnh để chuyển đến trang SubmitFeedback*/}
                 <TouchableOpacity onPress={() => nav.navigate("SubmitFeedback")}>
-                    <View style={{ alignItems: "center" }}>
+                    <View style={{ alignItems: "flex-end" }}>
                         <Image
                             source={require("../../assets/feedback.png")}
                             style={MyStyles.image}
@@ -184,7 +184,7 @@ const ResidentHome = () => {
                     <Text style={MyStyles.padding}>Bạn chưa có đăng ký giữ xe nào.</Text>
                 ) : (
                     registrations.map((registration, index) => (
-                        <Card key={index} style={MyStyles.card}>
+                        <Card key={index} style={MyStyles.cardd}>
                             <Card.Content>
                                 <Title>Khách: {registration.visitor_name}</Title>
                                 <Paragraph>Biển số xe: {registration.vehicle_number}</Paragraph>

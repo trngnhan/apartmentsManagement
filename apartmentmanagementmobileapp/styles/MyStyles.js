@@ -60,7 +60,7 @@ export default StyleSheet.create({
       },
       button: {
         backgroundColor: "#007BFF",
-        padding: 10,
+        padding: 15,
         borderRadius: 5,
         alignItems: "center",
         width: "100%",
@@ -87,6 +87,16 @@ export default StyleSheet.create({
       card: {
         backgroundColor: "#f9f9f9",
         padding: 15,
+        borderRadius: 10,
+        marginBottom: 15,
+        elevation: 5, // Hiệu ứng shadow trên Android
+        shadowColor: "#000", // Màu shadow trên iOS
+        shadowOffset: { width: 0, height: 2 }, // Độ lệch shadow trên iOS
+        shadowOpacity: 0.2, // Độ mờ của shadow trên iOS
+        shadowRadius: 5, // Bán kính của shadow trên iOS
+      },
+      cardd: {
+        backgroundColor: "#f9f9f9",
         borderRadius: 10,
         marginBottom: 15,
         elevation: 5, // Hiệu ứng shadow trên Android
@@ -216,6 +226,53 @@ export default StyleSheet.create({
         alignItems: "center",
         width: "48%",
         backgroundColor: "#FF6F61",
-    },
+      },
+      modalButtonText: {
+        color: "#fff",
+        fontWeight: "bold",
+      },
+      modalButtons: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        width: "100%",
+      },
+      searchInput: {
+        height: 50, // Chiều cao của ô nhập
+        borderColor: "#ccc", // Màu viền
+        borderWidth: 1, // Độ dày viền
+        borderRadius: 5, // Bo góc
+        paddingHorizontal: 10, // Khoảng cách nội dung bên trong
+        marginBottom: 10, // Khoảng cách phía dưới
+        backgroundColor: "#fff", // Màu nền
+        fontSize: 16, // Kích thước chữ
+      },
+      userItem: {
+        padding: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: "#ccc",
+      },
+      picker: {
+        width: "100%",
+        height: 50,
+        borderColor: "#ccc",
+        borderWidth: 1,
+        borderRadius: 5,
+        backgroundColor: "#fff",
+        marginBottom: 20,
+      },
+      userName: {
+          fontSize: 16,
+          fontWeight: "bold",
+      },
+      userEmail: {
+          fontSize: 14,
+          color: "#666",
+      },
+      noData: {
+          textAlign: "center",
+          fontSize: 16,
+          color: "#999",
+          marginTop: 20,
+      },
 });
 

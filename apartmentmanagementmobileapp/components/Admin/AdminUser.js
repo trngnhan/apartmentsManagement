@@ -23,6 +23,7 @@ const AdminUser = () => {
         try {
             const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
             const response = await fetch("http://192.168.44.103:8000/users/", {
+            // const response = await fetch("http://192.168.44.101:8000/users/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -50,7 +51,8 @@ const AdminUser = () => {
     const fetchUsers = async () => {
         try {
             const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
-            const response = await fetch("http://192.168.44.101:8000/users/", {
+            const response = await fetch("http://192.168.44.103:8000/users/", {
+            // const response = await fetch("http://192.168.44.101:8000/users/", {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,

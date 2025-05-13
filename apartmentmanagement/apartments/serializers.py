@@ -60,6 +60,7 @@ class UserSerializer(serializers.ModelSerializer):
 class ResidentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     image = serializers.ImageField(source='user.profile_picture', read_only=True)  # Trực tiếp lấy ảnh từ User
+
     user_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source='user',
@@ -91,7 +92,7 @@ class ApartmentTransferHistorySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApartmentTransferHistory
-        fields = ['apartment', 'apartment_code', 'previous_owner', 'previous_owner_email',
+        fields = ['id', 'apartment', 'apartment_code', 'previous_owner', 'previous_owner_email',
                   'new_owner', 'new_owner_email', 'transfer_date']
         read_only_fields = ['created_date', 'updated_date']
 
@@ -100,7 +101,7 @@ class ApartmentTransferHistorySerializer(serializers.ModelSerializer):
 class PaymentCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentCategory
-        fields = ['name', 'amount', 'is_recurring', 'description']
+        fields = ['id', 'name', 'amount', 'is_recurring', 'description']
         read_only_fields = ['created_date', 'updated_date']
 
     def validate_amount(self, value):
@@ -124,7 +125,7 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = PaymentTransaction
-        fields = ['apartment', 'apartment_code', 'category', 'category_name',
+        fields = ['id', 'apartment', 'apartment_code', 'category', 'category_name',
                   'amount', 'method', 'transaction_id', 'status', 'payment_proof',
                   'payment_proof_url', 'paid_date']
         read_only_fields = ['created_date', 'updated_date']

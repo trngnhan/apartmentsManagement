@@ -10,6 +10,7 @@ from django.views.generic import detail
 from rest_framework import viewsets, generics, permissions, status, parsers, renderers
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
@@ -125,6 +126,17 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateA
         serializer = self.get_serializer(user)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='unregistered-users')
+    def unregistered_users(self, request):
+        # Lấy danh sách user chưa liên kết với resident
+        unregistered_users = User.objects.filter(
+            resident_profile__isnull=True,
+            active=True,
+            is_superuser=False
+        )
+        serializer = self.get_serializer(unregistered_users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     @action(methods=['get', 'patch'], url_path='current-user', detail=False,
             permission_classes=[permissions.IsAuthenticated],
             parser_classes=[MultiPartParser, FormParser])
@@ -154,6 +166,7 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateA
 class ResidentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = Resident.objects.filter(active=True)
     serializer_class = ResidentSerializer
+    pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['active']
     search_fields = ['user__email', 'user__first_name', 'user__last_name', 'id_number']

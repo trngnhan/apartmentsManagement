@@ -15,6 +15,8 @@ import AdminSurvey from './components/Admin/AdminSurvey';
 import AdminSurveyResponses from './components/Admin/AdminSurveyResponses';
 import AdminUser from './components/Admin/AdminUser';
 import SubmitFeedback from './components/Home/SubmitFeedback';
+import AdminApartmentTransferHistorys from './components/Admin/AdminApartmentTransferHistorys';
+import AdminResident from './components/Admin/AdminResident';
 
 const Stack = createNativeStackNavigator();
 
@@ -33,6 +35,8 @@ export default function App() {
             <Stack.Screen name="AdminHome" component={AdminHome} />
             <Stack.Screen name="AdminUser" component={AdminUser} />
             <Stack.Screen name="AdminApartment" component={AdminApartment} />
+            <Stack.Screen name="AdminResident" component={AdminResident} />
+            <Stack.Screen name="AdminApartmentTransferHistorys" component={AdminApartmentTransferHistorys} />
             <Stack.Screen name="AdminSurvey" component={AdminSurvey} />
             <Stack.Screen name="AdminSurveyResponses" component={AdminSurveyResponses} />
             <Stack.Screen name="SubmitFeedback" component={SubmitFeedback} />
