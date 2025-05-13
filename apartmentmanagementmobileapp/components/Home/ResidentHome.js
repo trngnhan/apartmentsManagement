@@ -37,8 +37,8 @@ const ResidentHome = () => {
                         const fetchApartments = async (token) => {
                             try {
                                 const response = await fetch(
-                                    "http://192.168.44.103:8000/apartments/get-apartment/",
-                                    // "http://192.168.44.101:8000/apartments/get-apartment/",
+                                    "http://192.168.44.101:8000/apartments/get-apartment/",
+                                    // "http://192.168.44.103:8000/apartments/get-apartment/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
@@ -64,8 +64,8 @@ const ResidentHome = () => {
                         const fetchRegistrations = async () => {
                           try {
                               const response = await fetch(
-                                  "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
-                                //   "http://192.168.44.101:8000/visitorvehicleregistrations/my-registrations/",
+                                  "http://192.168.44.101:8000/visitorvehicleregistrations/my-registrations/",
+                                //   "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
                                   {
                                       headers: {
                                           Authorization: `Bearer ${token}`,
@@ -174,6 +174,17 @@ const ResidentHome = () => {
                             style={MyStyles.image}
                         />
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Gửi phản hồi</Text>
+                    </View>
+                </TouchableOpacity>
+
+                {/* Hình ảnh để chuyển đến trang SurveyList */}
+                <TouchableOpacity onPress={() => nav.navigate("SurveyList")}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/survey-feedback-checklist.png")}
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Phản hồi khảo sát</Text>
                     </View>
                 </TouchableOpacity>
               </View>

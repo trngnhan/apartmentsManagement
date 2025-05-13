@@ -752,12 +752,21 @@ class SurveyViewSet(viewsets.ViewSet, generics.ListAPIView):
     search_fields = ['title', 'description', 'deadline']
     ordering_fields = ['deadline', 'created_date']
 
+    # def get_permissions(self):
+    #     if self.action in ['create', 'destroy', 'update', 'partial_update', 'list', 'retrieve', 'post']:
+    #         return [IsAdminOrManagement()]  # Cho cả Admin và Management
+    #     elif self.action in ['get-responses']:
+    #         return [IsAdminOrManagement()]
+    #     return [permissions.IsAuthenticated()]  # Cư dân có thể tham gia khảo sát
+
     def get_permissions(self):
-        if self.action in ['create', 'destroy', 'update', 'partial_update', 'list', 'retrieve', 'post']:
-            return [IsAdminOrManagement()]  # Cho cả Admin và Management
+        if self.action in ['create', 'destroy', 'update', 'partial_update', 'post']:
+            return [IsAdminOrManagement()]  # Admin và Management mới có quyền
+        elif self.action == 'list':  # Công dân có quyền xem danh sách khảo sát
+            return [permissions.IsAuthenticated()]
         elif self.action in ['get-responses']:
             return [IsAdminOrManagement()]
-        return [permissions.IsAuthenticated()]  # Cư dân có thể tham gia khảo sát
+        return [permissions.IsAuthenticated()]  # Mặc định là công dân có thể tham gia khảo sát
 
     def get_object(self):
         try:

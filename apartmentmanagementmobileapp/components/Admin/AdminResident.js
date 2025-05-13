@@ -32,7 +32,8 @@ const AdminResident = () => {
     const fetchResidents = async (search = "") => {
         try {
             const token = await AsyncStorage.getItem("token");
-            const url = `http://192.168.44.103:8000/residents/?search=${search}`;
+            const url = `http://192.168.44.101:8000/residents/?search=${search}`;
+            // const url = `http://192.168.44.103:8000/residents/?search=${search}`;
             const response = await fetch(url, {
                 method: "GET",
                 headers: {
@@ -63,7 +64,8 @@ const AdminResident = () => {
             }
 
             const token = await AsyncStorage.getItem("token");
-            const url = `http://192.168.44.103:8000/residents/`;
+            const url = `http://192.168.44.101:8000/residents/`;
+            // const url = `http://192.168.44.103:8000/residents/`;
             const response = await fetch(url, {
                 method: "POST",
                 headers: {
@@ -94,7 +96,8 @@ const AdminResident = () => {
     const fetchUnregisteredUsers = async () => {
     try {
         const token = await AsyncStorage.getItem("token");
-        const url = `http://192.168.44.103:8000/users/unregistered-users/`;
+        const url = `http://192.168.44.101:8000/users/unregistered-users/`;
+        // const url = `http://192.168.44.103:8000/users/unregistered-users/`;
         const response = await fetch(url, {
             method: "GET",
             headers: {

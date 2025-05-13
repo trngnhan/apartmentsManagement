@@ -17,7 +17,8 @@ const AdminApartmentTransferHistorys = () => {
     const [loadingMore, setLoadingMore] = useState(false); // Trạng thái tải thêm dữ liệu
 
     // Hàm gọi API để lấy danh sách lịch sử chuyển nhượng
-    const fetchTransferHistory = async (url = "http://192.168.44.103:8000/apartmentstranshistories/") => {
+    const fetchTransferHistory = async (url = "http://192.168.44.101:8000/apartmentstranshistories/") => {
+    // const fetchTransferHistory = async (url = "http://192.168.44.103:8000/apartmentstranshistories/") => {
         try {
             const token = await AsyncStorage.getItem("token");
             const response = await fetch(url, {
