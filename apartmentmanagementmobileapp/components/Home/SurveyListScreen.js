@@ -155,7 +155,7 @@ const SurveyListScreen = () => {
     const fetchMyResponses = async (tokenParam) => {
         try {
             // const res = await fetch("http://192.168.44.101:8000/surveyresponses/my-responses/", {
-            const res = await fetch("http://192.168.44.101:8000/surveyresponses/my-responses/", {
+            const res = await fetch("http://192.168.44.103:8000/surveyresponses/my-responses/", {
                 headers: { Authorization: `Bearer ${tokenParam}` },
             });
 

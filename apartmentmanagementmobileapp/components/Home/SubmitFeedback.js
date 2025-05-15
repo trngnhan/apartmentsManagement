@@ -130,11 +130,11 @@ const SubmitFeedback = () => {
                     >
                         <Card.Title
                             title={fb.title}
-                            titleStyle={{ fontWeight: "bold", fontSize: 16 }}
+                            titleStyle={{ fontWeight: "bold", fontSize: 18, marginTop: 10 }}
                         />
                         <Card.Content>
                             <Text style={{ marginBottom: 6, fontSize: 14 }}>{fb.content}</Text>
-                            <Text style={{ fontSize: 12, color: "#888" }}>
+                            <Text style={{ fontSize: 13, color: "green" }}>
                                 Trạng thái: {fb.status === "pending" ? "Chờ xử lý" : fb.status}
                             </Text>
                         </Card.Content>

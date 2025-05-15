@@ -18,6 +18,7 @@ import SubmitFeedback from './components/Home/SubmitFeedback';
 import AdminApartmentTransferHistorys from './components/Admin/AdminApartmentTransferHistorys';
 import AdminResident from './components/Admin/AdminResident';
 import SurveyListScreen from './components/Home/SurveyListScreen';
+import AdminFeedback from './components/Admin/AdminFeedback';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,21 +28,25 @@ export default function App() {
       <MyProvider>
         <NavigationContainer>
           <Stack.Navigator initialRouteName="Login">
-            <Stack.Screen name="Login" component={Login} />
-            <Stack.Screen name="Home" component={Home} />
-            <Stack.Screen name='ResidentHome' component={ResidentHome}/>
-            <Stack.Screen name='UpdateProfile' component={UpdateProfile}/>
-            <Stack.Screen name="RegisterVehicle" component={RegisterVehicle} />
-            <Stack.Screen name="LockerItems" component={LockerItems} />
-            <Stack.Screen name="AdminHome" component={AdminHome} />
-            <Stack.Screen name="AdminUser" component={AdminUser} />
-            <Stack.Screen name="AdminApartment" component={AdminApartment} />
-            <Stack.Screen name="AdminResident" component={AdminResident} />
-            <Stack.Screen name="AdminApartmentTransferHistorys" component={AdminApartmentTransferHistorys} />
-            <Stack.Screen name="AdminSurvey" component={AdminSurvey} />
-            <Stack.Screen name="AdminSurveyResponses" component={AdminSurveyResponses} />
-            <Stack.Screen name="SubmitFeedback" component={SubmitFeedback} />
-            <Stack.Screen name="SurveyList" component={SurveyListScreen} options={{ title: "Khảo sát" }} />
+            {/* Login */}
+            <Stack.Screen name="Login" component={Login} options={{ title: "Đăng nhập" }} />
+            {/* User */}
+            <Stack.Screen name="Home" component={Home} options={{ title: "Trang chủ" }} />
+            <Stack.Screen name="ResidentHome" component={ResidentHome} options={{ title: "Trang chủ cư dân" }} />
+            <Stack.Screen name="UpdateProfile" component={UpdateProfile} options={{ title: "Cập nhật hồ sơ" }} />
+            <Stack.Screen name="RegisterVehicle" component={RegisterVehicle} options={{ title: "Đăng ký xe" }} />
+            <Stack.Screen name="LockerItems" component={LockerItems} options={{ title: "Tủ đồ cư dân" }} />
+            <Stack.Screen name="SubmitFeedback" component={SubmitFeedback} options={{ title: "Gửi phản ánh" }} />
+            <Stack.Screen name="SurveyList" component={SurveyListScreen} options={{ title: "Khảo sát cư dân" }} />
+            {/* Admin */}
+            <Stack.Screen name="AdminHome" component={AdminHome} options={{ title: "Trang chủ quản trị" }} />
+            <Stack.Screen name="AdminUser" component={AdminUser} options={{ title: "Quản lý người dùng" }} />
+            <Stack.Screen name="AdminApartment" component={AdminApartment} options={{ title: "Quản lý căn hộ" }} />
+            <Stack.Screen name="AdminResident" component={AdminResident} options={{ title: "Quản lý cư dân" }} />
+            <Stack.Screen name="AdminApartmentTransferHistorys" component={AdminApartmentTransferHistorys} options={{ title: "Lịch sử chuyển nhượng" }} />
+            <Stack.Screen name="AdminSurvey" component={AdminSurvey} options={{ title: "Quản lý khảo sát" }} />
+            <Stack.Screen name="AdminSurveyResponses" component={AdminSurveyResponses} options={{ title: "Phản hồi khảo sát" }} />
+            <Stack.Screen name="AdminFeedback" component={AdminFeedback} options={{ title: "Quản lý phản ánh" }} />
           </Stack.Navigator>
         </NavigationContainer>
       </MyProvider>

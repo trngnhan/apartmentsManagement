@@ -19,6 +19,8 @@ const AdminApartment = () => {
     const [modalVisible, setModalVisible] = useState(false); // Trạng thái hiển thị Modal
     const [residents, setResidents] = useState([]); // Danh sách cư dân chưa có căn hộ
     const nav = useNavigation(); // Điều hướng
+    const [selectedBuilding, setSelectedBuilding] = useState('all');
+    const [selectedFloor, setSelectedFloor] = useState('all');
 
     // Hàm gọi API để lấy danh sách apartment
     // const fetchApartments = async (url = "http://192.168.44.101:8000/apartments/") => {
@@ -189,6 +191,12 @@ const AdminApartment = () => {
         </View>
     );
 
+    const filteredApartments = apartments.filter(a => {
+        const buildingMatch = selectedBuilding === 'all' || a.building === selectedBuilding;
+        const floorMatch = selectedFloor === 'all' || a.floor.toString() === selectedFloor;
+        return buildingMatch && floorMatch;
+        });
+
     return (
         <LinearGradient
         colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
@@ -197,13 +205,42 @@ const AdminApartment = () => {
             <View style={styles.container}>
             <Text style={styles.header}>Danh sách Apartment</Text>
 
+            <View style={styles.header}>
+                <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Chọn tòa nhà:</Text>
+                <Picker
+                    selectedValue={selectedBuilding}
+                    onValueChange={(value) => setSelectedBuilding(value)}
+                    style={{ height: 50, backgroundColor: '#f0f0f0' }}
+                >
+                    <Picker.Item label="Tất cả" value="all" />
+                    <Picker.Item label="Tòa A" value="A" />
+                    <Picker.Item label="Tòa B" value="B" />
+                    <Picker.Item label="Tòa C" value="C" />
+                    <Picker.Item label="Tòa D" value="D" />
+                </Picker>
+            </View>
+
+            <View style={styles.header}>
+                <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Chọn tầng:</Text>
+                <Picker
+                    selectedValue={selectedFloor}
+                    onValueChange={(value) => setSelectedFloor(value)}
+                    style={{ height: 55, backgroundColor: '#f0f0f0' }}
+                >
+                    <Picker.Item label="Tất cả tầng" value="all" />
+                    {[...Array(20)].map((_, i) => (
+                    <Picker.Item key={i + 1} label={`Tầng ${i + 1}`} value={`${i + 1}`} />
+                    ))}
+                </Picker>
+            </View>
+
             {loading ? (
                 <ActivityIndicator size="large" color="#FF6F61" /> // Hiển thị loading khi đang tải dữ liệu ban đầu
-            ) : apartments.length === 0 ? (
+            ) : filteredApartments.length === 0 ? (
                 <Text style={styles.noData}>Không có apartment nào để hiển thị.</Text>
             ) : (
                 <FlatList
-                    data={apartments}
+                    data={filteredApartments}
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={renderApartment}
                     contentContainerStyle={{ paddingBottom: 20 }}
@@ -296,6 +333,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: "center",
         color: "#999",
+        marginBottom: 20,
     },
     card: {
         backgroundColor: "#f9f9f9",

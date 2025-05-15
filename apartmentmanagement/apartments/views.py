@@ -662,7 +662,7 @@ class FeedbackViewSet(viewsets.ViewSet, generics.ListAPIView):
             return [permissions.IsAuthenticated()]  # Cư dân gửi phản ánh
         elif self.action in ['destroy']:
             return [IsAdminRole]  # Chỉ admin mới được xóa
-        elif self.action in ['update', 'partial_update', 'list']:
+        elif self.action in ['update', 'partial_update', 'list', 'update-status']:
             return [IsAdminOrManagement()]  # Admin + Management được sửa, xem tất cả
         return [permissions.IsAuthenticated()]  # Mặc định các quyền khác
 
@@ -688,6 +688,31 @@ class FeedbackViewSet(viewsets.ViewSet, generics.ListAPIView):
         serializer.save(resident=resident)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['patch'], detail=True, url_path='update-status')
+    def update_status(self, request, pk=None):
+        try:
+            feedback = Feedback.objects.get(pk=pk, active=True)
+        except Feedback.DoesNotExist:
+            return Response(
+                {"detail": "Không tìm thấy phản hồi."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        new_status = request.data.get('status')
+        if not new_status:
+            return Response(
+                {"detail": "Thiếu dữ liệu 'status'."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        feedback.status = new_status
+        feedback.save()
+
+        return Response(
+            {"detail": "Cập nhật trạng thái thành công.", "status": feedback.status},
+            status=status.HTTP_200_OK
+        )
 
     @action(methods=['get'], detail=False, url_path='my-feedbacks')
     def my_feedbacks(self, request):

@@ -128,6 +128,7 @@ export default StyleSheet.create({
         fontSize: 14,
         color: "#555",
         marginBottom: 5,
+        marginTop: 5,
       },
       date: {
           fontSize: 12,

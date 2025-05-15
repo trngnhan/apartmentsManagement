@@ -183,10 +183,12 @@ class ParcelLockerSerializer(serializers.ModelSerializer):
 # Feedback Serializer
 class FeedbackSerializer(serializers.ModelSerializer):
     resident_email = serializers.EmailField(source='resident.user.email', read_only=True)
+    first_name = serializers.CharField(source='resident.user.first_name', read_only=True)
+    last_name = serializers.CharField(source='resident.user.last_name', read_only=True)
 
     class Meta:
         model = Feedback
-        fields = ['id', 'resident_email', 'title', 'content', 'status']
+        fields = ['id', 'resident_email', 'title', 'content', 'status', 'created_date', 'updated_date', 'first_name', 'last_name']
         read_only_fields = ['created_date', 'updated_date']
 
 

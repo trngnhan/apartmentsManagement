@@ -10,6 +10,7 @@ const AdminUser = () => {
     const [users, setUsers] = useState([]); // State lưu danh sách người dùng
     const [loading, setLoading] = useState(true); // State hiển thị trạng thái tải dữ liệu
     const [error, setError] = useState(null); // State hiển thị lỗi
+    const [searchText, setSearchText] = useState(""); // Văn bản tìm kiếm
     const [isModalVisible, setModalVisible] = useState(false); // Trạng thái hiển thị Modal
     const [email, setEmail] = useState("");
     const [firstName, setFirstName] = useState("");
@@ -48,11 +49,12 @@ const AdminUser = () => {
     };
 
     // Hàm gọi API để lấy danh sách người dùng
-    const fetchUsers = async () => {
+    const fetchUsers = async (search = "") => {
         try {
             const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
+            const url = `http://192.168.44.103:8000/users/?search=${search}`; // URL API với từ khóa tìm kiếm
             // const response = await fetch("http://192.168.44.101:8000/users/", {
-            const response = await fetch("http://192.168.44.103:8000/users/", {
+            const response = await fetch(url, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -114,6 +116,12 @@ const AdminUser = () => {
 
     const showCreateUserDialog = () => {
         setModalVisible(true); // Hiển thị Modal
+    };
+
+    // Hàm xử lý tìm kiếm
+    const handleSearch = (text) => {
+        setSearchText(text);
+        fetchUsers(text); // Gọi API với từ khóa tìm kiếm
     };
 
     const handleCreateUser = () => {
@@ -185,6 +193,13 @@ const AdminUser = () => {
         >
             <View style={MyStyles.containerr}>
                 <Text style={[MyStyles.header, MyStyles.center]}>Danh sách Người dùng</Text>
+
+                <TextInput
+                    style={MyStyles.searchInput}
+                    placeholder="Tìm kiếm cư dân..."
+                    value={searchText}
+                    onChangeText={handleSearch}
+                />
 
                 {/* Nút Tạo Tài Khoản */}
                 <TouchableOpacity

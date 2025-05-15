@@ -1,17 +1,14 @@
 import {
     Alert,
     Image,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
     ScrollView,
-    Text,
-    TouchableOpacity,
     View,
+    Animated,
+    StyleSheet,
 } from "react-native";
 import MyStyles from "../../styles/MyStyles";
 import { Button, HelperText, TextInput } from "react-native-paper";
-import { useContext, useState } from "react";
+import { useContext, useState, useRef, useEffect } from "react";
 import Apis, { authApis, endpoints } from "../../configs/Apis";
 import { useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -39,6 +36,8 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const nav = useNavigation();
     const dispatch = useContext(MyDispatchContext);
+    const translateX = useRef(new Animated.Value(-200)).current; // bắt đầu lệch trái
+    const opacity = useRef(new Animated.Value(0)).current;        // bắt đầu mờ
 
     const setState = (value, field) => {
         setUser({ ...user, [field]: value });
@@ -64,6 +63,21 @@ const Login = () => {
         setMsg(null);
         return true;
     };
+
+    useEffect(() => {
+        Animated.parallel([
+        Animated.timing(translateX, {
+            toValue: 0,
+            duration: 3500,
+            useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+            toValue: 1,
+            duration: 1500,
+            useNativeDriver: true,
+        }),
+        ]).start();
+    }, []);
 
     const login = async () => {
         if (validate()) {
@@ -158,6 +172,32 @@ const Login = () => {
                         alignSelf: "center",
                     }}
                 />
+
+                <View style={styles.container}>
+                    <Animated.Text
+                        style={[
+                        styles.text,
+                            {
+                                transform: [{ translateX }],
+                                opacity,
+                            },
+                        ]}
+                    >
+                        Chào mừng đến với 
+                    </Animated.Text>
+                    <Animated.Text
+                        style={[
+                        styles.text,
+                            {
+                                transform: [{ translateX }],
+                                opacity,
+                            },
+                        ]}
+                    >
+                        Dream Home Palace
+                    </Animated.Text>
+                    </View>
+
                 <HelperText type="error" visible={msg}>
                     {msg}
                 </HelperText>
@@ -201,5 +241,22 @@ const Login = () => {
         </LinearGradient>   
     );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginTop: 30,
+    alignItems: 'center',
+  },
+  text: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#4A90E2', // màu xanh nhã
+    letterSpacing: 1.5, // giãn cách chữ
+    textTransform: 'capitalize', // viết hoa chữ đầu
+    textShadowColor: '#00000055', // bóng mờ nhẹ
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 4,
+  },
+});
 
 export default Login;

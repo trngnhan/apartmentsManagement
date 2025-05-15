@@ -305,6 +305,9 @@ const AdminHome = () => {
             
             {/* Biểu đồ hình cột */}
             <View style={{ marginTop: 20, marginBottom: 20 }}>
+                <Text style={{ fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginBottom: 10, color: '#000' }}>
+                    Tỉ lệ phản hồi khảo sát 
+                </Text>
                 <BarChart
                     data={{
                     labels: surveyChartData.map(item => item.name),
@@ -315,7 +318,7 @@ const AdminHome = () => {
                     ],
                     }}
                     width={screenWidth - 20}
-                    height={400}
+                    height={300}
                     fromZero={true}
                     yAxisSuffix="%"
                     yAxisInterval={10} // Tăng khoảng cách trục Y để dễ phân biệt
