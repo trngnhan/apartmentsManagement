@@ -76,13 +76,13 @@ const AdminFeedback = () => {
             );
 
             if (response.ok) {
-            Alert.alert("Thành công", "Đã cập nhật trạng thái.");
-            fetchFeedbacks();
+                Alert.alert("Thành công", "Đã cập nhật trạng thái.");
+                fetchFeedbacks();
             } else {
-            const errorData = await response.json();
-            console.error("Lỗi:", errorData);
-            Alert.alert("Lỗi", "Không thể cập nhật trạng thái.");
-            }
+                const errorData = await response.json();
+                console.error("Lỗi:", errorData);
+                Alert.alert("Lỗi", "Không thể cập nhật trạng thái.");
+                }
         } catch (error) {
             console.error("Lỗi mạng:", error);
             Alert.alert("Lỗi", "Đã xảy ra lỗi khi kết nối.");

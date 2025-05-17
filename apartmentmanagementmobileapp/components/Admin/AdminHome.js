@@ -19,11 +19,11 @@ const AdminHome = () => {
 
     // Hàm điều hướng
     const navigateToAdminUser = () => {
-            nav.navigate("AdminUser"); // Điều hướng đến trang AdminUser
+        nav.navigate("AdminUser"); // Điều hướng đến trang AdminUser
     };
 
     const navigateToAdminResident = () => {
-            nav.navigate("AdminResident"); // Điều hướng đến trang AdminResident
+        nav.navigate("AdminResident"); // Điều hướng đến trang AdminResident
     };
 
     const navigateToAdminApartment = () => {
@@ -42,6 +42,14 @@ const AdminHome = () => {
         nav.navigate("AdminFeedback"); // Điều hướng đến trang AdminFeedback
     };
 
+    const navigateToAdminLocker = () => {
+        nav.navigate("AdminLocker"); // Điều hướng đến trang AdminLocker
+    };
+
+    const navigateToAdminPayment = () => {
+        nav.navigate("AdminPayment"); // Điều hướng đến trang AdminPayment
+    };
+    
     // Hàm gọi API
     const fetchSurveys = async () => {
         try {
@@ -237,6 +245,28 @@ const AdminHome = () => {
                             style={MyStyles.image}
                         />
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý Phản ánh</Text>
+                    </View>
+                </TouchableOpacity>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-around"}}>
+                <TouchableOpacity onPress={navigateToAdminLocker} style={MyStyles.imageContainer}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/admin-locker.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý tủ đồ</Text>
+                    </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={navigateToAdminPayment} style={MyStyles.imageContainer}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/admin_payment.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý thanh toán</Text>
                     </View>
                 </TouchableOpacity>
             </View>

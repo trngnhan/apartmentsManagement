@@ -164,21 +164,34 @@ class FirebaseTokenSerializer(serializers.ModelSerializer):
 # Parcel Locker Serializer
 class ParcelItemSerializer(serializers.ModelSerializer):
     resident_id = serializers.IntegerField(source='resident.id', read_only=True)
+    resident_email = serializers.EmailField(source='resident.user.email', read_only=True)
+    first_name = serializers.CharField(source='resident.user.first_name', read_only=True)
+    last_name = serializers.CharField(source='resident.user.last_name', read_only=True)
 
     class Meta:
         model = ParcelItem
-        fields = ['id', 'locker', 'name', 'status', 'note', 'resident_id', 'created_date', 'updated_date']
+        fields = ['id', 'locker', 'name', 'status', 'note', 'resident_id', 'created_date', 'updated_date',
+                  'first_name', 'last_name', 'resident_email']
         read_only_fields = ['created_date', 'updated_date']
 
 
 class ParcelLockerSerializer(serializers.ModelSerializer):
     resident_email = serializers.EmailField(source='resident.user.email', read_only=True)
+    first_name = serializers.CharField(source='resident.user.first_name', read_only=True)
+    last_name = serializers.CharField(source='resident.user.last_name', read_only=True)
+    resident_id = serializers.PrimaryKeyRelatedField(
+        queryset=Resident.objects.all(),
+        source='resident',
+        write_only=True
+    )
 
     class Meta:
         model = ParcelLocker
-        fields = ['id', 'resident_id', 'resident_email']
+        fields = ['id', 'resident_id', 'resident_email', 'first_name', 'last_name', 'active', 'resident']
         read_only_fields = ['created_date', 'updated_date']
-
+        extra_kwargs = {
+            'resident': {'read_only': True}  # để không bị lỗi
+        }
 
 # Feedback Serializer
 class FeedbackSerializer(serializers.ModelSerializer):

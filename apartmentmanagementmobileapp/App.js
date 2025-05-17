@@ -19,6 +19,9 @@ import AdminApartmentTransferHistorys from './components/Admin/AdminApartmentTra
 import AdminResident from './components/Admin/AdminResident';
 import SurveyListScreen from './components/Home/SurveyListScreen';
 import AdminFeedback from './components/Admin/AdminFeedback';
+import AdminLocker from './components/Admin/AdminLocker';
+import AdminLockerItems from './components/Admin/AdminLockerItems';
+import AdminPayment from './components/Admin/AdminPayment';
 
 const Stack = createNativeStackNavigator();
 
@@ -47,6 +50,9 @@ export default function App() {
             <Stack.Screen name="AdminSurvey" component={AdminSurvey} options={{ title: "Quản lý khảo sát" }} />
             <Stack.Screen name="AdminSurveyResponses" component={AdminSurveyResponses} options={{ title: "Phản hồi khảo sát" }} />
             <Stack.Screen name="AdminFeedback" component={AdminFeedback} options={{ title: "Quản lý phản ánh" }} />
+            <Stack.Screen name="AdminLocker" component={AdminLocker} options={{ title: "Quản lý tủ đồ" }} />
+            <Stack.Screen name="AdminLockerItems" component={AdminLockerItems} options={{title: "Tủ đồ cư dân"}} />
+            <Stack.Screen name="AdminPayment" component={AdminPayment} options={{title: "Quản lý thanh toán"}} />
           </Stack.Navigator>
         </NavigationContainer>
       </MyProvider>

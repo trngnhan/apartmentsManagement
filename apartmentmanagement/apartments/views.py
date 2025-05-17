@@ -504,7 +504,7 @@ def notify_resident_about_new_item(resident, item_name):
     else:
         print("Số điện thoại không tồn tại.")
 # Parcel Locker ViewSet
-class ParcelLockerViewSet(viewsets.ViewSet, generics.ListAPIView, APIView):
+class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView):
     queryset = ParcelLocker.objects.filter(active=True)
     serializer_class = ParcelLockerSerializer
     filter_backends = [DjangoFilterBackend]
@@ -532,6 +532,28 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListAPIView, APIView):
             return self.queryset.get(pk=self.kwargs["pk"])
         except ParcelLocker.DoesNotExist:
             raise NotFound("Không tìm thấy tủ đồ với ID này.")
+
+    @action(methods=['get'], detail=False, url_path='resident-without-locker')
+    def get_resident_without_locker(self, request):
+        # Lấy danh sách id các Resident đã có tủ đồ
+        residents_with_lockers = ParcelLocker.objects.values_list('resident_id', flat=True)
+
+        # Lọc Resident chưa có tủ đồ
+        residents = Resident.objects.filter(
+            user__role=User.Role.RESIDENT,
+            user__active=True
+        ).exclude(id__in=residents_with_lockers)
+
+        # Trả về Resident.id và thông tin từ user
+        data = [
+            {
+                "id": resident.id,
+                "email": resident.user.email,
+            }
+            for resident in residents
+        ]
+
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(methods=['get'], detail=False, url_path='my-locker')
     def my_locker(self, request):
@@ -621,11 +643,11 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListAPIView, APIView):
             locker = self.get_object()  # Lấy tủ đồ hiện tại
             item = locker.items.get(id=item_id)  # Tìm món đồ trong tủ đồ
 
-            if item.status != 'PENDING':
-                return Response(
-                    {"detail": "Chỉ có thể chuyển trạng thái từ PENDING sang trạng thái khác."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            # if item.status != 'PENDING':
+            #     return Response(
+            #         {"detail": "Chỉ có thể chuyển trạng thái từ PENDING sang trạng thái khác."},
+            #         status=status.HTTP_400_BAD_REQUEST
+            #     )
 
             # Cập nhật trạng thái món đồ
             item.status = new_status

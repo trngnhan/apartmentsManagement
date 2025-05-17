@@ -254,7 +254,7 @@ export default StyleSheet.create({
       },
       picker: {
         width: "100%",
-        height: 50,
+        height: 60,
         borderColor: "#ccc",
         borderWidth: 1,
         borderRadius: 5,
