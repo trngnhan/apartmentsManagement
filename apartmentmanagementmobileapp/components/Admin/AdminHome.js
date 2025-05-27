@@ -49,6 +49,13 @@ const AdminHome = () => {
     const navigateToAdminPayment = () => {
         nav.navigate("AdminPayment"); // Điều hướng đến trang AdminPayment
     };
+
+    const navigateToAdminChatScreen = async () => {
+        const token = await AsyncStorage.getItem("token");
+        const user = await AsyncStorage.getItem("user");
+
+        nav.navigate("AdminChatScreen", { token, user });
+    };
     
     // Hàm gọi API
     const fetchSurveys = async () => {
@@ -269,6 +276,20 @@ const AdminHome = () => {
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý thanh toán</Text>
                     </View>
                 </TouchableOpacity>
+            </View>
+
+            <View style={{ flexDirection: "row", justifyContent: "space-around"}}>
+                <TouchableOpacity onPress={navigateToAdminChatScreen} style={MyStyles.imageContainer}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/admin-chatscreen.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý tin nhắn trực tuyến</Text>
+                    </View>
+                </TouchableOpacity>
+
+                
             </View>
 
             <View style={{

@@ -21,10 +21,17 @@ const AdminApartment = () => {
     const nav = useNavigation(); // Điều hướng
     const [selectedBuilding, setSelectedBuilding] = useState('all');
     const [selectedFloor, setSelectedFloor] = useState('all');
+    const [createModalVisible, setCreateModalVisible] = useState(false);
+    const [newCode, setNewCode] = useState("");
+    const [newBuilding, setNewBuilding] = useState("");
+    const [newFloor, setNewFloor] = useState("");
+    const [newNumber, setNewNumber] = useState("");
+    const [newOwnerIdCreate, setNewOwnerIdCreate] = useState("");
 
     // Hàm gọi API để lấy danh sách apartment
     // const fetchApartments = async (url = "http://192.168.44.101:8000/apartments/") => {
     const fetchApartments = async (url = "http://192.168.44.103:8000/apartments/") => {
+    // const fetchApartments = async (url = "http://192.168.1.36:8000/apartments/") => {
         try {
             if (!nextPage) setLoading(true); // Bật trạng thái tải dữ liệu ban đầu
             const token = await AsyncStorage.getItem("token");
@@ -135,6 +142,8 @@ const AdminApartment = () => {
             if (response.ok) {
                 Alert.alert("Thành công", data.detail);
                 setModalVisible(false); // Đóng Modal
+                setApartments([]); // Clear danh sách cũ
+                fetchApartments(); // Reload lại
                 setNewOwnerId(""); // Reset trường nhập liệu
                 setNote("");
             } else {
@@ -143,6 +152,52 @@ const AdminApartment = () => {
         } catch (error) {
             console.error("Lỗi khi chuyển nhượng căn hộ:", error);
             Alert.alert("Lỗi", "Đã xảy ra lỗi khi chuyển nhượng căn hộ.");
+        }
+    };
+
+    const handleCreateApartment = async () => {
+        if (!newCode || !newBuilding || !newFloor || !newNumber || !newOwnerIdCreate) {
+            Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
+            return;
+        }
+
+        try {
+            const body = {
+                code: newCode,                
+                building: newBuilding,        
+                floor: Number(newFloor),      
+                number: newNumber,            
+                owner: Number(newOwnerIdCreate),
+                active: true,
+            };
+            console.log("Body to be posted:", body);
+            const token = await AsyncStorage.getItem("token");
+            const response = await fetch("http://192.168.44.103:8000/apartments/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify(body),
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                Alert.alert("Thành công", "Tạo căn hộ thành công");
+                setCreateModalVisible(false);
+                setNewCode("");
+                setNewBuilding("");
+                setNewFloor("");
+                setNewNumber("");
+                setNewOwnerIdCreate("");
+                setApartments([]); // Clear cũ
+                fetchApartments(); // Reload danh sách
+            } else {
+                Alert.alert("Lỗi", data.detail || "Tạo căn hộ thất bại");
+            }
+        } catch (error) {
+            console.error("Lỗi khi tạo căn hộ:", error);
+            Alert.alert("Lỗi", "Đã xảy ra lỗi khi tạo căn hộ.");
         }
     };
 
@@ -157,10 +212,10 @@ const AdminApartment = () => {
 
         fetchUser(); // Gọi hàm lấy thông tin người dùng
         fetchApartments(); // Gọi API để tải dữ liệu ban đầu
-        if (modalVisible) {
+        if (createModalVisible) {
             fetchResidentsWithoutApartment(); // Gọi API khi Modal mở
         }
-    }, [modalVisible]);
+    }, [createModalVisible]);
 
     // Render từng apartment
     const renderApartment = ({ item }) => (
@@ -197,6 +252,10 @@ const AdminApartment = () => {
         return buildingMatch && floorMatch;
         });
 
+    const buildingOptions = ["A", "B", "C", "D"];
+    const floorOptions = Array.from({ length: 20 }, (_, i) => (i + 1).toString());
+    const roomNumberOptions = Array.from({ length: 30 }, (_, i) => (i + 1).toString().padStart(2, '0'));
+
     return (
         <LinearGradient
         colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
@@ -205,8 +264,18 @@ const AdminApartment = () => {
             <View style={styles.container}>
             <Text style={styles.header}>Danh sách Apartment</Text>
 
+            <TouchableOpacity
+                onPress={() => {
+                    setCreateModalVisible(true);
+                    fetchResidentsWithoutApartment(); // Load danh sách cư dân chưa có căn hộ
+                }}
+                style={[MyStyles.createButtonn, { backgroundColor: "#FF6F61" }]}
+            >
+                <Text style={MyStyles.createButtonText}>Tạo căn hộ</Text>
+            </TouchableOpacity>
+
             <View style={styles.header}>
-                <Text style={{ fontWeight: 'bold', marginBottom: 5 }}>Chọn tòa nhà:</Text>
+                <Text style={{ fontWeight: 'bold', marginBottom: 5, paddingTop: 15 }}>Chọn tòa nhà:</Text>
                 <Picker
                     selectedValue={selectedBuilding}
                     onValueChange={(value) => setSelectedBuilding(value)}
@@ -294,6 +363,96 @@ const AdminApartment = () => {
                                     style={MyStyles.buttonnn}
                                 >
                                     <Text style={MyStyles.buttonText}>Chuyển</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </Modal>
+                
+                {/* Modal tạo căn hộ */}
+                <Modal
+                    visible={createModalVisible}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => setCreateModalVisible(false)}
+                >
+                    <View style={MyStyles.modalOverlay}>
+                        <View style={MyStyles.modalContent}>
+                            <Text style={MyStyles.modalTitle}>Tạo căn hộ mới</Text>
+
+                            <Text style={MyStyles.label}>Mã căn hộ</Text>
+                            <TextInput
+                                value={newCode}
+                                onChangeText={setNewCode}
+                                style={MyStyles.input}
+                                placeholder="Nhập mã căn hộ"
+                            />
+
+                            <Text style={MyStyles.label}>Toà nhà</Text>
+                            <Picker
+                                selectedValue={newBuilding}
+                                onValueChange={(itemValue) => setNewBuilding(itemValue)}
+                                style={MyStyles.input}
+                            >
+                                <Picker.Item label="Chọn toà" value="" />
+                                {buildingOptions.map((building) => (
+                                    <Picker.Item key={building} label={building} value={building} />
+                                ))}
+                            </Picker>
+
+                            <Text style={MyStyles.label}>Tầng</Text>
+                            <Picker
+                                selectedValue={newFloor}
+                                onValueChange={(itemValue) => setNewFloor(itemValue)}
+                                style={MyStyles.input}
+                            >
+                                <Picker.Item label="Chọn tầng" value="" />
+                                {floorOptions.map((floor) => (
+                                    <Picker.Item key={floor} label={`Tầng ${floor}`} value={floor} />
+                                ))}
+                            </Picker>
+
+                            <Text style={MyStyles.label}>Số phòng</Text>
+                            <Picker
+                                selectedValue={newNumber}
+                                onValueChange={(itemValue) => setNewNumber(itemValue)}
+                                style={MyStyles.input}
+                            >
+                                <Picker.Item label="Chọn số phòng" value="" />
+                                {roomNumberOptions.map((room) => (
+                                    <Picker.Item key={room} label={`Phòng ${room}`} value={room} />
+                                ))}
+                            </Picker>
+
+                            <Text style={MyStyles.label}>Chủ sở hữu</Text>
+                            <Picker
+                                selectedValue={newOwnerIdCreate}
+                                onValueChange={(itemValue) => setNewOwnerIdCreate(itemValue)}
+                                style={MyStyles.input}
+                            >
+                                <Picker.Item label="Chọn cư dân" value="" />
+                                {residents.map((resident) => (
+                                    <Picker.Item
+                                        key={resident.id}
+                                        label={`${resident.first_name} ${resident.last_name} (${resident.email})`}
+                                        value={resident.id}
+                                    />
+                                ))}
+                            </Picker>
+
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                                <TouchableOpacity
+                                    onPress={() => setCreateModalVisible(false)}
+                                    style={[MyStyles.button, { backgroundColor: '#ccc', flex: 1, marginRight: 5 }]}
+                                >
+                                    <Text style={MyStyles.buttonText}>Hủy</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    onPress={handleCreateApartment}
+                                    style={[MyStyles.button, { backgroundColor: '#4CAF50', flex: 1, marginLeft: 5 }]}
+                                >
+                                    <Text style={MyStyles.buttonText}>Lưu</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>

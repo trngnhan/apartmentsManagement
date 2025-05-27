@@ -23,8 +23,8 @@ const AdminUser = () => {
     const createUser = async (newUser) => {
         try {
             const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
-            const response = await fetch("http://192.168.44.101:8000/users/", {
-            // const response = await fetch("http://192.168.44.103:8000/users/", {
+            // const response = await fetch("http://192.168.44.101:8000/users/", {
+            const response = await fetch("http://192.168.44.103:8000/users/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

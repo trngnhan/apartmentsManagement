@@ -113,14 +113,22 @@ const handleUpdateStatus = async (lockerId, itemId, newStatus) => {
     }
 
     return (
-        <FlatList
+    <View style={styles.container}>
+        {items.length === 0 ? (
+        <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>📦 Chưa có món đồ nào trong tủ đồ...</Text>
+        </View>
+        ) : (<FlatList
             data={items}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderItem}
-            contentContainerStyle={styles.container}
+            contentContainerStyle={{ paddingBottom: 16 }}
         />
-    );
-    };
+        )}
+    </View>
+);
+
+};
 
 const styles = StyleSheet.create({
     container: {
@@ -155,6 +163,19 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginVertical: 4,
         backgroundColor: "#fff",
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 20,
+    },
+
+    emptyText: {
+        fontSize: 18,
+        color: "#6c757d",
+        textAlign: "center",
+        lineHeight: 26,
     },
 });
 

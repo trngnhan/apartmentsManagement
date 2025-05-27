@@ -71,6 +71,11 @@ export default StyleSheet.create({
         alignItems: "center",
         marginVertical: 10,
       },
+      createButtonn: {
+        padding: 10,
+        borderRadius: 5,
+        alignItems: "center",
+      },
       createButtonText: {
           color: "#fff",
           fontWeight: "bold",

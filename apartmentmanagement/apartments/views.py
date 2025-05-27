@@ -137,6 +137,22 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateA
         serializer = self.get_serializer(unregistered_users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['get'], url_path='admins')
+    def get_admins(self, request):
+        # Lọc các user có role là ADMIN
+        admins = User.objects.filter(role='ADMIN', active=True)
+
+        if not admins.exists():
+            return Response({"detail": "Không tìm thấy Admin nào."}, status=404)
+
+        # Nếu bạn chỉ cần ID của admin đầu tiên
+        first_admin = admins.first()
+        return Response({
+            "admin_id": first_admin.id,
+            "admin_name": f"{first_admin.first_name} {first_admin.last_name}",
+            "admin_email": first_admin.email
+        })
+
     @action(methods=['get', 'patch'], url_path='current-user', detail=False,
             permission_classes=[permissions.IsAuthenticated],
             parser_classes=[MultiPartParser, FormParser])
@@ -206,7 +222,7 @@ class ResidentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         return Response(serializer.data)
 
 # Apartment ViewSet
-class ApartmentViewSet(viewsets.ViewSet, generics.ListAPIView):
+class ApartmentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = Apartment.objects.filter(active=True)
     serializer_class = ApartmentSerializer
     pagination_class = Pagination

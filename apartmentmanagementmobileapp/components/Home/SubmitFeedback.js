@@ -51,8 +51,7 @@ const SubmitFeedback = () => {
         setLoading(true);
 
         try {
-            const response = await fetch("http://192.168.44.101:8000/feedbacks/", {
-            // const response = await fetch("http://192.168.44.103:8000/feedbacks/", {
+            const response = await fetch("http://192.168.44.103:8000/feedbacks/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

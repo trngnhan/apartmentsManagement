@@ -22,6 +22,9 @@ import AdminFeedback from './components/Admin/AdminFeedback';
 import AdminLocker from './components/Admin/AdminLocker';
 import AdminLockerItems from './components/Admin/AdminLockerItems';
 import AdminPayment from './components/Admin/AdminPayment';
+import AdminChatScreen from './components/Admin/AdminChatScreen';
+import ChatListScreen from './components/Home/ChatListScreen';
+import AdminChat from './components/Admin/AdminChat';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,9 +44,10 @@ export default function App() {
             <Stack.Screen name="LockerItems" component={LockerItems} options={{ title: "Tủ đồ cư dân" }} />
             <Stack.Screen name="SubmitFeedback" component={SubmitFeedback} options={{ title: "Gửi phản ánh" }} />
             <Stack.Screen name="SurveyList" component={SurveyListScreen} options={{ title: "Khảo sát cư dân" }} />
+            <Stack.Screen name="ChatListScreen" component={ChatListScreen} options={{ title: "Trò chuyện trực tuyến"}}/>
             {/* Admin */}
             <Stack.Screen name="AdminHome" component={AdminHome} options={{ title: "Trang chủ quản trị" }} />
-            <Stack.Screen name="AdminUser" component={AdminUser} options={{ title: "Quản lý người dùng" }} />
+            <Stack.Screen name="AdminUser" component={AdminUser} options={{ title: "Quản lý tài khoản" }} />
             <Stack.Screen name="AdminApartment" component={AdminApartment} options={{ title: "Quản lý căn hộ" }} />
             <Stack.Screen name="AdminResident" component={AdminResident} options={{ title: "Quản lý cư dân" }} />
             <Stack.Screen name="AdminApartmentTransferHistorys" component={AdminApartmentTransferHistorys} options={{ title: "Lịch sử chuyển nhượng" }} />
@@ -53,6 +57,9 @@ export default function App() {
             <Stack.Screen name="AdminLocker" component={AdminLocker} options={{ title: "Quản lý tủ đồ" }} />
             <Stack.Screen name="AdminLockerItems" component={AdminLockerItems} options={{title: "Tủ đồ cư dân"}} />
             <Stack.Screen name="AdminPayment" component={AdminPayment} options={{title: "Quản lý thanh toán"}} />
+            <Stack.Screen name="AdminChatScreen" component={AdminChatScreen} options={{title: "Quản lý tin nhắn trực tuyến"}} />
+            <Stack.Screen name="AdminChat" component={AdminChat} options={{ title: "Trò chuyện với cư dân" }} />
+            {/* Chat */}
           </Stack.Navigator>
         </NavigationContainer>
       </MyProvider>

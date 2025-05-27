@@ -44,7 +44,8 @@ const AdminResident = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log("Phản hồi từ API:", data);
-                setResidents(data.results || data || []); // Sử dụng `results` nếu có, nếu không thì dùng toàn bộ `data`
+                const filteredResidents = data.filter(item => item.user.role === 'RESIDENT');
+                setResidents(filteredResidents); // Sử dụng `results` nếu có, nếu không thì dùng toàn bộ `data`
             } else {
                 console.error("Lỗi khi lấy danh sách cư dân:", response.status);
             }

@@ -12,12 +12,51 @@ const ResidentHome = () => {
     const [apartments, setApartments] = useState([]); // State lưu căn hộ
     const [registrations, setRegistrations] = useState([]); // State lưu đăng ký giữ xe
     const [lockerItems, setLockerItems] = useState([]); // State lưu danh sách món hàng trong tủ đồ
+    const [token, setToken] = useState(null);
+    const [currentUserId, setCurrentUserId] = useState(null);
+    const [adminId, setAdminId] = useState(null);
     const nav = useNavigation();
+
+    const getAdminIdForResident = async (residentId) => {
+        const token = await AsyncStorage.getItem("token");
+        try {
+            const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Data admin API:", data);
+                return data.admin_id;  // sửa đây, lấy đúng trường admin_id
+            } else {
+                console.error("Lỗi response admin:", response.status);
+                return null;
+            }
+        } catch (error) {
+            console.error("Lỗi fetch admin:", error);
+            return null;
+        }
+    };
+
+
+    const onGoToChat = async () => {
+        if (!currentUserId) {
+            alert("Chưa đăng nhập hoặc chưa lấy được residentId");
+            return;
+        }
+        const adminId = await getAdminIdForResident(currentUserId);
+        console.log("Admin ID:", adminId); // Kiểm tra adminId
+        if (!adminId) {
+            alert("Chưa xác định được Admin");
+            return;
+        }
+        nav.navigate("ChatListScreen", { currentUserId, adminId });
+    };
 
     useEffect(() => {
         const checkToken = async () => {
             const token = await AsyncStorage.getItem("token");
             console.log("Token: ", token); // Kiểm tra token
+            setToken(token);
 
             if (!token) {
                 console.log("No token, redirecting to Login");
@@ -30,6 +69,7 @@ const ResidentHome = () => {
                     try {
                         const parsedUser = JSON.parse(userData);
                         console.log("Parsed User:", parsedUser); // Kiểm tra người dùng sau khi parse
+                        setCurrentUserId(parsedUser.resident_id);
 
                         setUser(parsedUser);
                         //---
@@ -62,27 +102,27 @@ const ResidentHome = () => {
 
                         // Gọi API lấy danh sách đăng ký giữ xe
                         const fetchRegistrations = async () => {
-                          try {
-                              const response = await fetch(
-                                //   "http://192.168.44.101:8000/visitorvehicleregistrations/my-registrations/",
-                                  "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
-                                  {
-                                      headers: {
-                                          Authorization: `Bearer ${token}`,
-                                      },
-                                  }
-                              );
-                      
-                              if (response.ok) {
-                                  const data = await response.json();
-                                  console.log("Dữ liệu trả về từ API:", data); // Log dữ liệu trả về
-                                  setRegistrations(data); // Lưu danh sách đăng ký giữ xe vào state
-                              } else {
-                                  console.error("Lỗi khi lấy danh sách đăng ký giữ xe:", response.status);
-                              }
-                            } catch (error) {
-                                console.error("Lỗi khi gọi API đăng ký giữ xe:", error);
-                            }
+                            try {
+                                const response = await fetch(
+                                    //   "http://192.168.44.101:8000/visitorvehicleregistrations/my-registrations/",
+                                    "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
+                                    {
+                                        headers: {
+                                            Authorization: `Bearer ${token}`,
+                                        },
+                                    }
+                                );
+                        
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    console.log("Dữ liệu trả về từ API:", data); // Log dữ liệu trả về
+                                    setRegistrations(data); // Lưu danh sách đăng ký giữ xe vào state
+                                } else {
+                                    console.error("Lỗi khi lấy danh sách đăng ký giữ xe:", response.status);
+                                }
+                                } catch (error) {
+                                    console.error("Lỗi khi gọi API đăng ký giữ xe:", error);
+                                }
                         };
 
                         // GỌI API ở đây!
@@ -177,6 +217,9 @@ const ResidentHome = () => {
                     </View>
                 </TouchableOpacity>
 
+              </View>
+
+              <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
                 {/* Hình ảnh để chuyển đến trang SurveyList */}
                 <TouchableOpacity onPress={() => nav.navigate("SurveyList")}>
                     <View style={{ alignItems: "center" }}>
@@ -187,6 +230,18 @@ const ResidentHome = () => {
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Phản hồi khảo sát</Text>
                     </View>
                 </TouchableOpacity>
+
+                {/* Hình ảnh để chuyển đến trang ChatScreen */}
+                <TouchableOpacity onPress={onGoToChat}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/chat-user.png")}
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Chat trực tuyến</Text>
+                    </View>
+                </TouchableOpacity>
+
               </View>
 
               {/* Hiển thị danh sách đăng ký giữ xe */}
@@ -207,7 +262,7 @@ const ResidentHome = () => {
                         </Card>
                     ))
                 )}
-
+                
               <Button
               style={{
                 backgroundColor: "#FF6F61", // Màu nền nút
