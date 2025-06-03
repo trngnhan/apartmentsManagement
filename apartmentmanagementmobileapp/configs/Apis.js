@@ -8,6 +8,9 @@ const BASE_URL = "http://192.168.44.103:8000/";
 export const endpoints = {
     login: "/o/token/",
     "current-user": "/users/current-user/",
+    apartments: "/apartments/",
+    transfer: (id) => `/apartments/${id}/transfer/`,
+    residentsWithoutApartment: "/apartments/resident-without-apartment/",
 };
 
 // Hàm tạo instance của axios với token

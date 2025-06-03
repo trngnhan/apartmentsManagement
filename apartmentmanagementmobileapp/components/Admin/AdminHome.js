@@ -42,8 +42,18 @@ const AdminHome = () => {
         nav.navigate("AdminFeedback"); // Điều hướng đến trang AdminFeedback
     };
 
-    const navigateToAdminLocker = () => {
-        nav.navigate("AdminLocker"); // Điều hướng đến trang AdminLocker
+    const navigateToAdminLocker = async () => {
+        const userStr = await AsyncStorage.getItem("user");
+        let adminId = null;
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                adminId = user.id;
+            } catch (e) {
+                console.error("Lỗi parse user:", e);
+            }
+        }
+        nav.navigate("AdminLocker", { adminId }); // Điều hướng đến trang AdminLocker
     };
 
     const navigateToAdminPayment = () => {

@@ -22,11 +22,13 @@ class ItemSerializer(ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True, use_url=True)
     resident_id = serializers.SerializerMethodField()  # Thêm trường resident_id
+    locker_id = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'password', 'first_name', 'last_name', 'profile_picture', 'role',
-                  'must_change_password', 'resident_id', 'phone_number', 'is_superuser', 'is_staff', 'active']
+                  'must_change_password', 'resident_id', 'phone_number', 'is_superuser', 'is_staff', 'active',
+                  'locker_id']
         read_only_fields = ['date_joined']
         extra_kwargs = {
             'password': {'write_only': True}
@@ -55,6 +57,15 @@ class UserSerializer(serializers.ModelSerializer):
         except AttributeError:
             return None  # Trả về None nếu không có Resident liên kết
 
+    def get_locker_id(self, obj):
+        # Lấy resident_id từ user
+        resident = getattr(obj, 'resident_profile', None)
+        if resident:
+            # Truy vấn ngược từ ParcelLocker
+            from apartments.models import ParcelLocker
+            locker = ParcelLocker.objects.filter(resident=resident).first()
+            return locker.id if locker else None
+        return None
 
 # Resident Serializer
 class ResidentSerializer(serializers.ModelSerializer):
@@ -101,7 +112,8 @@ class ApartmentTransferHistorySerializer(serializers.ModelSerializer):
 class PaymentCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = PaymentCategory
-        fields = ['id', 'name', 'amount', 'is_recurring', 'description']
+        fields = ['id', 'name', 'amount', 'is_recurring', 'description', 'active', 'frequency',
+                  'tax_percentage', 'grace_period', 'category_type', 'created_date']
         read_only_fields = ['created_date', 'updated_date']
 
     def validate_amount(self, value):

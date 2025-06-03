@@ -246,7 +246,7 @@ def seed():
         defaults={
             'amount': 250000,
             'method': 'MOMO',
-            'status': 'SUCCESS',
+            'status': 'COMPLETED',
             'paid_date': datetime.now(),
             'transaction_fee': 1500
         }
@@ -348,7 +348,7 @@ def seed():
         defaults={
             'amount': 320000,
             'method': 'VNPAY',
-            'status': 'SUCCESS',
+            'status': 'COMPLETED',
             'paid_date': datetime.now(),
             'transaction_fee': 1000
         }
@@ -399,7 +399,7 @@ def seed():
         defaults={
             'amount': 280000,
             'method': 'MOMO',
-            'status': 'SUCCESS',
+            'status': 'COMPLETED',
             'paid_date': datetime.now(),
             'transaction_fee': 1200
         }
@@ -501,7 +501,7 @@ def seed():
         defaults={
             'amount': 270000,
             'method': 'MOMO',
-            'status': 'SUCCESS',
+            'status': 'COMPLETED',
             'paid_date': datetime.now(),
             'transaction_fee': 1200
         }
@@ -603,7 +603,7 @@ def seed():
         defaults={
             'amount': 280000,
             'method': 'MOMO',
-            'status': 'SUCCESS',
+            'status': 'COMPLETED',
             'paid_date': datetime.now(),
             'transaction_fee': 1200
         }

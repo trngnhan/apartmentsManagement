@@ -391,8 +391,8 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
 
 
 # Payment Category ViewSet
-class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
-    queryset = PaymentCategory.objects.filter(active=True)
+class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView):
+    queryset = PaymentCategory.objects.filter()
     serializer_class = serializers.PaymentCategorySerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['is_recurring', 'active']
@@ -405,7 +405,7 @@ class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
 
 # Payment Transaction ViewSet
-class PaymentTransactionViewSet(viewsets.ViewSet):
+class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = PaymentTransaction.objects.filter(active=True)
     serializer_class = serializers.PaymentTransactionSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -431,12 +431,12 @@ class PaymentTransactionViewSet(viewsets.ViewSet):
 
         return query
 
-    @action(methods=['get'], detail=False, url_path='my-payments')
-    def my_payments(self, request):
-       #Trả về danh sách giao dịch thanh toán của người dùng hiện tại
-        payments = PaymentTransaction.objects.filter(apartment__owner=request.user)
-        serializer = self.get_serializer(payments, many=True)
-        return Response(serializer.data)
+    # @action(methods=['get'], detail=False, url_path='my-payments')
+    # def my_payments(self, request):
+    #    #Trả về danh sách giao dịch thanh toán của người dùng hiện tại
+    #     payments = PaymentTransaction.objects.filter(apartment__owner=request.user)
+    #     serializer = self.get_serializer(payments, many=True)
+    #     return Response(serializer.data)
 
     @action(methods=['post'], detail=True, url_path='upload-proof', parser_classes=[parsers.MultiPartParser])
     def upload_proof(self, request, pk):
@@ -461,20 +461,18 @@ class PaymentTransactionViewSet(viewsets.ViewSet):
         return Response(self.get_serializer(transaction).data)
 
     @action(methods=['patch'], detail=True, url_path='update-payment', permission_classes=[IsAdminUser])
-    def mark_completed(self, request, pk=None):
+    def update_payment(self, request, pk=None):
         transaction = self.get_object()
-
-        if transaction.status == 'COMPLETED':
+        new_status = request.data.get("status")
+        if new_status not in ["PENDING", "COMPLETED", "FAILED", "REFUNDED"]:
             return Response(
-                {"detail": "Giao dịch này đã hoàn tất."},
+                {"detail": "Trạng thái không hợp lệ."},
                 status=status.HTTP_400_BAD_REQUEST
             )
-
-        transaction.status = 'COMPLETED'
+        transaction.status = new_status
         transaction.save()
-
         return Response(
-            {"detail": "Giao dịch đã được đánh dấu là hoàn tất."},
+            {"detail": f"Trạng thái đã được cập nhật thành {new_status}."},
             status=status.HTTP_200_OK
         )
 
@@ -604,10 +602,11 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView)
     def add_item(self, request, pk=None):
         locker = self.get_object()
         item_name = request.data.get('item_name')
+        note = request.data.get('note', '')
         if not item_name:
             return Response({"detail": "Tên món đồ là bắt buộc."}, status=status.HTTP_400_BAD_REQUEST)
 
-        item = locker.items.create(name=item_name)
+        item = locker.items.create(name=item_name, note=note)
         notify_resident_about_new_item(locker.resident, item_name)
         serializer = ParcelItemSerializer(item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)

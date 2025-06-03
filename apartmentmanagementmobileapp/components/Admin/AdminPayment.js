@@ -1,14 +1,408 @@
-import { View, Text } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, FlatList, ActivityIndicator, TouchableOpacity, Alert, StyleSheet } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import MyStyles from "../../styles/MyStyles";
-import React from "react";
+import { Modal, TextInput } from "react-native-paper";
+import { Modal as RNModal } from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { useNavigation } from "@react-navigation/native";
+
+const API_URL = "http://192.168.44.103:8000/paymentcategories/";
 
 const AdminPayment = () => {
+    const [payments, setPayments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState("ALL");
+    const [refreshing, setRefreshing] = useState(false);
+    const [activeFilter, setActiveFilter] = useState("ALL");
+    const [createModalVisible, setCreateModalVisible] = useState(false);
+    const [newName, setNewName] = useState("");
+    const [newAmount, setNewAmount] = useState("");
+    const [newFrequency, setNewFrequency] = useState("");
+    const [newTax, setNewTax] = useState("");
+    const [newGrace, setNewGrace] = useState("");
+    const [newCategoryType, setNewCategoryType] = useState("");
+    const [creating, setCreating] = useState(false);
+    const navigation = useNavigation();
+
+    const fetchPayments = async (active = "ALL") => {
+        setLoading(true);
+        try {
+            const token = await AsyncStorage.getItem("token");
+            let url = API_URL;
+            if (active === "ACTIVE") {
+                url += "?active=true";
+                const res = await fetch(url, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                setPayments(data.results || data);
+            } else if (active === "INACTIVE") {
+                url += "?active=false";
+                const res = await fetch(url, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await res.json();
+                setPayments(data.results || data);
+            } else {
+                // Gọi cả hai trạng thái và gộp lại
+                const resActive = await fetch(API_URL + "?active=true", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const resInactive = await fetch(API_URL + "?active=false", {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const dataActive = await resActive.json();
+                const dataInactive = await resInactive.json();
+                // Gộp hai mảng lại
+                const allPayments = [
+                    ...(dataActive.results || dataActive || []),
+                    ...(dataInactive.results || dataInactive || [])
+                ];
+                console.log("All payments:", allPayments); // Thêm dòng này
+                setPayments(allPayments);
+            }
+        } catch (err) {
+            Alert.alert("Lỗi", "Không thể tải danh sách giao dịch.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCreatePayment = async () => {
+        setCreating(true);
+        try {
+            const token = await AsyncStorage.getItem("token");
+            const res = await fetch("http://192.168.44.103:8000/paymentcategories/", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    name: newName,
+                    amount: newAmount,
+                    frequency: newFrequency,
+                    tax_percentage: newTax,
+                    grace_period: newGrace,
+                    category_type: newCategoryType,
+                    active: true
+                })
+            });
+            if (res.ok) {
+                setCreateModalVisible(false);
+                setNewName("");
+                setNewAmount("");
+                setNewFrequency("");
+                setNewTax("");
+                setNewGrace("");
+                setNewCategoryType("");
+                fetchPayments(activeFilter);
+                Alert.alert("Thành công", "Đã tạo hóa đơn mới!");
+            } else {
+                const data = await res.json();
+                Alert.alert("Lỗi", data.detail || "Không thể tạo hóa đơn.");
+            }
+        } catch (err) {
+            Alert.alert("Lỗi", "Có lỗi xảy ra khi tạo hóa đơn.");
+        } finally {
+            setCreating(false);
+        }
+    };
+
+    const frequencyDisplay = (code) => {
+        switch (code) {
+            case "ONE_TIME":
+                return "Một lần";
+            case "MONTHLY":
+                return "Hàng tháng";
+            case "QUARTERLY":
+                return "Hàng quý";
+            case "YEARLY":
+                return "Hàng năm";
+            default:
+                return code;
+        }
+    };
+    
+    const categoryTypeDisplay = (code) => {
+        switch (code) {
+            case "MAINTENANCE":
+                return "Bảo trì";
+            case "UTILITY":
+                return "Tiện ích";
+            case "SERVICE":
+                return "Dịch vụ";
+            default:
+                return code;
+        }
+    };
+
+    const lockPayment = async (paymentId) => {
+        try {
+            const token = await AsyncStorage.getItem("token");
+            const response = await fetch(`http://192.168.44.103:8000/paymentcategories/${paymentId}/`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ active: false }),
+            });
+
+            if (response.ok) {
+                Alert.alert("Thành công", "Hóa đơn đã được khóa.");
+                setPayments((prevPayments) =>
+                    prevPayments.map((payment) =>
+                        payment.id === paymentId ? { ...payment, active: false } : payment
+                    )
+                );
+            } else {
+                console.error("Lỗi khi khóa hóa đơn:", response.status);
+                Alert.alert("Lỗi", "Không thể khóa hóa đơn. Vui lòng thử lại.");
+            }
+        } catch (error) {
+            console.error("Lỗi khi gọi API khóa hóa đơn:", error);
+            Alert.alert("Lỗi", "Đã xảy ra lỗi khi khóa hóa đơn.");
+        }
+    };
+
+    useEffect(() => {
+        fetchPayments(activeFilter);
+    }, [activeFilter]);
+
+    const renderPayment = ({ item }) => (
+        <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.7}
+            onPress={() =>
+                item.active &&
+                navigation.navigate("AdminPaymentTransactionList", {
+                    categoryId: item.id,
+                    categoryName: item.name,
+                })
+            }
+            disabled={!item.active} // Không cho ấn nếu hóa đơn đã khoá
+        >
+            <Text>Loại phí: {item.name}</Text>
+            <Text>
+                Số tiền: {parseInt(item.amount).toLocaleString("vi-VN")} VNĐ
+            </Text>
+            <Text>Tần suất thanh toán: {frequencyDisplay(item.frequency)}</Text>
+            <Text>VAT: {item.tax_percentage}</Text>
+            <Text>Thời gian ân hạn (ngày): {item.grace_period}</Text>
+            <Text>Loại phí: {categoryTypeDisplay(item.category_type)}</Text>
+            <Text>Trạng thái: {item.active ? "Hoạt động" : "Đã khoá"}</Text>
+            <Text style={{ marginBottom: 5 }}>
+                Ngày tạo: {new Date(item.created_date).toLocaleDateString("vi-VN")}
+            </Text>
+
+            <TouchableOpacity
+                style={[
+                    MyStyles.button,
+                    {
+                        backgroundColor: item.active ? "#4CAF50" : "#999",
+                        marginBottom: 10,
+                        opacity: item.active ? 1 : 0.5,
+                    },
+                ]}
+                onPress={() => {
+                    if (item.active) lockPayment(item.id);
+                }}
+                disabled={!item.active}
+            >
+                <Text style={MyStyles.buttonText}>
+                    {item.active ? "Khoá" : "Đã khoá"}
+                </Text>
+            </TouchableOpacity>
+        </TouchableOpacity>
+    );
+
     return (
-        <View style={MyStyles.container}>
-            <Text>Chào mừng bạn đã đăng nhập thành công!</Text>
+        <View style={MyStyles.containerr}>
+            <Text style={styles.header}>Quản lý giao dịch thanh toán</Text>
+            <TouchableOpacity
+                style={[MyStyles.button, { backgroundColor: "#4CAF50", marginBottom: 10 }]}
+                onPress={() => setCreateModalVisible(true)}
+            >
+                <Text style={MyStyles.buttonText}>Tạo hóa đơn</Text>
+            </TouchableOpacity>
+
+            {/* Sửa lại RNModal để modal nổi lên trên và làm mờ nền */}
+            <RNModal
+                visible={createModalVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setCreateModalVisible(false)}
+            >
+                <View style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(0,0,0,0.4)',
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                }}>
+                    <View style={{
+                        backgroundColor: 'white',
+                        padding: 20,
+                        borderRadius: 10,
+                        width: '90%'
+                    }}>
+                        <Text style={{ fontWeight: "bold", fontSize: 20, marginBottom: 10, textAlign: "center" }}>
+                            Tạo hoá đơn mới
+                        </Text>
+                        <TextInput
+                            label="Tên loại phí"
+                            value={newName}
+                            onChangeText={setNewName}
+                            style={{ marginBottom: 10 }}
+                        />
+                        <TextInput
+                            label="Số tiền"
+                            value={newAmount}
+                            onChangeText={setNewAmount}
+                            keyboardType="numeric"
+                            style={{ marginBottom: 10 }}
+                        />
+                        <View style={{ marginBottom: 10 }}>
+                            <Text style={{ marginBottom: 5, color: "#888" }}>Tần suất thanh toán</Text>
+                            <View style={{
+                                borderWidth: 1,
+                                borderColor: "#ccc",
+                                borderRadius: 5,
+                                overflow: "hidden"
+                            }}>
+                                <Picker
+                                    selectedValue={newFrequency}
+                                    onValueChange={(itemValue) => setNewFrequency(itemValue)}
+                                >
+                                    <Picker.Item label="Chọn tần suất" value="" />
+                                    <Picker.Item label="Một lần" value="ONE_TIME" />
+                                    <Picker.Item label="Hàng tháng" value="MONTHLY" />
+                                    <Picker.Item label="Hàng quý" value="QUARTERLY" />
+                                    <Picker.Item label="Hàng năm" value="YEARLY" />
+                                </Picker>
+                            </View>
+                        </View>
+                        <TextInput
+                            label="VAT (%)"
+                            value={newTax}
+                            onChangeText={setNewTax}
+                            keyboardType="numeric"
+                            style={{ marginBottom: 10 }}
+                        />
+                        <TextInput
+                            label="Thời gian ân hạn (ngày)"
+                            value={newGrace}
+                            onChangeText={setNewGrace}
+                            keyboardType="numeric"
+                            style={{ marginBottom: 10 }}
+                        />
+                        <View style={{ marginBottom: 10 }}>
+                            <Text style={{ marginBottom: 5, color: "#888" }}>Loại phí</Text>
+                            <View style={{
+                                borderWidth: 1,
+                                borderColor: "#ccc",
+                                borderRadius: 5,
+                                overflow: "hidden"
+                            }}>
+                                <Picker
+                                    selectedValue={newCategoryType}
+                                    onValueChange={(itemValue) => setNewCategoryType(itemValue)}
+                                >
+                                    <Picker.Item label="Chọn loại phí" value="" />
+                                    <Picker.Item label="Bảo trì" value="MAINTENANCE" />
+                                    <Picker.Item label="Tiện ích" value="UTILITY" />
+                                    <Picker.Item label="Dịch vụ" value="SERVICE" />
+                                </Picker>
+                            </View>
+                        </View>
+                        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                            <TouchableOpacity
+                                style={[MyStyles.button, { backgroundColor: "#ccc", flex: 1, marginRight: 5 }]}
+                                onPress={() => setCreateModalVisible(false)}
+                            >
+                                <Text style={MyStyles.buttonText}>Hủy</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[MyStyles.button, { backgroundColor: "#4CAF50", flex: 1, marginLeft: 5 }]}
+                                onPress={handleCreatePayment}
+                                disabled={creating}
+                            >
+                                <Text style={MyStyles.buttonText}>{creating ? "Đang tạo..." : "Tạo"}</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </RNModal>
+
+            <View style={styles.filterRow}>
+                <Text>Lọc trạng thái: </Text>
+                {["ALL", "ACTIVE", "INACTIVE"].map((status) => (
+                    <TouchableOpacity
+                        key={status}
+                        style={[
+                            styles.filterBtn,
+                            activeFilter === status && styles.filterBtnActive
+                        ]}
+                        onPress={() => setActiveFilter(status)}
+                    >
+                        <Text style={{ color: activeFilter === status ? "#fff" : "#333" }}>
+                            {status === "ALL" ? "Tất cả" : status === "ACTIVE" ? "Hoạt động" : "Đã khoá"}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+            {loading ? (
+                <ActivityIndicator size="large" color="#FF6F61" />
+            ) : (
+                <FlatList
+                    data={payments}
+                    keyExtractor={(item) => item.id?.toString()}
+                    renderItem={renderPayment}
+                    refreshing={refreshing}
+                    onRefresh={() => fetchPayments(activeFilter)}
+                    ListEmptyComponent={<Text style={{ textAlign: "center", marginTop: 20 }}>Không có giao dịch nào.</Text>}
+                />
+            )}
         </View>
     );
 };
 
+const styles = StyleSheet.create({
+    header: {
+        fontSize: 22,
+        fontWeight: "bold",
+        marginBottom: 10,
+        textAlign: "center"
+    },
+    card: {
+        backgroundColor: "#f9f9f9",
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        elevation: 2,
+    },
+    title: {
+        fontWeight: "bold",
+        fontSize: 16,
+        marginBottom: 5,
+    },
+    filterRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 10,
+        justifyContent: "center"
+    },
+    filterBtn: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 20,
+        backgroundColor: "#eee",
+        marginHorizontal: 5,
+    },
+    filterBtnActive: {
+        backgroundColor: "#FF6F61",
+    },
+});
 
 export default AdminPayment;

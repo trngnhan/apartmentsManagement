@@ -4,10 +4,10 @@ import { ActivityIndicator, Avatar, Card } from "react-native-paper";
 import MyStyles from "../../styles/MyStyles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
-import ChatServices from "../../firebase/ChatServices";
+import { chatServices } from "../../firebase/ChatServices";
 
 const AdminChatScreen = ({ navigation, route }) => {
-const { user, token } = route.params; // token nếu cần dùng cho API bảo mật
+const { user, token } = route.params;
 const [residents, setResidents] = useState([]);
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState(null);
@@ -30,7 +30,6 @@ useEffect(() => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Phản hồi từ API:", data);
                 const filteredResidents = data.filter(item => item.user.role === 'RESIDENT');
                 setResidents(filteredResidents);
                 setLoading(false)
@@ -51,15 +50,15 @@ const navigateToChatWithResident = async (resident) => {
         const userObj = typeof user === 'string' ? JSON.parse(user) : user;
         console.log("Đã gọi navigateToChatWithResident", resident);
 
-        if (!userObj || !userObj.id) {
-            alert("Không xác định được Admin hiện tại.");
-            return;
-        }
+        // if (!userObj || !userObj.id) {
+        //     alert("Không xác định được Admin hiện tại.");
+        //     return;
+        // }
 
-        const roomId = await ChatServices.createOrGetChatRoom(userObj.id, resident.id);
+        const roomId = await chatServices.createOrGetChatRoom(userObj.id, resident.id);
         console.log("Phòng chat đã tạo hoặc lấy:", roomId);
 
-        const chatRoomDetails = await ChatServices.getChatRoomDetails(roomId);
+        const chatRoomDetails = await chatServices.getChatRoomDetails(roomId);
         console.log("Chi tiết phòng chat:", chatRoomDetails);
         navigation.navigate("AdminChat", {
             roomId,

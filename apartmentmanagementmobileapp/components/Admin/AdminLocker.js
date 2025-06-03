@@ -14,10 +14,11 @@
     import AsyncStorage from "@react-native-async-storage/async-storage";
     import { LinearGradient } from "expo-linear-gradient";
     import MyStyles from "../../styles/MyStyles";
-    import { useNavigation } from "@react-navigation/native";
+    import { useNavigation, useRoute } from "@react-navigation/native";
     import { Picker } from "@react-native-picker/picker";
 
     const AdminLocker = () => {
+    const route = useRoute();
     const [lockers, setLockers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -26,6 +27,8 @@
     const [newLocker, setNewLocker] = useState({
         resident_id: null,
     });
+    const adminId = route.params?.adminId;
+    const residentId = route.params?.residentId;
 
     const sortedLockers = [...lockers].sort((a, b) => a.id - b.id);
     const nav = useNavigation();
@@ -42,13 +45,14 @@
         });
         if (response.ok) {
             const data = await response.json();
+            console.log("Danh sách tủ đồ:", data);  // debug
             setLockers(data.results || data);
         } else {
             setError("Không thể tải danh sách tủ đồ.");
         }
         } catch (error) {
-        console.error("Lỗi khi gọi API tủ đồ:", error);
-        setError("Đã xảy ra lỗi khi tải danh sách tủ đồ.");
+            console.error("Lỗi khi gọi API tủ đồ:", error);
+            setError("Đã xảy ra lỗi khi tải danh sách tủ đồ.");
         } finally {
         setLoading(false);
         }
@@ -107,7 +111,7 @@
                 Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-                resident_id: newLocker.resident_id,
+                resident_id: newLocker.resident,
             }),
         });
 
@@ -129,7 +133,11 @@
     const renderLocker = ({ item }) => (
         <TouchableOpacity
         style={[MyStyles.card, styles.lockerCard]}
-        onPress={() => nav.navigate("AdminLockerItems", { lockerId: item.id })}
+        onPress={() => nav.navigate("AdminLockerItems", { 
+            lockerId: item.id,
+            adminId: adminId,
+            residentId: item.resident,
+        })}
         >
         <View style={{ alignItems: "center" }}>
             <Image

@@ -1,8 +1,8 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
 
 // Firebase configuration object
-export const firebaseConfig = {
+const firebaseConfig1 = {
     apiKey: "AIzaSyBAPZZ3Q3_a8aaaFmftELJ0na2ipuVbtp4",
     authDomain: "apartmentschat.firebaseapp.com",
     databaseURL: "https://apartmentschat-default-rtdb.firebaseio.com",
@@ -13,11 +13,35 @@ export const firebaseConfig = {
     measurementId: "G-5PV3802RYQ"
 };
 
-// Khởi tạo Firebase một lần duy nhất
-const app = initializeApp(firebaseConfig);
+const firebaseConfig2 = {
+    apiKey: "AIzaSyDdy2oeoK0vm2M30lHT5RQ46EwP2rR3loo",
+    authDomain: "apartmentlocker.firebaseapp.com",
+    databaseURL: "https://apartmentlocker-default-rtdb.firebaseio.com",
+    projectId: "apartmentlocker",
+    storageBucket: "apartmentlocker.firebasestorage.app",
+    messagingSenderId: "430007039203",
+    appId: "1:430007039203:web:d3a0cc058e75760a7881d6",
+    measurementId: "G-MF2FVBF9PX"
+};
 
-// Khởi tạo database
-const database = getDatabase(app);
+let app1;
+if (!getApps().find(app => app.name === "[DEFAULT]")) {
+    app1 = initializeApp(firebaseConfig1);
+} else {
+    app1 = getApp();
+}
+
+// Khởi tạo app 2 với tên khác
+let app2;
+if (!getApps().find(app => app.name === "SECOND_DB")) {
+    app2 = initializeApp(firebaseConfig2, "SECOND_DB");
+} else {
+    app2 = getApp("SECOND_DB");
+}
+
+// Khởi tạo 2 database
+const database1 = getDatabase(app1);
+const database2 = getDatabase(app2);
 
 // Export database
-export { database };
+export { database1, database2 };

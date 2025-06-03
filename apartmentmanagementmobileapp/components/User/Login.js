@@ -119,7 +119,8 @@ const Login = () => {
                     "user",
                     JSON.stringify({
                         token: res.data.access_token,
-                        resident_id: u.data.resident_id, // Đảm bảo lưu resident_id
+                        resident_id: u.data.resident_id, // Đảm bảo lưu resident_id\
+                        locker_id: u.data.locker_id, // Lưu locker_id nếu có
                         ...u.data,
                     })
                 );

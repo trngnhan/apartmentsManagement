@@ -237,6 +237,7 @@ const AdminApartment = () => {
                 onPress={() => {
                     setSelectedApartment(item); // Lưu căn hộ được chọn
                     setModalVisible(true); // Hiển thị Modal
+                    fetchResidentsWithoutApartment();
                 }}
                 style={[MyStyles.button, { backgroundColor: "#FFCC33", marginTop: 10 }]}
             >

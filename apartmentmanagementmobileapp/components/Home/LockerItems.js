@@ -1,12 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Card, Title, Paragraph } from "react-native-paper";
 import { LinearGradient } from "expo-linear-gradient";
 import MyStyles from "../../styles/MyStyles";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { getDatabase, ref, update, get } from "firebase/database";
+import { database2 } from "../../firebase/Configs";
+
+const database = database2;
 
 const LockerItems = () => {
     const [lockerItems, setLockerItems] = useState([]); // State lưu danh sách món hàng trong tủ đồ
+    const [lockerId, setLockerId] = useState(null);
+    const navigation = useNavigation();
+    const route = useRoute();
+    const { currentUserId, adminId: adminIdFromParams} = route.params || {};
+
+    console.log("Current User ID:", currentUserId);
+    console.log("Admin ID from params:", adminIdFromParams);
+    console.log("Locker ID:", lockerId);
+
+    useEffect(() => {
+        const fetchLockerId = async () => {
+            const userData = await AsyncStorage.getItem("user");
+            if (userData) {
+                const user = JSON.parse(userData);
+                setLockerId(user.locker_id);
+            }
+        };
+        fetchLockerId();
+    }, []);
 
     useEffect(() => {
         const fetchLockerItems = async () => {
@@ -21,7 +45,6 @@ const LockerItems = () => {
 
                 const user = JSON.parse(userData);
                 console.log("User data:", user);
-                console.log("Resident ID:", user.resident_id);
                 if (!user.resident_id) {
                     console.error("Resident ID không tồn tại trong dữ liệu người dùng.");
                     return;
@@ -29,7 +52,7 @@ const LockerItems = () => {
 
                 const response = await fetch(
                     // `http://192.168.44.101:8000/parcellockers/${user.resident_id}/items/`,
-                    `http://192.168.44.103:8000/parcellockers/${user.resident_id}/items/`,
+                    `http://192.168.44.103:8000/parcellockers/${user.locker_id}/items/`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -52,18 +75,50 @@ const LockerItems = () => {
         fetchLockerItems();
     }, []);
 
+    // Hàm xử lý khi bấm chuông
+    const handleBellPress = async () => {
+        let adminId = adminIdFromParams;
+        if (!adminId) {
+            adminId = await getAdminIdForResident(currentUserId);
+        }
+        if (!currentUserId || !adminId || !lockerId) {
+            alert("Thiếu thông tin!");
+            return;
+        }
+
+        try {
+            const db = database // hoặc dùng database2 nếu bạn dùng database thứ 2
+            const roomId = `${adminId}_${currentUserId}_${lockerId}`;
+            const messagesRef = ref(db, `chatRooms/${roomId}/messages`);
+            const snapshot = await get(messagesRef);
+            if (snapshot.exists()) {
+                const updates = {};
+                snapshot.forEach(child => {
+                    updates[`${child.key}/read`] = true;
+                });
+                await update(messagesRef, updates);
+            }
+        } catch (err) {
+            console.error("Lỗi cập nhật trạng thái read:", err);
+        }
+        navigation.navigate("NotificationScreen", { currentUserId, adminId, lockerId });
+    };
+
     return (
         <LinearGradient 
-        colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
-        style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+        colors={['#fff', '#d7d2cc', '#FFBAC3']}
+        style={{ flex: 1 }}
         >
             <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Danh sách món hàng trong tủ đồ</Text>
+            <Text style={MyStyles.titlee}>Danh sách món hàng trong tủ đồ</Text>
+            <TouchableOpacity onPress={handleBellPress}>
+                <Text style={MyStyles.bellIcon}>🔔 Thông báo</Text>
+            </TouchableOpacity>
             {lockerItems.length === 0 ? (
-                <Text style={styles.noItems}>Không có món hàng nào trong tủ đồ.</Text>
+                <Text style={MyStyles.noItems}>Không có món hàng nào trong tủ đồ.</Text>
             ) : (
                 lockerItems.map((item, index) => (
-                    <Card key={index} style={styles.card}>
+                    <Card key={index} style={MyStyles.card}>
                         <Card.Content>
                             <Title style={MyStyles.text}>Món hàng: {item.name}</Title>
                             <Paragraph>Trạng thái: {item.status}</Paragraph>

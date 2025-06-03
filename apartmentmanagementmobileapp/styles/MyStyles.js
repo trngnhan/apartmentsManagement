@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
     container: {
         flex: 1,
-        padding: 10,
+        padding: 20,
         justifyContent: "center",
         alignItems: "center",
       },
@@ -45,6 +45,14 @@ export default StyleSheet.create({
         fontSize: 24,
         fontWeight: "bold",
         marginBottom: 20,
+      },
+      titlee: {
+        fontSize: 25,
+        fontWeight: "bold",
+        marginBottom: 16,
+        textAlign: "center",
+        alignSelf: "center",
+        width: "100%",
       },
       header: {
         fontSize: 18,
@@ -279,6 +287,23 @@ export default StyleSheet.create({
           fontSize: 16,
           color: "#999",
           marginTop: 20,
+      },
+      bellIcon: {
+        fontSize: 20,
+        color: "#ff4081",
+        backgroundColor: "#fff",
+        borderRadius: 20,
+        padding: 8,
+        marginBottom: 12,
+        marginLeft: 8,
+        alignSelf: "flex-end",
+        // Đổ bóng cho Android
+        elevation: 4,
+        // Đổ bóng cho iOS
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
       },
 });
 

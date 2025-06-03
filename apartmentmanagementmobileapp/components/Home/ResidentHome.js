@@ -14,6 +14,7 @@ const ResidentHome = () => {
     const [lockerItems, setLockerItems] = useState([]); // State lưu danh sách món hàng trong tủ đồ
     const [token, setToken] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [lockerId, setLockerId] = useState(null);
     const [adminId, setAdminId] = useState(null);
     const nav = useNavigation();
 
@@ -52,6 +53,22 @@ const ResidentHome = () => {
         nav.navigate("ChatListScreen", { currentUserId, adminId });
     };
 
+    const goLockerItems = async () => {
+        if (!currentUserId) {
+            alert("Chưa đăng nhập hoặc chưa lấy được residentId");
+            return;
+        }
+        const adminId = await getAdminIdForResident(currentUserId);
+        console.log("Admin ID:", adminId); // Kiểm tra adminId
+        console.log("Current User ID:", currentUserId); // Kiểm tra currentUserId
+        console.log("Locker Items:", lockerId); // Kiểm tra danh sách món hàng trong tủ đồ
+        if (!adminId) {
+            alert("Chưa xác định được Admin");
+            return;
+        }
+        nav.navigate("LockerItems", { currentUserId, adminId });
+    };
+
     useEffect(() => {
         const checkToken = async () => {
             const token = await AsyncStorage.getItem("token");
@@ -72,6 +89,10 @@ const ResidentHome = () => {
                         setCurrentUserId(parsedUser.resident_id);
 
                         setUser(parsedUser);
+
+                        const lockerId = parsedUser.locker_id;
+                        setLockerId(lockerId);
+                        console.log("Locker ID:", lockerId);
                         //---
                         // Hàm lấy API căn hộ
                         const fetchApartments = async (token) => {
@@ -196,7 +217,7 @@ const ResidentHome = () => {
                 </TouchableOpacity>
 
                 {/* Hình ảnh để chuyển đến trang LockerItems*/}
-                <TouchableOpacity onPress={() => nav.navigate("LockerItems")}>
+                <TouchableOpacity onPress={() => goLockerItems()}>
                     <View style={{ alignItems: "center" }}>
                         <Image
                             source={require("../../assets/locker_items.png")} // Đường dẫn đến hình ảnh
