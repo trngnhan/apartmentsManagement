@@ -23,6 +23,8 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "scheme": "apartmentmanagementmobileapp",
+    "deepLinking": true
   }
 }

@@ -387,84 +387,454 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
         return Response(ApartmentTransferHistorySerializer(transfer_history).data, status=status.HTTP_201_CREATED)
 
 
+# # Payment Category ViewSet
+# class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView):
+#     queryset = PaymentCategory.objects.filter()
+#     serializer_class = serializers.PaymentCategorySerializer
+#     filter_backends = [DjangoFilterBackend, SearchFilter]
+#     filterset_fields = ['is_recurring', 'active']
+#     search_fields = ['name', 'description']
+#
+#     def get_permissions(self):
+#         if self.action in ['create', 'update', 'partial_update', 'list']:
+#             return [IsAdminUser()]
+#         return [IsAdminOrManagement()]
+#
+#
+# # Payment Transaction ViewSet
+# class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
+#     queryset = PaymentTransaction.objects.filter(active=True)
+#     serializer_class = serializers.PaymentTransactionSerializer
+#     filter_backends = [DjangoFilterBackend, OrderingFilter]
+#     filterset_fields = ['apartment', 'category', 'method', 'status', 'active']
+#     ordering_fields = ['paid_date', 'created_date', 'amount']
+#
+#     def get_permissions(self):
+#         if self.action in ['create', 'update', 'partial_update']:
+#             return [IsAdminUser()]
+#         if self.action in ['list', 'retrieve']:
+#             return [IsAdminOrManagement()]
+#         return [permissions.IsAuthenticated()]
+#
+#     def get_queryset(self):
+#         #Nếu người dùng không phải admin, chỉ hiển thị các giao dịch của căn hộ mà họ sở hữu
+#         query = self.queryset
+#         if not self.request.user.is_staff:
+#             query = query.filter(apartment__owner=self.request.user)
+#
+#         status_param = self.request.query_params.get('status')
+#         if status_param:
+#             query = query.filter(status=status_param)
+#
+#         return query
+#
+#     @action(methods=['post'], detail=True, url_path='upload-proof', parser_classes=[parsers.MultiPartParser])
+#     def upload_proof(self, request, pk):
+#         #Tải lên bằng chứng thanh toán
+#         transaction = self.get_object()
+#         if transaction.apartment.owner != request.user and not request.user.is_staff:
+#             return Response(
+#                 {"detail": "Bạn không có quyền thực hiện hành động này."},
+#                 status=status.HTTP_403_FORBIDDEN
+#             )
+#
+#         if 'payment_proof' not in request.data:
+#             return Response(
+#                 {"detail": "Không tìm thấy file bằng chứng thanh toán."},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#
+#         transaction.payment_proof = request.data['payment_proof']
+#         transaction.status = 'PENDING'
+#         transaction.save()
+#
+#         return Response(self.get_serializer(transaction).data)
+#
+#     @action(methods=['patch'], detail=True, url_path='update-payment', permission_classes=[IsAdminUser])
+#     def update_payment(self, request, pk=None):
+#         transaction = self.get_object()
+#         new_status = request.data.get("status")
+#         if new_status not in ["PENDING", "COMPLETED", "FAILED", "REFUNDED"]:
+#             return Response(
+#                 {"detail": "Trạng thái không hợp lệ."},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#         transaction.status = new_status
+#         transaction.save()
+#         return Response(
+#             {"detail": f"Trạng thái đã được cập nhật thành {new_status}."},
+#             status=status.HTTP_200_OK
+#         )
+
 # Payment Category ViewSet
-class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView):
-    queryset = PaymentCategory.objects.filter()
+class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
+    queryset = PaymentCategory.objects.filter(active=True)
     serializer_class = serializers.PaymentCategorySerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['is_recurring', 'active']
     search_fields = ['name', 'description']
 
+    # def get_permissions(self):
+    #     if self.action in ['create', 'update', 'partial_update', 'list']:
+    #         return [IsAdminUser()]
+    #     return [IsAdminOrManagement()]
+
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'list']:
+        if self.action in ['create', 'update', 'partial_update']:
             return [IsAdminUser()]
-        return [IsAdminOrManagement()]
+        return [IsAuthenticated()]  # Cho phép cư dân đã xác thực truy cập danh sách
+
+    def get_queryset(self):
+        return self.queryset
 
 
 # Payment Transaction ViewSet
-class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
+# class PaymentTransactionViewSet(viewsets.ViewSet):
+#     queryset = PaymentTransaction.objects.filter(active=True)
+#     serializer_class = serializers.PaymentTransactionSerializer
+#     filter_backends = [DjangoFilterBackend, OrderingFilter]
+#     filterset_fields = ['apartment', 'category', 'method', 'status', 'active']
+#     ordering_fields = ['paid_date', 'created_date', 'amount']
+#
+#     def get_permissions(self):
+#         if self.action in ['create', 'update', 'partial_update']:
+#             return [IsAdminUser()]
+#         if self.action in ['list', 'retrieve']:
+#             return [IsAdminOrManagement()]
+#         return [permissions.IsAuthenticated()]
+#
+#     def get_queryset(self):
+#         #Nếu người dùng không phải admin, chỉ hiển thị các giao dịch của căn hộ mà họ sở hữu
+#         query = self.queryset
+#         if not self.request.user.is_staff:
+#             query = query.filter(apartment__owner=self.request.user)
+#
+#         status_param = self.request.query_params.get('status')
+#         if status_param:
+#             query = query.filter(status=status_param)
+#
+#         return query
+#
+#     @action(methods=['get'], detail=False, url_path='my-payments')
+#     def my_payments(self, request):
+#        #Trả về danh sách giao dịch thanh toán của người dùng hiện tại
+#         payments = PaymentTransaction.objects.filter(apartment__owner=request.user)
+#         serializer = self.get_serializer(payments, many=True)
+#         return Response(serializer.data)
+#
+#     @action(methods=['post'], detail=True, url_path='upload-proof', parser_classes=[parsers.MultiPartParser])
+#     def upload_proof(self, request, pk):
+#         #Tải lên bằng chứng thanh toán
+#         transaction = self.get_object()
+#         if transaction.apartment.owner != request.user and not request.user.is_staff:
+#             return Response(
+#                 {"detail": "Bạn không có quyền thực hiện hành động này."},
+#                 status=status.HTTP_403_FORBIDDEN
+#             )
+#
+#         if 'payment_proof' not in request.data:
+#             return Response(
+#                 {"detail": "Không tìm thấy file bằng chứng thanh toán."},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#
+#         transaction.payment_proof = request.data['payment_proof']
+#         transaction.status = 'PENDING'
+#         transaction.save()
+#
+#         return Response(self.get_serializer(transaction).data)
+#
+#     @action(methods=['patch'], detail=True, url_path='update-payment', permission_classes=[IsAdminUser])
+#     def mark_completed(self, request, pk=None):
+#         transaction = self.get_object()
+#
+#         if transaction.status == 'COMPLETED':
+#             return Response(
+#                 {"detail": "Giao dịch này đã hoàn tất."},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#
+#         transaction.status = 'COMPLETED'
+#         transaction.save()
+#
+#         return Response(
+#             {"detail": "Giao dịch đã được đánh dấu là hoàn tất."},
+#             status=status.HTTP_200_OK
+#         )
+
+
+from rest_framework import viewsets, generics, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAuthenticated, IsAdminUser
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from .models import PaymentCategory, PaymentTransaction, Apartment
+from .serializers import PaymentCategorySerializer, PaymentTransactionSerializer
+import hashlib
+import hmac
+import requests
+import time
+from decouple import config
+from django.utils import timezone
+import logging
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+import json
+
+logger = logging.getLogger('__name__')
+
+class IsAdminOrManagement(IsAuthenticated):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and (request.user.is_staff or
+                request.user.groups.filter(name='Management').exists())
+
+class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
+    queryset = PaymentCategory.objects.filter(active=True)
+    serializer_class = PaymentCategorySerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['is_recurring', 'active']
+    search_fields = ['amount', 'description']
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update']:
+            return [IsAdminUser()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        return self.queryset
+
+class PaymentTransactionViewSet(viewsets.GenericViewSet):
     queryset = PaymentTransaction.objects.filter(active=True)
-    serializer_class = serializers.PaymentTransactionSerializer
+    serializer_class = PaymentTransactionSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['apartment', 'category', 'method', 'status', 'active']
     ordering_fields = ['paid_date', 'created_date', 'amount']
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update']:
+        if self.action in ['create', 'update', 'partial_update', 'mark_completed']:
             return [IsAdminUser()]
         if self.action in ['list', 'retrieve']:
             return [IsAdminOrManagement()]
-        return [permissions.IsAuthenticated()]
+        return [IsAuthenticated()]
 
     def get_queryset(self):
-        #Nếu người dùng không phải admin, chỉ hiển thị các giao dịch của căn hộ mà họ sở hữu
         query = self.queryset
         if not self.request.user.is_staff:
             query = query.filter(apartment__owner=self.request.user)
-
         status_param = self.request.query_params.get('status')
         if status_param:
             query = query.filter(status=status_param)
-
         return query
 
-    @action(methods=['post'], detail=True, url_path='upload-proof', parser_classes=[parsers.MultiPartParser])
-    def upload_proof(self, request, pk):
-        #Tải lên bằng chứng thanh toán
-        transaction = self.get_object()
-        if transaction.apartment.owner != request.user and not request.user.is_staff:
-            return Response(
-                {"detail": "Bạn không có quyền thực hiện hành động này."},
-                status=status.HTTP_403_FORBIDDEN
+    @action(methods=['get'], detail=False, url_path='my-payments')
+    def my_payments(self, request):
+        payments = PaymentTransaction.objects.filter(apartment__owner=self.request.user)
+        serializer = self.get_serializer(payments, many=True)
+        logger.info(f"Returning {len(payments)} transactions for user {self.request.user.username}")
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=False, url_path='transaction/(?P<transaction_id>[^/.]+)')
+    def get_transaction(self, request, transaction_id=None):
+        try:
+            transaction = PaymentTransaction.objects.get(
+                transaction_id=transaction_id,
+                apartment__owner=self.request.user
+            )
+            serializer = self.get_serializer(transaction)
+            logger.info(f"Retrieved transaction {transaction_id} for user {self.request.user.username}")
+            return Response(serializer.data)
+        except PaymentTransaction.DoesNotExist:
+            logger.error(f"Transaction {transaction_id} not found for user {self.request.user.username}")
+            return Response({"detail": "Không tìm thấy giao dịch"}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(methods=['post'], detail=True, url_path='create-momo-payment', permission_classes=[IsAuthenticated])
+    def create_momo_payment(self, request, pk=None):
+        try:
+            category = PaymentCategory.objects.get(pk=pk, active=True)
+            try:
+                apartment = Apartment.objects.get(owner=self.request.user)
+            except Apartment.DoesNotExist:
+                return Response(
+                    {"detail": "Người dùng không sở hữu căn hộ nào."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Kiểm tra giao dịch định kỳ
+            if category.is_recurring and category.frequency == 'MONTHLY':
+                now = timezone.now()
+                existing_transaction = PaymentTransaction.objects.filter(
+                    apartment=apartment,
+                    category=category,
+                    status='COMPLETED',
+                    paid_date__year=now.year,
+                    paid_date__month=now.month
+                ).exists()
+                if existing_transaction:
+                    return Response(
+                        {"detail": "Khoản phí này đã được thanh toán cho chu kỳ hiện tại."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+            # MoMo configuration
+            partner_code = "MOMO"
+            order_id = f"{partner_code}{int(time.time() * 1000)}"
+            request_id = order_id
+            access_key = config('MOMO_ACCESS_KEY', default='F8BBA842ECF85')
+            secret_key = config('MOMO_SECRET_KEY', default='K951B6PE1waDMi640xX08PD3vg6EkVlz')
+            redirect_url = "apartmentmanagement://payment-callback"
+            ipn_url = 'https://<your-ngrok-id>.ngrok-free.app/paymenttransactions/momo-ipn/'  # Thay bằng ngrok URL
+            request_type = "captureWallet"
+            amount = str(int(category.amount))
+            order_info = f"Thanh toán {category.name}"
+            extra_data = ""
+            lang = "vi"
+
+            logger.info(f"Using ipn_url: {ipn_url}")
+
+            # Tạo raw signature đúng theo MoMo
+            raw_signature = (
+                f"accessKey={access_key}&amount={amount}&extraData={extra_data}"
+                f"&ipnUrl={ipn_url}&orderId={order_id}&orderInfo={order_info}"
+                f"&partnerCode={partner_code}&redirectUrl={redirect_url}"
+                f"&requestId={request_id}&requestType={request_type}"
+            )
+            logger.info(f"Raw signature: {raw_signature}")
+
+            signature = hmac.new(
+                key=secret_key.encode('utf-8'),
+                msg=raw_signature.encode('utf-8'),
+                digestmod=hashlib.sha256
+            ).hexdigest()
+
+            # Tạo request body
+            request_body = {
+                "partnerCode": partner_code,
+                "partnerName": "Test",
+                "storeId": "MomoTestStore",
+                "requestId": request_id,
+                "amount": amount,
+                "orderId": order_id,
+                "orderInfo": order_info,
+                "redirectUrl": redirect_url,
+                "ipnUrl": ipn_url,
+                "lang": lang,
+                "requestType": request_type,
+                "extraData": extra_data,
+                "signature": signature
+            }
+
+            # Gửi yêu cầu tới MoMo
+            logger.info(f"Sending MoMo request: {request_body}")
+            response = requests.post(
+                "https://test-payment.momo.vn/v2/gateway/api/create",
+                headers={"Content-Type": "application/json"},
+                json=request_body,
+                timeout=30  # Tăng timeout
+            )
+            response.raise_for_status()
+            momo_response = response.json()
+            logger.info(f"MoMo response: {momo_response}")
+
+            if not momo_response.get('qrCodeUrl'):
+                logger.error("No qrCodeUrl in MoMo response")
+                return Response({"detail": "MoMo API không trả về QR Code"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            transaction = PaymentTransaction.objects.create(
+                apartment=apartment,
+                category=category,
+                amount=category.amount,
+                method=PaymentTransaction.Method.MOMO,
+                transaction_id=order_id,
+                status='PENDING'
             )
 
-        if 'payment_proof' not in request.data:
-            return Response(
-                {"detail": "Không tìm thấy file bằng chứng thanh toán."},
-                status=status.HTTP_400_BAD_REQUEST
+            return Response({
+                "transaction": PaymentTransactionSerializer(transaction).data,
+                "momo_response": momo_response
+            }, status=status.HTTP_200_OK)
+
+        except PaymentCategory.DoesNotExist:
+            return Response({"detail": "Không tìm thấy loại phí"}, status=status.HTTP_404_NOT_FOUND)
+        except requests.RequestException as e:
+            logger.error(f"MoMo API error: {str(e)}")
+            return Response({"detail": f"Lỗi khi gọi MoMo API: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(methods=['post'], detail=False, url_path='update-status', permission_classes=[IsAuthenticated])
+    def update_status(self, request):
+        transaction_id = request.data.get('transaction_id')
+        result_code = request.data.get('result_code')
+        try:
+            transaction = PaymentTransaction.objects.get(
+                transaction_id=transaction_id,
+                apartment__owner=self.request.user
             )
+            if result_code == '0':
+                transaction.status = 'COMPLETED'
+                transaction.paid_date = timezone.now()
+            else:
+                transaction.status = 'FAILED'
+            transaction.save()
+            logger.info(f"Transaction {transaction_id} updated via API, status: {transaction.status}")
+            return Response({"message": "Cập nhật trạng thái thành công"}, status=status.HTTP_200_OK)
+        except PaymentTransaction.DoesNotExist:
+            logger.error(f"Transaction {transaction_id} not found for user {self.request.user.username}")
+            return Response({"detail": "Không tìm thấy giao dịch"}, status=status.HTTP_404_NOT_FOUND)
 
-        transaction.payment_proof = request.data['payment_proof']
-        transaction.status = 'PENDING'
-        transaction.save()
+@csrf_exempt
+@require_POST
+def momo_ipn(request):
+    try:
+        logger.info(f"IPN request received: {request.body}")
+        data = json.loads(request.body)
+        secret_key = config('MOMO_SECRET_KEY', default='K951B6PE1waDMi640xX08PD3vg6EkVlz')
+        logger.info(f"IPN data: {json.dumps(data, indent=2)}")
+        logger.info(f"IPN data keys: {data.keys()}")
 
-        return Response(self.get_serializer(transaction).data)
-
-    @action(methods=['patch'], detail=True, url_path='update-payment', permission_classes=[IsAdminUser])
-    def update_payment(self, request, pk=None):
-        transaction = self.get_object()
-        new_status = request.data.get("status")
-        if new_status not in ["PENDING", "COMPLETED", "FAILED", "REFUNDED"]:
-            return Response(
-                {"detail": "Trạng thái không hợp lệ."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        transaction.status = new_status
-        transaction.save()
-        return Response(
-            {"detail": f"Trạng thái đã được cập nhật thành {new_status}."},
-            status=status.HTTP_200_OK
+        raw_signature = (
+            f"accessKey={data.get('accessKey')}&amount={data.get('amount')}"
+            f"&extraData={data.get('extraData')}&message={data.get('message')}"
+            f"&orderId={data.get('orderId')}&orderInfo={data.get('orderInfo')}"
+            f"&orderType={data.get('orderType')}&partnerCode={data.get('partnerCode')}"
+            f"&payType={data.get('payType')}&requestId={data.get('requestId')}"
+            f"&responseTime={data.get('responseTime')}&resultCode={data.get('resultCode')}"
+            f"&transId={data.get('transId')}"
         )
+        logger.info(f"Raw signature string: {raw_signature}")
+
+        signature = hmac.new(
+            key=secret_key.encode('utf-8'),
+            msg=raw_signature.encode('utf-8'),
+            digestmod=hashlib.sha256
+        ).hexdigest()
+
+        if signature != data.get('signature'):
+            logger.error(f"Invalid signature. Expected: {signature}, Received: {data.get('signature')}")
+            return JsonResponse({"message": "Chữ ký không hợp lệ"}, status=400)
+
+        try:
+            transaction = PaymentTransaction.objects.get(transaction_id=data.get('orderId'))
+        except PaymentTransaction.DoesNotExist:
+            logger.error(f"Transaction not found for orderId: {data.get('orderId')}")
+            return JsonResponse({"message": "Không tìm thấy giao dịch"}, status=404)
+
+        logger.info(f"Processing IPN for transaction: {transaction.transaction_id}, resultCode: {data.get('resultCode')}")
+        if str(data.get('resultCode')) == '0':  # Chuyển thành string để an toàn
+            transaction.status = 'COMPLETED'
+            transaction.paid_date = timezone.now()
+        else:
+            transaction.status = 'FAILED'
+        transaction.save()
+        logger.info(f"Transaction updated: {transaction.transaction_id}, status: {transaction.status}")
+
+        return JsonResponse({"message": "IPN nhận thành công"}, status=200)
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in IPN: {str(e)}")
+        return JsonResponse({"message": "Dữ liệu JSON không hợp lệ"}, status=400)
+    except Exception as e:
+        logger.error(f"IPN error: {str(e)}")
+        return JsonResponse({"message": f"Lỗi server: {str(e)}"}, status=500)
 
 # Parcel Locker ViewSet
 class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView):

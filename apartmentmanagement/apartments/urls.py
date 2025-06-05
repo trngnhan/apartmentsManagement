@@ -7,6 +7,10 @@ from .views import (resident_login_view, resident_home_view, UserViewSet, Reside
                     ParcelLockerViewSet, FeedbackViewSet, SurveyViewSet, SurveyOptionViewSet,
                     SurveyResponseViewSet, VisitorVehicleRegistrationViewSet)
 
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import PaymentCategoryViewSet, PaymentTransactionViewSet, momo_ipn
+
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
 router.register(r'residents', ResidentViewSet, basename='resident')
@@ -30,4 +34,5 @@ urlpatterns = [
     path('upload-avatar/', views.upload_avatar, name='upload_avatar'),
     path('home/', resident_home_view, name='resident_home'),
     path('send-sms/', ParcelLockerViewSet.as_view({'post': 'send_sms'}), name='send-sms'),
+    path('paymenttransactions/momo-ipn/', momo_ipn, name='momo_ipn'),
 ]

@@ -28,8 +28,8 @@ const RegisterVehicle = ({ navigation }) => {
             const user = JSON.parse(userData);
 
             const response = await fetch(
-                // "http://192.168.44.101:8000/visitorvehicleregistrations/",
-                "http://192.168.44.103:8000/visitorvehicleregistrations/",
+                // "http://192.168.44.103:8000/visitorvehicleregistrations/",
+                "http://192.168.44.106:8000/visitorvehicleregistrations/",
                 {
                     method: "POST",
                     headers: {

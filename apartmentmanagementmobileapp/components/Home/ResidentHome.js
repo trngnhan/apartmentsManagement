@@ -21,7 +21,8 @@ const ResidentHome = () => {
     const getAdminIdForResident = async (residentId) => {
         const token = await AsyncStorage.getItem("token");
         try {
-            const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
+            // const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
+            const response = await fetch(`http://192.168.44.106:8000/users/admins/`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.ok) {
@@ -98,8 +99,8 @@ const ResidentHome = () => {
                         const fetchApartments = async (token) => {
                             try {
                                 const response = await fetch(
-                                    // "http://192.168.44.101:8000/apartments/get-apartment/",
-                                    "http://192.168.44.103:8000/apartments/get-apartment/",
+                                    // "http://192.168.44.103:8000/apartments/get-apartment/",
+                                    "http://192.168.44.106:8000/apartments/get-apartment/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
@@ -125,8 +126,8 @@ const ResidentHome = () => {
                         const fetchRegistrations = async () => {
                             try {
                                 const response = await fetch(
-                                    //   "http://192.168.44.101:8000/visitorvehicleregistrations/my-registrations/",
-                                    "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
+                                    //   "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
+                                    "http://192.168.44.106:8000/visitorvehicleregistrations/my-registrations/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
@@ -263,6 +264,16 @@ const ResidentHome = () => {
                     </View>
                 </TouchableOpacity>
 
+                {/* Hình ảnh để chuyển đến trang PaymentScreen */}
+                <TouchableOpacity onPress={() => nav.navigate("PaymentScreen")}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/payment.png")}
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Thanh toán phí chung cư</Text>
+                    </View>
+                </TouchableOpacity>
               </View>
 
               {/* Hiển thị danh sách đăng ký giữ xe */}

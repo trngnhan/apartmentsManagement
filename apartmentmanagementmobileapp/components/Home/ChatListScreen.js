@@ -61,7 +61,8 @@ const ChatListScreen = ({ navigation, route }) => {
         if (adminsInfo[adminId]) return adminsInfo[adminId];
         try {
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
+            // const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
+            const response = await fetch(`http://192.168.44.106:8000/users/admins/`, {
                 headers: {
                 Authorization: `Bearer ${token}`,
                 },

@@ -28,6 +28,8 @@ import PaymentTransactionList from './components/Admin/AdminPaymentTransactionLi
 import AdminChatLocker from './components/Admin/AdminChatLocker';
 import NotificationScreen from './components/Home/NotificationScreen';
 import AdminParkingRegistrations from './components/Admin/AdminParkingRegistrations';
+import PaymentScreen from './components/Home/PaymentScreen';
+import PaymentDetailScreen from './components/Home/PaymentDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -49,6 +51,8 @@ export default function App() {
             <Stack.Screen name="SurveyList" component={SurveyListScreen} options={{ title: "Khảo sát cư dân" }} />
             <Stack.Screen name="ChatListScreen" component={ChatListScreen} options={{ title: "Trò chuyện trực tuyến"}}/>
             <Stack.Screen name="NotificationScreen" component={NotificationScreen} options={{ title: "Thông báo"}}/>
+            <Stack.Screen name="PaymentScreen" component={PaymentScreen} options={{ title: "Thanh toán phí chung cư" }} />
+            <Stack.Screen name="PaymentDetailScreen" component={PaymentDetailScreen} options={{ title: "Thông tin thanh toán phí chung cư" }} />
             {/* Admin */}
             <Stack.Screen name="AdminHome" component={AdminHome} options={{ title: "Trang chủ quản trị" }} />
             <Stack.Screen name="AdminUser" component={AdminUser} options={{ title: "Quản lý tài khoản" }} />

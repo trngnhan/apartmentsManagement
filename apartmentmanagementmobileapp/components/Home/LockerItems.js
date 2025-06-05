@@ -51,8 +51,8 @@ const LockerItems = () => {
                 }
 
                 const response = await fetch(
-                    // `http://192.168.44.101:8000/parcellockers/${user.resident_id}/items/`,
-                    `http://192.168.44.103:8000/parcellockers/${user.locker_id}/items/`,
+                    // `http://192.168.44.103:8000/parcellockers/${user.resident_id}/items/`,
+                    `http://192.168.44.106:8000/parcellockers/${user.locker_id}/items/`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
