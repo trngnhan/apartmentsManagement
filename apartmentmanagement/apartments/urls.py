@@ -34,5 +34,5 @@ urlpatterns = [
     path('upload-avatar/', views.upload_avatar, name='upload_avatar'),
     path('home/', resident_home_view, name='resident_home'),
     path('send-sms/', ParcelLockerViewSet.as_view({'post': 'send_sms'}), name='send-sms'),
-    path('paymenttransactions/momo-ipn/', momo_ipn, name='momo_ipn'),
+    path('paymenttransactions/momo-ipn/', views.momo_ipn, name='momo_ipn'),
 ]
