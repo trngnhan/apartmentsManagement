@@ -19,27 +19,27 @@ const AdminHome = () => {
 
     // Hàm điều hướng
     const navigateToAdminUser = () => {
-        nav.navigate("AdminUser"); // Điều hướng đến trang AdminUser
+        nav.navigate("AdminUser");
     };
 
     const navigateToAdminResident = () => {
-        nav.navigate("AdminResident"); // Điều hướng đến trang AdminResident
+        nav.navigate("AdminResident");
     };
 
     const navigateToAdminApartment = () => {
-        nav.navigate("AdminApartment"); // Điều hướng đến trang AdminApartment
+        nav.navigate("AdminApartment");
     };
 
     const navigateToAdminApartmentTransferHistorys = () => {
-        nav.navigate("AdminApartmentTransferHistorys"); // Điều hướng đến trang AdminApartmentTransferHistorys
+        nav.navigate("AdminApartmentTransferHistorys");
     };
 
     const navigateToAdminSurvey = () => {
-        nav.navigate("AdminSurvey"); // Điều hướng đến trang AdminSurvey
+        nav.navigate("AdminSurvey");
     };
 
     const navigateToAdminFeedback = () => {
-        nav.navigate("AdminFeedback"); // Điều hướng đến trang AdminFeedback
+        nav.navigate("AdminFeedback");
     };
 
     const navigateToAdminLocker = async () => {
@@ -53,11 +53,25 @@ const AdminHome = () => {
                 console.error("Lỗi parse user:", e);
             }
         }
-        nav.navigate("AdminLocker", { adminId }); // Điều hướng đến trang AdminLocker
+        nav.navigate("AdminLocker", { adminId });
     };
 
     const navigateToAdminPayment = () => {
-        nav.navigate("AdminPayment"); // Điều hướng đến trang AdminPayment
+        nav.navigate("AdminPayment");
+    };
+
+    const navigateToAdminParkingRegistrations = async () => {
+        const userStr = await AsyncStorage.getItem("user");
+        let adminId = null;
+        if (userStr) {
+            try {
+                const user = JSON.parse(userStr);
+                adminId = user.id;
+            } catch (e) {
+                console.error("Lỗi parse user:", e);
+            }
+        }
+        nav.navigate("AdminParkingRegistrations", { adminId });
     };
 
     const navigateToAdminChatScreen = async () => {
@@ -74,7 +88,7 @@ const AdminHome = () => {
             const response = await fetch("http://192.168.44.103:8000/surveys/", {
                 method: "GET",
                 headers: {
-                    Authorization: `Bearer ${token}`, // Cú pháp đúng cho Bearer token
+                    Authorization: `Bearer ${token}`,
                 },
             });
 
@@ -82,17 +96,17 @@ const AdminHome = () => {
                 const data = await response.json();
                 console.log("Danh sách khảo sát từ API:", data);
 
-                const actualSurveys = data.results || data; // Kiểm tra nếu có results trong data
-                setSurveys(actualSurveys); // Gán dữ liệu khảo sát vào state
+                const actualSurveys = data.results || data;
+                setSurveys(actualSurveys);
 
                 // Dùng map trên actualSurveys để tạo dữ liệu cho biểu đồ
                 const chartData = await Promise.all(
                     actualSurveys.map(async (survey) => {
                         if (survey.id) {  // Đảm bảo survey.id không phải null hoặc undefined
-                            const token = await AsyncStorage.getItem("token");  // Lấy token
+                            const token = await AsyncStorage.getItem("token");
                             const res = await fetch(`http://192.168.44.103:8000/surveys/${survey.id}/response-rate/`, {
                                 headers: {
-                                    Authorization: `Bearer ${token}`,  // Đính kèm token vào từng request phụ
+                                    Authorization: `Bearer ${token}`,
                                 },
                             });
                             const json = await res.json();
@@ -289,6 +303,16 @@ const AdminHome = () => {
             </View>
 
             <View style={{ flexDirection: "row", justifyContent: "space-around"}}>
+                <TouchableOpacity onPress={navigateToAdminParkingRegistrations} style={MyStyles.imageContainer}>
+                    <View style={{ alignItems: "center" }}>
+                        <Image
+                            source={require("../../assets/parkingRegistrations.png")} // Đường dẫn đến hình ảnh
+                            style={MyStyles.image}
+                        />
+                        <Text style={[MyStyles.padding, MyStyles.textSmall]}>Quản lý gửi xe cư dân</Text>
+                    </View>
+                </TouchableOpacity>
+
                 <TouchableOpacity onPress={navigateToAdminChatScreen} style={MyStyles.imageContainer}>
                     <View style={{ alignItems: "center" }}>
                         <Image

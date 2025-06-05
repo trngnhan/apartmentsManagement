@@ -21,7 +21,7 @@ class ItemSerializer(ModelSerializer):
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True, use_url=True)
-    resident_id = serializers.SerializerMethodField()  # Thêm trường resident_id
+    resident_id = serializers.SerializerMethodField()
     locker_id = serializers.SerializerMethodField()
 
     class Meta:
@@ -51,17 +51,14 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
     def get_resident_id(self, obj):
-        # Lấy resident_id từ Resident liên kết với User
         try:
-            return obj.resident_profile.id  # Truy cập quan hệ resident_profile
+            return obj.resident_profile.id
         except AttributeError:
-            return None  # Trả về None nếu không có Resident liên kết
+            return None
 
     def get_locker_id(self, obj):
-        # Lấy resident_id từ user
         resident = getattr(obj, 'resident_profile', None)
         if resident:
-            # Truy vấn ngược từ ParcelLocker
             from apartments.models import ParcelLocker
             locker = ParcelLocker.objects.filter(resident=resident).first()
             return locker.id if locker else None
@@ -70,7 +67,7 @@ class UserSerializer(serializers.ModelSerializer):
 # Resident Serializer
 class ResidentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    image = serializers.ImageField(source='user.profile_picture', read_only=True)  # Trực tiếp lấy ảnh từ User
+    image = serializers.ImageField(source='user.profile_picture', read_only=True)
 
     user_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
@@ -162,17 +159,6 @@ class PaymentTransactionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Transaction ID không được để trống.")
         return value
 
-
-# Firebase Token Serializer
-class FirebaseTokenSerializer(serializers.ModelSerializer):
-    user_email = serializers.EmailField(source='user.email', read_only=True)
-
-    class Meta:
-        model = FirebaseToken
-        fields = ['user', 'user_email', 'token', 'created_date', 'updated_date']
-        read_only_fields = ['created_date', 'updated_date']
-
-
 # Parcel Locker Serializer
 class ParcelItemSerializer(serializers.ModelSerializer):
     resident_id = serializers.IntegerField(source='resident.id', read_only=True)
@@ -258,9 +244,11 @@ class SurveySerializer(serializers.ModelSerializer):
 # Visitor Vehicle Registration Serializer
 class VisitorVehicleRegistrationSerializer(serializers.ModelSerializer):
     resident_email = serializers.EmailField(source='resident.user.email', read_only=True)
+    first_name = serializers.CharField(source='resident.user.first_name', read_only=True)
+    last_name = serializers.CharField(source='resident.user.last_name', read_only=True)
 
     class Meta:
         model = VisitorVehicleRegistration
-        fields = ['resident_id', 'resident_email', 'visitor_name', 'vehicle_number',
-                  'registration_date', 'approved']
+        fields = ['id', 'resident_id', 'resident_email', 'visitor_name', 'vehicle_number',
+                  'registration_date', 'approved', 'first_name', 'last_name']
         read_only_fields = ['registration_date', 'created_date', 'updated_date']

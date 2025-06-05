@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Login from './components/User/Login';
@@ -27,8 +26,8 @@ import ChatListScreen from './components/Home/ChatListScreen';
 import AdminChat from './components/Admin/AdminChat';
 import PaymentTransactionList from './components/Admin/AdminPaymentTransactionList';
 import AdminChatLocker from './components/Admin/AdminChatLocker';
-import NotificationsScreen from './components/Home/NotificationScreen';
 import NotificationScreen from './components/Home/NotificationScreen';
+import AdminParkingRegistrations from './components/Admin/AdminParkingRegistrations';
 
 const Stack = createNativeStackNavigator();
 
@@ -64,6 +63,7 @@ export default function App() {
             <Stack.Screen name="AdminChatLocker" component={AdminChatLocker} options={{ title: "Gửi tin nhắn qua tủ đồ" }} />
             <Stack.Screen name="AdminPayment" component={AdminPayment} options={{title: "Quản lý thanh toán"}} />
             <Stack.Screen name="AdminPaymentTransactionList" component={PaymentTransactionList} options={{ title: "Quản lý chi tiết thanh toán" }} />
+            <Stack.Screen name="AdminParkingRegistrations" component={AdminParkingRegistrations} options={{ title: "Quản lý gửi xe cư dân" }} />
             <Stack.Screen name="AdminChatScreen" component={AdminChatScreen} options={{title: "Quản lý tin nhắn trực tuyến"}} />
             <Stack.Screen name="AdminChat" component={AdminChat} options={{ title: "Trò chuyện với cư dân" }} />
             {/* Chat */}

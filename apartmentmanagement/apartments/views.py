@@ -1,12 +1,9 @@
-from pickle import FALSE
-
 from cloudinary.utils import now
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash, authenticate, login, get_user_model
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse
-from django.views.generic import detail
 from rest_framework import viewsets, generics, permissions, status, parsers, renderers
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, NotFound
@@ -23,12 +20,12 @@ from .pagination import Pagination
 from apartments import serializers
 
 from apartments.serializers import UserSerializer, ResidentSerializer, ApartmentSerializer, \
-    ApartmentTransferHistorySerializer, FirebaseTokenSerializer, ParcelItemSerializer, ParcelLockerSerializer, \
+    ApartmentTransferHistorySerializer, ParcelItemSerializer, ParcelLockerSerializer, \
     FeedbackSerializer, SurveySerializer, SurveyOptionSerializer, SurveyResponseSerializer, \
     VisitorVehicleRegistrationSerializer
 from .models import (
     Resident, Apartment, ApartmentTransferHistory, PaymentCategory,
-    PaymentTransaction, FirebaseToken, ParcelLocker, ParcelItem,
+    PaymentTransaction, ParcelLocker, ParcelItem,
     Feedback, Survey, SurveyOption, SurveyResponse, VisitorVehicleRegistration
 )
 from .sms import send_sms
@@ -431,13 +428,6 @@ class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
 
         return query
 
-    # @action(methods=['get'], detail=False, url_path='my-payments')
-    # def my_payments(self, request):
-    #    #Trả về danh sách giao dịch thanh toán của người dùng hiện tại
-    #     payments = PaymentTransaction.objects.filter(apartment__owner=request.user)
-    #     serializer = self.get_serializer(payments, many=True)
-    #     return Response(serializer.data)
-
     @action(methods=['post'], detail=True, url_path='upload-proof', parser_classes=[parsers.MultiPartParser])
     def upload_proof(self, request, pk):
         #Tải lên bằng chứng thanh toán
@@ -476,47 +466,6 @@ class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
             status=status.HTTP_200_OK
         )
 
-# Firebase Token ViewSet
-class FirebaseTokenViewSet(viewsets.ViewSet):
-    queryset = FirebaseToken.objects.filter(active=True)
-    serializer_class = FirebaseTokenSerializer
-
-    def get_permissions(self):
-        #Xác định quyền truy cập cho các action.
-        if self.action in ['list', 'retrieve']:
-            return [permissions.IsAdminUser()]  # Chỉ cho phép Admin xem danh sách hoặc chi tiết
-        return [permissions.IsAuthenticated()]  # Các hành động khác yêu cầu người dùng đã xác thực
-
-    @action(methods=['post'], detail=False, url_path='update-token')
-    def update_token(self, request):
-        #Cập nhật token Firebase cho người dùng hiện tại
-        token = request.data.get('token')
-        if not token:
-            return Response(
-                {"detail": "Token không được cung cấp."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Cập nhật hoặc tạo mới token Firebase cho người dùng hiện tại
-        token_obj, created = FirebaseToken.objects.update_or_create(
-            user=request.user,
-            defaults={'token': token}
-        )
-
-        # Trả về dữ liệu token đã được cập nhật hoặc tạo mới
-        serializer = self.get_serializer(token_obj)
-        return Response({
-            'created': created,
-            'data': serializer.data
-        }, status=status.HTTP_200_OK)
-
-def notify_resident_about_new_item(resident, item_name):
-    print(f"Gửi thông báo SMS đến: {resident.user.phone_number}")
-    message = f"Xin chào {resident.user.first_name}, bạn có món hàng mới trong tủ đồ: {item_name}. Vui lòng đến nhận sớm."
-    if resident.user.phone_number:
-        send_sms(resident.user.phone_number, message)
-    else:
-        print("Số điện thoại không tồn tại.")
 # Parcel Locker ViewSet
 class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView):
     queryset = ParcelLocker.objects.filter(active=True)
@@ -1017,28 +966,12 @@ class VisitorVehicleRegistrationViewSet(viewsets.ViewSet, generics.ListAPIView):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @action(methods=['post'], detail=True, url_path='approve')
-    def approve(self, request, pk):
-        try:
-            registration = self.get_object()
-        except VisitorVehicleRegistration.DoesNotExist:
-            return Response(
-                {"detail": "Không tìm thấy đăng ký xe."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        if not request.user.is_staff:
-            return Response(
-                {"detail": "Bạn không có quyền thực hiện hành động này."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        registration.approved = True
-        registration.save()
-        serializer = self.get_serializer(registration)
-        return Response(serializer.data)
-
-    @action(methods=['post'], detail=True, url_path='reject')
-    def reject(self, request, pk):
-        #Từ chối đăng ký giữ xe (chỉ dành cho admin hoặc management)
+    @action(methods=['patch'], detail=True, url_path='set-approval')
+    def set_approval(self, request, pk):
+        """
+        Cập nhật trạng thái approved (duyệt hoặc từ chối) cho đăng ký giữ xe.
+        Truyền {"approved": true} hoặc {"approved": false} trong body.
+        """
         registration = self.get_object()
 
         # Kiểm tra quyền
@@ -1048,9 +981,15 @@ class VisitorVehicleRegistrationViewSet(viewsets.ViewSet, generics.ListAPIView):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        registration.approved = False
-        registration.save()
+        approved = request.data.get("approved", None)
+        if approved is None:
+            return Response(
+                {"detail": "Thiếu trường approved."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        registration.approved = approved
+        registration.save()
         serializer = self.get_serializer(registration)
         return Response(serializer.data)
 
