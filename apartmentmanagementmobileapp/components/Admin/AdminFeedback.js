@@ -33,32 +33,7 @@ const AdminFeedback = () => {
             setLoading(false);
         }
     };
-
-    // const sendReply = async () => {
-    //     try {
-    //         const token = await AsyncStorage.getItem("token");
-    //         const response = await fetch(`http://192.168.44.103:8000/feedbacks/${selectedFeedbackId}/reply/`, {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //             body: JSON.stringify({ reply: replyContent }),
-    //         });
-    //         if (response.ok) {
-    //             alert("Phản hồi đã được gửi.");
-    //             setReplyContent("");
-    //             setShowReplyModal(false);
-    //             fetchFeedbacks(); // reload
-    //         } else {
-    //             alert("Không thể gửi phản hồi.");
-    //         }
-    //     } catch (err) {
-    //         console.error(err);
-    //         alert("Lỗi khi gửi phản hồi.");
-    //     }
-    // };
-
+    
     const handleUpdateStatus = async (id, newStatus) => {
         try {
             const token = await AsyncStorage.getItem("token");

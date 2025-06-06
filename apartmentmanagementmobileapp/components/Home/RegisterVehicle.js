@@ -4,9 +4,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 
 const RegisterVehicle = ({ navigation }) => {
-    const [visitorName, setVisitorName] = useState(""); // Tên khách
-    const [vehicleNumber, setVehicleNumber] = useState(""); // Biển số xe
-    const [loading, setLoading] = useState(false); // Trạng thái xử lý
+    const [visitorName, setVisitorName] = useState(""); 
+    const [vehicleNumber, setVehicleNumber] = useState(""); 
+    const [loading, setLoading] = useState(false);
 
     const handleRegister = async () => {
         if (!visitorName || !vehicleNumber) {
@@ -28,8 +28,8 @@ const RegisterVehicle = ({ navigation }) => {
             const user = JSON.parse(userData);
 
             const response = await fetch(
-                // "http://192.168.44.103:8000/visitorvehicleregistrations/",
-                "http://192.168.44.106:8000/visitorvehicleregistrations/",
+                "http://192.168.44.103:8000/visitorvehicleregistrations/",
+                //"http://192.168.44.106:8000/visitorvehicleregistrations/",
                 {
                     method: "POST",
                     headers: {
@@ -37,8 +37,8 @@ const RegisterVehicle = ({ navigation }) => {
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
-                        resident: user.resident_id, // ID của cư dân
-                        resident_email: user.email, // Email của cư dân
+                        resident: user.resident_id,
+                        resident_email: user.email,
                         visitor_name: visitorName,
                         vehicle_number: vehicleNumber,
                     }),
@@ -47,7 +47,7 @@ const RegisterVehicle = ({ navigation }) => {
 
             if (response.ok) {
                 Alert.alert("Thành công", "Đăng ký xe thành công.");
-                navigation.goBack(); // Quay lại màn hình trước đó
+                navigation.goBack();
             } else {
                 const errorData = await response.json();
                 console.error("Lỗi khi gọi API:", errorData);
@@ -63,8 +63,8 @@ const RegisterVehicle = ({ navigation }) => {
 
     return (
         <LinearGradient
-            colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
-            style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+            colors={['#fff', '#d7d2cc', '#FFBAC3']} 
+            style={{ flex: 1 }}
         >
             <View style={[styles.container]}>
             <Text style={[styles.title]}>Đăng ký xe cho người thân</Text>

@@ -7,22 +7,20 @@ import { Button, Modal, TextInput } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 
 const AdminUser = () => {
-    const [users, setUsers] = useState([]); // State lưu danh sách người dùng
-    const [loading, setLoading] = useState(true); // State hiển thị trạng thái tải dữ liệu
-    const [error, setError] = useState(null); // State hiển thị lỗi
-    const [searchText, setSearchText] = useState(""); // Văn bản tìm kiếm
-    const [isModalVisible, setModalVisible] = useState(false); // Trạng thái hiển thị Modal
+    const [users, setUsers] = useState([]); 
+    const [loading, setLoading] = useState(true); 
+    const [error, setError] = useState(null); 
+    const [searchText, setSearchText] = useState(""); 
+    const [isModalVisible, setModalVisible] = useState(false); 
     const [email, setEmail] = useState("");
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
     const [password, setPassword] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     
-
-    // Hàm gọi API để tạo tài khoản người dùng
     const createUser = async (newUser) => {
         try {
-            const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
+            const token = await AsyncStorage.getItem("token"); 
             // const response = await fetch("http://192.168.44.101:8000/users/", {
             const response = await fetch("http://192.168.44.103:8000/users/", {
                 method: "POST",
@@ -48,11 +46,10 @@ const AdminUser = () => {
         }
     };
 
-    // Hàm gọi API để lấy danh sách người dùng
     const fetchUsers = async (search = "") => {
         try {
-            const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
-            const url = `http://192.168.44.103:8000/users/?search=${search}`; // URL API với từ khóa tìm kiếm
+            const token = await AsyncStorage.getItem("token");
+            const url = `http://192.168.44.103:8000/users/?search=${search}`; 
             // const response = await fetch("http://192.168.44.101:8000/users/", {
             const response = await fetch(url, {
                 method: "GET",
@@ -62,22 +59,21 @@ const AdminUser = () => {
             });
 
             if (response.ok) {
-                const data = await response.json(); // Chuyển đổi dữ liệu trả về thành JSON
-                console.log("Danh sách người dùng từ API:", data); // Log dữ liệu người dùng
-                setUsers(data.results || data); // Lưu danh sách người dùng vào state
+                const data = await response.json(); 
+                console.log("Danh sách người dùng từ API:", data);
+                setUsers(data.results || data);
             } else {
-                console.error("Lỗi khi lấy danh sách người dùng:", response.status); // Log lỗi nếu có
-                setError("Không thể tải danh sách người dùng."); // Cập nhật lỗi vào state
+                console.error("Lỗi khi lấy danh sách người dùng:", response.status)
+                setError("Không thể tải danh sách người dùng.");
             }
         } catch (error) {
-            console.error("Lỗi khi gọi API người dùng:", error); // Log lỗi nếu có
-            setError("Đã xảy ra lỗi khi tải danh sách người dùng."); // Cập nhật lỗi vào state
+            console.error("Lỗi khi gọi API người dùng:", error);
+            setError("Đã xảy ra lỗi khi tải danh sách người dùng."); 
         } finally {
-            setLoading(false); // Tắt trạng thái tải dữ liệu
+            setLoading(false);
         }
     };
 
-    // Hàm gọi API để khóa tài khoản người dùng
     const lockUser = async (userId) => {
         try {
             const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
@@ -88,12 +84,11 @@ const AdminUser = () => {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify({ active: false }), // Gửi trạng thái active = false
+                body: JSON.stringify({ active: false }),
             });
 
             if (response.ok) {
                 Alert.alert("Thành công", "Tài khoản đã được khóa.");
-                // Cập nhật trạng thái người dùng trong danh sách
                 setUsers((prevUsers) =>
                     prevUsers.map((user) =>
                         user.id === userId ? { ...user, active: false } : user
@@ -109,19 +104,18 @@ const AdminUser = () => {
         }
     };
 
-    // Gọi API khi component được mount
     useEffect(() => {
         fetchUsers();
     }, []);
 
     const showCreateUserDialog = () => {
-        setModalVisible(true); // Hiển thị Modal
+        setModalVisible(true);
     };
 
     // Hàm xử lý tìm kiếm
     const handleSearch = (text) => {
         setSearchText(text);
-        fetchUsers(text); // Gọi API với từ khóa tìm kiếm
+        fetchUsers(text);
     };
 
     const handleCreateUser = () => {
@@ -138,7 +132,6 @@ const AdminUser = () => {
             phone_number: phoneNumber,
         });
 
-        // Đóng Modal và reset các trường nhập liệu
         setModalVisible(false);
         setEmail("");
         setFirstName("");
@@ -177,7 +170,7 @@ const AdminUser = () => {
                     MyStyles.buttonnn,
                     { backgroundColor: item.active === false ? "#999" : "#FF6F61" },
                 ]}
-                disabled={item.active === false} // Vô hiệu hóa nút nếu tài khoản đã bị khóa
+                disabled={item.active === false}
             >
                 <Text style={MyStyles.buttonText}>
                     {item.active === false ? "Đã khóa" : "Khóa tài khoản"}
@@ -188,8 +181,8 @@ const AdminUser = () => {
 
     return (
         <LinearGradient
-            colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
-            style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+            colors={['#fff', '#d7d2cc', '#FFBAC3']}
+            style={{ flex: 1 }}
         >
             <View style={MyStyles.containerr}>
                 <Text style={[MyStyles.header, MyStyles.center]}>Danh sách Người dùng</Text>
@@ -201,7 +194,6 @@ const AdminUser = () => {
                     onChangeText={handleSearch}
                 />
 
-                {/* Nút Tạo Tài Khoản */}
                 <TouchableOpacity
                     onPress={showCreateUserDialog}
                     style={[MyStyles.createButton, { backgroundColor: "#FF6F61" }]}
@@ -209,7 +201,6 @@ const AdminUser = () => {
                     <Text style={MyStyles.createButtonText}>Tạo tài khoản</Text>
                 </TouchableOpacity>
 
-                {/* Modal Nhập Liệu */}
                 <Modal
                     visible={isModalVisible}
                     animationType="fade"
@@ -220,7 +211,6 @@ const AdminUser = () => {
                         <View style={MyStyles.modalContent}>
                             <Text style={MyStyles.modalTitle}>Tạo tài khoản mới</Text>
 
-                            {/* Trường nhập liệu */}
                             <TextInput
                                 placeholder="Email"
                                 value={email}
@@ -256,7 +246,6 @@ const AdminUser = () => {
                                 style={MyStyles.input}
                             />
 
-                            {/* Nút hành động */}
                             <View style={MyStyles.modalButtonContainer}>
                                 <TouchableOpacity
                                     onPress={() => setModalVisible(false)}
@@ -275,7 +264,6 @@ const AdminUser = () => {
                     </View>
                 </Modal>
 
-                {/* Danh Sách Người Dùng */}
                 <View style={{ flex: 2, padding: 10 }}>
                     {loading ? (
                         <ActivityIndicator size="large" color="#FF6F61" />

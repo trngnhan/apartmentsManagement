@@ -24,8 +24,8 @@ const SubmitFeedback = () => {
     // Gọi API lấy phản hồi của người dùng
     const fetchMyFeedbacks = async (tokenParam = token) => {
         try {
-            // const res = await fetch("http://192.168.44.103:8000/feedbacks/my-feedbacks/", {
-            const res = await fetch("http://192.168.44.106:8000/feedbacks/my-feedbacks/", {
+            const res = await fetch("http://192.168.44.103:8000/feedbacks/my-feedbacks/", {
+            //const res = await fetch("http://192.168.44.106:8000/feedbacks/my-feedbacks/", {
                 headers: {
                     Authorization: `Bearer ${tokenParam}`,
                 },
@@ -51,8 +51,8 @@ const SubmitFeedback = () => {
         setLoading(true);
 
         try {
-            // const response = await fetch("http://192.168.44.103:8000/feedbacks/", {
-            const response = await fetch("http://192.168.44.106:8000/feedbacks/", {
+            const response = await fetch("http://192.168.44.103:8000/feedbacks/", {
+            //const response = await fetch("http://192.168.44.106:8000/feedbacks/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

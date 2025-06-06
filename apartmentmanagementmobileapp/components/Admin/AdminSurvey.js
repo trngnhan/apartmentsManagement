@@ -7,20 +7,20 @@ import {Picker} from '@react-native-picker/picker';
 import MyStyles from "../../styles/MyStyles";
 
 const AdminSurvey = () => {
-    const [surveys, setSurveys] = useState([]); // State lưu danh sách khảo sát
-    const [loading, setLoading] = useState(true); // State hiển thị trạng thái tải dữ liệu
-    const [error, setError] = useState(null); // State hiển thị lỗi
-    const [showModal, setShowModal] = useState(false); // State hiển thị form tạo khảo sát
-    const [showOptionModal, setShowOptionModal] = useState(false); // State hiển thị form tạo options
-    const [newSurvey, setNewSurvey] = useState({ title: "", description: "", deadline: "" }); // State lưu thông tin khảo sát mới
-    const [newOption, setNewOption] = useState({ surveyId: "", option_text: "" }); // State lưu thông tin option mới
-    const [selectedSurveyId, setSelectedSurveyId] = useState(""); // State lưu khảo sát được chọn
+    const [surveys, setSurveys] = useState([]); 
+    const [loading, setLoading] = useState(true); 
+    const [error, setError] = useState(null); 
+    const [showModal, setShowModal] = useState(false);
+    const [showOptionModal, setShowOptionModal] = useState(false); 
+    const [newSurvey, setNewSurvey] = useState({ title: "", description: "", deadline: "" }); 
+    const [newOption, setNewOption] = useState({ surveyId: "", option_text: "" }); 
+    const [selectedSurveyId, setSelectedSurveyId] = useState(""); 
     const nav = useNavigation(); // Điều hướng
 
     // Hàm gọi API để lấy danh sách khảo sát
     const fetchSurveys = async () => {
         try {
-            const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
+            const token = await AsyncStorage.getItem("token");
             const response = await fetch("http://192.168.44.103:8000/surveys/", {
                 method: "GET",
                 headers: {
@@ -28,27 +28,25 @@ const AdminSurvey = () => {
                 },
             });
             if (response.ok) {
-                const data = await response.json(); // Chuyển đổi dữ liệu trả về thành JSON
-                console.log("Danh sách khảo sát từ API:", data); // Log dữ liệu khảo sát
-                setSurveys(data.results || data); // Lưu danh sách khảo sát vào state
+                const data = await response.json(); 
+                console.log("Danh sách khảo sát từ API:", data); 
+                setSurveys(data.results || data); 
             } else {
-                console.error("Lỗi khi lấy danh sách khảo sát:", response.status); // Log lỗi nếu có
-                setError("Không thể tải danh sách khảo sát."); // Cập nhật lỗi vào state
+                console.error("Lỗi khi lấy danh sách khảo sát:", response.status); 
+                setError("Không thể tải danh sách khảo sát.");
             }
         } catch (error) {
-            console.error("Lỗi khi gọi API khảo sát:", error); // Log lỗi nếu có
-            setError("Đã xảy ra lỗi khi tải danh sách khảo sát."); // Cập nhật lỗi vào state
+            console.error("Lỗi khi gọi API khảo sát:", error); 
+            setError("Đã xảy ra lỗi khi tải danh sách khảo sát.");
         } finally {
-            setLoading(false); // Tắt trạng thái tải dữ liệu
+            setLoading(false);
         }
     };
 
-    // Hàm gọi API khi component được mount
     useEffect(() => {
-        fetchSurveys(); // Gọi hàm lấy danh sách khảo sát
-    }, []); // Chỉ chạy một lần khi component được mount
-
-    // Hàm tạo khảo sát mới
+        fetchSurveys();
+    }, []);
+    
     const createSurvey = async () => {
         try {
             const token = await AsyncStorage.getItem("token");
@@ -63,9 +61,9 @@ const AdminSurvey = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log("Khảo sát mới được tạo:", data);
-                setSurveys((prevSurveys) => [data, ...prevSurveys]); // Thêm khảo sát mới vào danh sách
-                setShowModal(false); // Đóng modal
-                setNewSurvey({ title: "", description: "", deadline: "" }); // Reset form
+                setSurveys((prevSurveys) => [data, ...prevSurveys]);
+                setShowModal(false);
+                setNewSurvey({ title: "", description: "", deadline: "" })
             } else {
                 console.error("Lỗi khi tạo khảo sát:", response.status);
                 alert("Không thể tạo khảo sát. Vui lòng thử lại.");
@@ -76,42 +74,49 @@ const AdminSurvey = () => {
         }
     };
 
-    // Hàm tạo options khảo sát
     const createSurveyOption = async () => {
         try {
             const token = await AsyncStorage.getItem("token");
+            const payload = {
+                surveyId: selectedSurveyId,
+                option_text: newOption.option_text,
+            };
             const response = await fetch("http://192.168.44.103:8000/surveyoptions/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
                 },
-                body: JSON.stringify(newOption),
+                body: JSON.stringify(payload),
             });
 
             if (response.ok) {
                 console.log("Option mới được tạo:", await response.json());
                 alert("Tùy chọn khảo sát đã được tạo thành công!");
-                setShowOptionModal(false); // Đóng modal
-                setNewOption({ surveyId: "", option_text: "" }); // Reset form
+                setShowOptionModal(false); 
+                setNewOption({ surveyId: "", option_text: "" });
             } else {
+                const errorData = await response.json();
                 console.error("Lỗi khi tạo option:", response.status);
-                alert("Không thể tạo tùy chọn khảo sát. Vui lòng thử lại.");
+                alert("Không thể tạo tùy chọn khảo sát. Vui lòng thử lại.\n"  + JSON.stringify(errorData));
             }
         } catch (error) {
             console.error("Lỗi khi gọi API tạo option:", error);
             alert("Đã xảy ra lỗi khi tạo tùy chọn khảo sát.");
         }
-        console.log("Dữ liệu gửi lên:", newOption);
+        // Log dữ liệu gửi lên để debug
+        console.log("Dữ liệu gửi lên:", {
+            survey: selectedSurveyId,
+            option_text: newOption.option_text,
+        });
         console.log("Survey ID được chọn:", selectedSurveyId);
-        console.log("Token:", token);
     };
 
     // Hàm render từng khảo sát
     const renderSurvey = ({ item }) => (
         <TouchableOpacity
             style={MyStyles.card}
-            onPress={() => nav.navigate("AdminSurveyResponses", { surveyId: item.id })} // Điều hướng đến AdminSurveyResponses
+            onPress={() => nav.navigate("AdminSurveyResponses", { surveyId: item.id })}
         >
             <Text style={MyStyles.title}>Tên khảo sát: {item.title}</Text>
             <Text style={MyStyles.description}>Nội dung khảo sát: {item.description}</Text>
@@ -144,21 +149,21 @@ const AdminSurvey = () => {
 
     return (
         <LinearGradient
-            colors={["#fff", "#d7d2cc", "#FFBAC3"]} // Màu gradient
-            style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+            colors={["#fff", "#d7d2cc", "#FFBAC3"]}
+            style={{ flex: 1 }}
         >
             <View style={{ flex: 1, padding: 20, borderRadius: 20, alignItems: "center" }}>
                 <Text style={MyStyles.header}>Danh sách Khảo sát</Text>
                 <View style={{ flexDirection: "row", justifyContent: "space-between", width: "100%" }}>
                     <Button title="Tạo Khảo Sát" onPress={() => setShowModal(true)} color="#FF6F61" />
-                    <Button title="Tạo Options Khảo Sát" onPress={() => setShowOptionModal(true)} color="#FF6F61" />
+                    <Button title="Tạo Lựa chọn Khảo Sát" onPress={() => setShowOptionModal(true)} color="#FF6F61" />
                 </View>
                 {loading ? (
-                    <ActivityIndicator size="large" color="#FF6F61" /> // Hiển thị trạng thái đang tải
+                    <ActivityIndicator size="large" color="#FF6F61" />
                 ) : error ? (
-                    <Text style={MyStyles.error}>{error}</Text> // Hiển thị lỗi nếu có
+                    <Text style={MyStyles.error}>{error}</Text>
                 ) : surveys.length === 0 ? (
-                    <Text style={MyStyles.noData}>Không có khảo sát nào để hiển thị.</Text> // Hiển thị khi danh sách rỗng
+                    <Text style={MyStyles.noData}>Không có khảo sát nào để hiển thị.</Text>
                 ) : (
                     <FlatList
                         data={surveys}
@@ -168,7 +173,6 @@ const AdminSurvey = () => {
                     />
                 )}
 
-                {/* Modal Tạo Khảo Sát */}
                 <Modal visible={showModal} animationType="slide" transparent={true}>
                     <View style={MyStyles.modalContainer}>
                         <View style={MyStyles.modalContent}>
@@ -197,7 +201,6 @@ const AdminSurvey = () => {
                     </View>
                 </Modal>
 
-                {/* Modal Tạo Options Khảo Sát */}
                 <Modal visible={showOptionModal} animationType="slide" transparent={true}>
                     <View style={MyStyles.modalContainer}>
                         <View style={MyStyles.modalContent}>
@@ -215,7 +218,6 @@ const AdminSurvey = () => {
                                 ))}
                             </Picker>
 
-                            {/* Nhập nội dung tùy chọn */}
                             <TextInput
                                 style={MyStyles.input}
                                 placeholder="Nội dung tùy chọn"

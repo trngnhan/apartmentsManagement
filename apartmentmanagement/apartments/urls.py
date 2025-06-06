@@ -2,7 +2,7 @@ from django.urls import path, include
 from . import views
 from rest_framework.routers import DefaultRouter
 
-from .views import (resident_login_view, resident_home_view, UserViewSet, ResidentViewSet,
+from .views import (UserViewSet, ResidentViewSet,
                     ApartmentViewSet, ApartmentTransferHistoryViewSet, PaymentTransactionViewSet, PaymentCategoryViewSet,
                     ParcelLockerViewSet, FeedbackViewSet, SurveyViewSet, SurveyOptionViewSet,
                     SurveyResponseViewSet, VisitorVehicleRegistrationViewSet)
@@ -28,11 +28,6 @@ router.register(r'visitorvehicleregistrations', VisitorVehicleRegistrationViewSe
 urlpatterns = [
     path('', include(router.urls)),
 
-
-    path('login/', resident_login_view, name='resident_login'),
-    path('change-password/', views.change_password, name='change_password'),
-    path('upload-avatar/', views.upload_avatar, name='upload_avatar'),
-    path('home/', resident_home_view, name='resident_home'),
     path('send-sms/', ParcelLockerViewSet.as_view({'post': 'send_sms'}), name='send-sms'),
     path('paymenttransactions/momo-ipn/', momo_ipn, name='momo_ipn'),
 ]

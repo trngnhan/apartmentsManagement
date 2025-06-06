@@ -139,6 +139,8 @@ const AdminPayment = () => {
     };
 
     const lockPayment = async (paymentId) => {
+        console.log("Lock payment id:", paymentId);
+        console.log("All payments:", payments);
         try {
             const token = await AsyncStorage.getItem("token");
             const response = await fetch(`http://192.168.44.103:8000/paymentcategories/${paymentId}/`, {
@@ -182,7 +184,7 @@ const AdminPayment = () => {
                     categoryName: item.name,
                 })
             }
-            disabled={!item.active} // Không cho ấn nếu hóa đơn đã khoá
+            disabled={!item.active}
         >
             <Text>Loại phí: {item.name}</Text>
             <Text>
@@ -228,7 +230,6 @@ const AdminPayment = () => {
                 <Text style={MyStyles.buttonText}>Tạo hóa đơn</Text>
             </TouchableOpacity>
 
-            {/* Sửa lại RNModal để modal nổi lên trên và làm mờ nền */}
             <RNModal
                 visible={createModalVisible}
                 transparent

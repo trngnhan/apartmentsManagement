@@ -8,10 +8,10 @@ import { LinearGradient } from "expo-linear-gradient";
 
 const ResidentHome = () => {
     const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true); // State hiển thị trạng thái loading
-    const [apartments, setApartments] = useState([]); // State lưu căn hộ
-    const [registrations, setRegistrations] = useState([]); // State lưu đăng ký giữ xe
-    const [lockerItems, setLockerItems] = useState([]); // State lưu danh sách món hàng trong tủ đồ
+    const [loading, setLoading] = useState(true);
+    const [apartments, setApartments] = useState([]); 
+    const [registrations, setRegistrations] = useState([]);
+    const [lockerItems, setLockerItems] = useState([]); 
     const [token, setToken] = useState(null);
     const [currentUserId, setCurrentUserId] = useState(null);
     const [lockerId, setLockerId] = useState(null);
@@ -21,14 +21,14 @@ const ResidentHome = () => {
     const getAdminIdForResident = async (residentId) => {
         const token = await AsyncStorage.getItem("token");
         try {
-            // const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
-            const response = await fetch(`http://192.168.44.106:8000/users/admins/`, {
+            const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
+            // const response = await fetch(`http://192.168.44.106:8000/users/admins/`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             if (response.ok) {
                 const data = await response.json();
                 console.log("Data admin API:", data);
-                return data.admin_id;  // sửa đây, lấy đúng trường admin_id
+                return data.admin_id;
             } else {
                 console.error("Lỗi response admin:", response.status);
                 return null;
@@ -46,7 +46,7 @@ const ResidentHome = () => {
             return;
         }
         const adminId = await getAdminIdForResident(currentUserId);
-        console.log("Admin ID:", adminId); // Kiểm tra adminId
+        console.log("Admin ID:", adminId);
         if (!adminId) {
             alert("Chưa xác định được Admin");
             return;
@@ -60,9 +60,9 @@ const ResidentHome = () => {
             return;
         }
         const adminId = await getAdminIdForResident(currentUserId);
-        console.log("Admin ID:", adminId); // Kiểm tra adminId
-        console.log("Current User ID:", currentUserId); // Kiểm tra currentUserId
-        console.log("Locker Items:", lockerId); // Kiểm tra danh sách món hàng trong tủ đồ
+        console.log("Admin ID:", adminId);
+        console.log("Current User ID:", currentUserId);
+        console.log("Locker Items:", lockerId);
         if (!adminId) {
             alert("Chưa xác định được Admin");
             return;
@@ -73,7 +73,7 @@ const ResidentHome = () => {
     useEffect(() => {
         const checkToken = async () => {
             const token = await AsyncStorage.getItem("token");
-            console.log("Token: ", token); // Kiểm tra token
+            console.log("Token: ", token)
             setToken(token);
 
             if (!token) {
@@ -81,12 +81,12 @@ const ResidentHome = () => {
                 nav.navigate("Login");
             } else {
                 const userData = await AsyncStorage.getItem("user");
-                console.log("User data: ", userData); // Kiểm tra dữ liệu người dùng
+                console.log("User data: ", userData);
 
                 if (userData) {
                     try {
                         const parsedUser = JSON.parse(userData);
-                        console.log("Parsed User:", parsedUser); // Kiểm tra người dùng sau khi parse
+                        console.log("Parsed User:", parsedUser);
                         setCurrentUserId(parsedUser.resident_id);
 
                         setUser(parsedUser);
@@ -99,8 +99,8 @@ const ResidentHome = () => {
                         const fetchApartments = async (token) => {
                             try {
                                 const response = await fetch(
-                                    // "http://192.168.44.103:8000/apartments/get-apartment/",
-                                    "http://192.168.44.106:8000/apartments/get-apartment/",
+                                    "http://192.168.44.103:8000/apartments/get-apartment/",
+                                    //"http://192.168.44.106:8000/apartments/get-apartment/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
@@ -110,7 +110,7 @@ const ResidentHome = () => {
 
                                 if (response.ok) {
                                     const data = await response.json();
-                                    setApartments(data.results || data); // Nếu dùng pagination
+                                    setApartments(data.results || data);
                                 } else {
                                     console.error(
                                         "Lỗi khi lấy thông tin căn hộ:",
@@ -126,8 +126,8 @@ const ResidentHome = () => {
                         const fetchRegistrations = async () => {
                             try {
                                 const response = await fetch(
-                                    //   "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
-                                    "http://192.168.44.106:8000/visitorvehicleregistrations/my-registrations/",
+                                    "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
+                                    //"http://192.168.44.106:8000/visitorvehicleregistrations/my-registrations/",
                                     {
                                         headers: {
                                             Authorization: `Bearer ${token}`,
@@ -137,8 +137,8 @@ const ResidentHome = () => {
                         
                                 if (response.ok) {
                                     const data = await response.json();
-                                    console.log("Dữ liệu trả về từ API:", data); // Log dữ liệu trả về
-                                    setRegistrations(data); // Lưu danh sách đăng ký giữ xe vào state
+                                    console.log("Dữ liệu trả về từ API:", data); 
+                                    setRegistrations(data);
                                 } else {
                                     console.error("Lỗi khi lấy danh sách đăng ký giữ xe:", response.status);
                                 }
@@ -176,13 +176,13 @@ const ResidentHome = () => {
     };
 
     if (!user) {
-        return <Text>Loading...</Text>; // Hoặc có thể thêm Spinner tại đây
+        return <Text>Loading...</Text>;
     }
 
     return (
       <LinearGradient
-      colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
-      style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+      colors={['#fff', '#d7d2cc', '#FFBAC3']} 
+      style={{ flex: 1 }}
       >
           <ScrollView contentContainerStyle={{ padding: 16 }}>
               <Text style={[MyStyles.text, MyStyles.padding]}>
@@ -210,7 +210,7 @@ const ResidentHome = () => {
                 <TouchableOpacity onPress={() => nav.navigate("RegisterVehicle")}>
                     <View style={{ alignItems: "flex-start" }}>
                         <Image
-                            source={require("../../assets/register_vehicle.png")} // Đường dẫn đến hình ảnh
+                            source={require("../../assets/register_vehicle.png")}
                             style={MyStyles.image}
                         />
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Đăng ký xe cho người thân</Text>
@@ -221,7 +221,7 @@ const ResidentHome = () => {
                 <TouchableOpacity onPress={() => goLockerItems()}>
                     <View style={{ alignItems: "center" }}>
                         <Image
-                            source={require("../../assets/locker_items.png")} // Đường dẫn đến hình ảnh
+                            source={require("../../assets/locker_items.png")}
                             style={MyStyles.image}
                         />
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Tủ đồ</Text>
@@ -297,18 +297,18 @@ const ResidentHome = () => {
                 
               <Button
               style={{
-                backgroundColor: "#FF6F61", // Màu nền nút
-                borderRadius: 15, // Bo góc
-                paddingVertical: 2, // Khoảng cách trên dưới
+                backgroundColor: "#FF6F61",
+                borderRadius: 15, 
+                paddingVertical: 2,
                 width: 350,
-                alignSelf: "center", // Căn giữa
-                elevation: 5, // Đổ bóng
-                marginTop: 20, // Khoảng cách phía trên
+                alignSelf: "center",
+                elevation: 5, 
+                marginTop: 20,
               }}
               labelStyle={{
-                  color: "white", // Màu chữ
-                  fontSize: 16, // Kích thước chữ
-                  fontWeight: "bold", // Đậm chữ
+                  color: "white", 
+                  fontSize: 16,
+                  fontWeight: "bold",
               }}
               title="Logout" onPress={logout} />
           </ScrollView>

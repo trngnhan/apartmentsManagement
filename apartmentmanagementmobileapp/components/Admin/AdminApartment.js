@@ -8,17 +8,17 @@ import { Modal, TextInput } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 
 const AdminApartment = () => {
-    const [apartments, setApartments] = useState([]); // State lưu danh sách apartment
-    const [loading, setLoading] = useState(true); // State hiển thị trạng thái loading
-    const [user, setUser] = useState(null); // State lưu thông tin người dùng
-    const [nextPage, setNextPage] = useState(null); // URL của trang tiếp theo
-    const [loadingMore, setLoadingMore] = useState(false); // Trạng thái tải thêm dữ liệu
-    const [selectedApartment, setSelectedApartment] = useState(null); // Căn hộ được chọn để chuyển nhượng
-    const [newOwnerId, setNewOwnerId] = useState(""); // ID người nhận
-    const [note, setNote] = useState(""); // Ghi chú chuyển nhượng
-    const [modalVisible, setModalVisible] = useState(false); // Trạng thái hiển thị Modal
-    const [residents, setResidents] = useState([]); // Danh sách cư dân chưa có căn hộ
-    const nav = useNavigation(); // Điều hướng
+    const [apartments, setApartments] = useState([]); 
+    const [loading, setLoading] = useState(true); 
+    const [user, setUser] = useState(null); 
+    const [nextPage, setNextPage] = useState(null); 
+    const [loadingMore, setLoadingMore] = useState(false); 
+    const [selectedApartment, setSelectedApartment] = useState(null);
+    const [newOwnerId, setNewOwnerId] = useState("");
+    const [note, setNote] = useState("");
+    const [modalVisible, setModalVisible] = useState(false); 
+    const [residents, setResidents] = useState([]); 
+    const nav = useNavigation(); 
     const [selectedBuilding, setSelectedBuilding] = useState('all');
     const [selectedFloor, setSelectedFloor] = useState('all');
     const [createModalVisible, setCreateModalVisible] = useState(false);
@@ -28,7 +28,6 @@ const AdminApartment = () => {
     const [newNumber, setNewNumber] = useState("");
     const [newOwnerIdCreate, setNewOwnerIdCreate] = useState("");
 
-    // Hàm gọi API để lấy danh sách apartment
     // const fetchApartments = async (url = "http://192.168.44.101:8000/apartments/") => {
     const fetchApartments = async (url = "http://192.168.44.103:8000/apartments/") => {
     // const fetchApartments = async (url = "http://192.168.1.36:8000/apartments/") => {
@@ -44,10 +43,9 @@ const AdminApartment = () => {
     
             if (response.ok) {
                 const data = await response.json();
-                console.log("Danh sách apartment từ API:", data); // Log dữ liệu trả về
-                console.log("URL trang tiếp theo:", data.next); // Log URL của trang tiếp theo
+                console.log("Danh sách apartment từ API:", data); 
+                console.log("URL trang tiếp theo:", data.next); 
     
-                // Loại bỏ dữ liệu trùng lặp và thêm dữ liệu mới
                 setApartments((prevApartments) => {
                     const newApartments = data.results.filter(
                         (apartment) => !prevApartments.some((prev) => prev.code === apartment.code)
@@ -55,25 +53,24 @@ const AdminApartment = () => {
                     return [...prevApartments, ...newApartments];
                 });
     
-                setNextPage(data.next); // Cập nhật URL của trang tiếp theo (hoặc null nếu không còn trang)
+                setNextPage(data.next);
             } else {
                 console.error("Lỗi khi lấy danh sách apartment:", response.status);
             }
         } catch (error) {
             console.error("Lỗi khi gọi API apartment:", error);
         } finally {
-            if (!nextPage) setLoading(false); // Tắt trạng thái loading nếu đây là lần tải đầu tiên
-            setLoadingMore(false); // Tắt trạng thái tải thêm dữ liệu
+            if (!nextPage) setLoading(false);
+            setLoadingMore(false);
         }
     };
 
-    // Hàm tải thêm dữ liệu khi cuộn đến cuối danh sách
     const loadMore = () => {
-        console.log("nextPage:", nextPage); // Log giá trị của nextPage
-        console.log("loadingMore:", loadingMore); // Log trạng thái loadingMore
+        console.log("nextPage:", nextPage); 
+        console.log("loadingMore:", loadingMore); 
         if (nextPage && !loadingMore) {
-            setLoadingMore(true); // Bật trạng thái tải thêm dữ liệu
-            fetchApartments(nextPage); // Gọi API để tải thêm dữ liệu
+            setLoadingMore(true); 
+            fetchApartments(nextPage); 
         }
     };
 
@@ -101,8 +98,8 @@ const AdminApartment = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Danh sách cư dân từ API chưa có căn hộ:", data); // Log dữ liệu trả về
-                setResidents(data); // Lưu danh sách cư dân vào state
+                console.log("Danh sách cư dân từ API chưa có căn hộ:", data);
+                setResidents(data); 
             } else {
                 console.error("Lỗi khi lấy danh sách cư dân:", response.status);
             }
@@ -259,8 +256,8 @@ const AdminApartment = () => {
 
     return (
         <LinearGradient
-        colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
-        style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+        colors={['#fff', '#d7d2cc', '#FFBAC3']}
+        style={{ flex: 1 }}
         >
             <View style={styles.container}>
             <Text style={styles.header}>Danh sách Apartment</Text>
@@ -268,7 +265,7 @@ const AdminApartment = () => {
             <TouchableOpacity
                 onPress={() => {
                     setCreateModalVisible(true);
-                    fetchResidentsWithoutApartment(); // Load danh sách cư dân chưa có căn hộ
+                    fetchResidentsWithoutApartment();
                 }}
                 style={[MyStyles.createButtonn, { backgroundColor: "#FF6F61" }]}
             >
@@ -305,7 +302,7 @@ const AdminApartment = () => {
             </View>
 
             {loading ? (
-                <ActivityIndicator size="large" color="#FF6F61" /> // Hiển thị loading khi đang tải dữ liệu ban đầu
+                <ActivityIndicator size="large" color="#FF6F61" /> 
             ) : filteredApartments.length === 0 ? (
                 <Text style={styles.noData}>Không có apartment nào để hiển thị.</Text>
             ) : (
@@ -314,15 +311,14 @@ const AdminApartment = () => {
                     keyExtractor={(item, index) => index.toString()}
                     renderItem={renderApartment}
                     contentContainerStyle={{ paddingBottom: 20 }}
-                    onEndReached={loadMore} // Gọi hàm loadMore khi cuộn đến cuối danh sách
-                    onEndReachedThreshold={0.1} // Ngưỡng để gọi loadMore
+                    onEndReached={loadMore} 
+                    onEndReachedThreshold={0.1} 
                     ListFooterComponent={
-                        loadingMore && <ActivityIndicator size="small" color="#FF6F61" /> // Hiển thị loading khi tải thêm dữ liệu
+                        loadingMore && <ActivityIndicator size="small" color="#FF6F61" />
                     }
                 />
             )}
 
-            {/* Modal chuyển nhượng */}
                 <Modal
                     visible={modalVisible}
                     animationType="slide"
@@ -370,7 +366,6 @@ const AdminApartment = () => {
                     </View>
                 </Modal>
                 
-                {/* Modal tạo căn hộ */}
                 <Modal
                     visible={createModalVisible}
                     animationType="slide"

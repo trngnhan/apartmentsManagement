@@ -22,13 +22,11 @@ const NotificationScreen = () => {
         }
 
         setLoading(true);
-        // Tạo roomId theo đúng cấu trúc của bạn
         const roomId = `${adminId}_${currentUserId}_${lockerId}`;
         const notificationsRef = ref(database, `chatRooms/${roomId}/messages`);
         const unsubscribe = onValue(notificationsRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                // Chuyển object thành array, sắp xếp mới nhất lên đầu
                 const notiArr = Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                 setNotifications(notiArr);
             } else {

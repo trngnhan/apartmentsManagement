@@ -6,19 +6,6 @@ from cloudinary.models import CloudinaryField
 from datetime import datetime
 import calendar
 
-# Utilities
-
-def get_default_end_date():
-    now = datetime.now()
-    last_day = calendar.monthrange(now.year, now.month)[1]
-    return datetime(now.year, now.month, last_day)
-
-def current_month():
-    return datetime.now().month
-
-def current_year():
-    return datetime.now().year
-
 # Base Model
 class BaseModel(models.Model):
     active = models.BooleanField(default=True)

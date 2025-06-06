@@ -17,18 +17,17 @@ import { Modal } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 
 const AdminResident = () => {
-    const [residents, setResidents] = useState([]); // Danh sách cư dân
-    const [loading, setLoading] = useState(true); // Trạng thái tải dữ liệu
-    const [searchText, setSearchText] = useState(""); // Văn bản tìm kiếm
-    const [unregisteredUsers, setUnregisteredUsers] = useState([]); // Danh sách user chưa đăng ký
-    const [modalVisible, setModalVisible] = useState(false); // Trạng thái hiển thị modal
+    const [residents, setResidents] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchText, setSearchText] = useState("");
+    const [unregisteredUsers, setUnregisteredUsers] = useState([]);
+    const [modalVisible, setModalVisible] = useState(false);
     const [newResident, setNewResident] = useState({
         first_name: "",
         last_name: "",
         email: "",
-    }); // Thông tin cư dân mới
+    });
 
-    // Hàm gọi API để lấy danh sách cư dân
     const fetchResidents = async (search = "") => {
         try {
             const token = await AsyncStorage.getItem("token");
@@ -43,9 +42,8 @@ const AdminResident = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Phản hồi từ API:", data);
                 const filteredResidents = data.filter(item => item.user.role === 'RESIDENT');
-                setResidents(filteredResidents); // Sử dụng `results` nếu có, nếu không thì dùng toàn bộ `data`
+                setResidents(filteredResidents);
             } else {
                 console.error("Lỗi khi lấy danh sách cư dân:", response.status);
             }
@@ -73,15 +71,15 @@ const AdminResident = () => {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ user_id: newResident.user_id }), // Gửi user_id thay vì email
+                body: JSON.stringify({ user_id: newResident.user_id }),
             });
 
             if (response.ok) {
                 const data = await response.json();
                 console.log("Cư dân mới đã được thêm:", data);
-                setResidents((prevResidents) => [data, ...prevResidents]); // Cập nhật danh sách cư dân
-                setModalVisible(false); // Đóng modal
-                setNewResident({ first_name: "", last_name: "", email: "", user_id: "" }); // Reset form
+                setResidents((prevResidents) => [data, ...prevResidents]);
+                setModalVisible(false);
+                setNewResident({ first_name: "", last_name: "", email: "", user_id: "" });
                 Alert.alert("Thành công", "Cư dân mới đã được thêm.");
             } else {
                 const errorData = await response.json();
@@ -109,7 +107,7 @@ const AdminResident = () => {
         if (response.ok) {
             const data = await response.json();
             console.log("Danh sách user chưa đăng ký:", data);
-            setUnregisteredUsers(data); // Lưu danh sách user chưa đăng ký
+            setUnregisteredUsers(data);
         } else {
             console.error("Lỗi khi lấy danh sách user chưa đăng ký:", response.status);
         }
@@ -118,7 +116,6 @@ const AdminResident = () => {
     }
 };
 
-    // Gọi API khi component được render lần đầu
     useEffect(() => {
         fetchResidents();
         if (modalVisible) {
@@ -126,20 +123,18 @@ const AdminResident = () => {
         }
     }, [modalVisible]);
 
-    // Hàm xử lý tìm kiếm
     const handleSearch = (text) => {
         setSearchText(text);
-        fetchResidents(text); // Gọi API với từ khóa tìm kiếm
+        fetchResidents(text);
     };
 
-    // Hàm render từng mục trong danh sách
     const renderItem = ({ item }) => {
         return (
             <View style={MyStyles.card}>
                 {/* Hiển thị ảnh đại diện nếu có */}
-                {item.image || item.user?.profile_picture ? (
+                {item.user?.profile_picture ? (
                     <Image
-                        source={{ uri: item.image || item.user?.profile_picture }}
+                        source={{ uri: item.user?.profile_picture }}
                         style={styles.avatar}
                     />
                 ) : (
@@ -157,8 +152,8 @@ const AdminResident = () => {
 
     return (
         <LinearGradient
-            colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
-            style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+            colors={['#fff', '#d7d2cc', '#FFBAC3']}
+            style={{ flex: 1 }}
         >
             <View style={MyStyles.containerr}>
                 <Text style={MyStyles.header}>Quản lý Cư dân</Text>
@@ -171,7 +166,7 @@ const AdminResident = () => {
 
                 <TouchableOpacity
                     onPress={() => {
-                        setModalVisible(true); // Hiển thị Modal
+                        setModalVisible(true);
                     }}
                     style={[MyStyles.button, { backgroundColor: "#FFCC33", marginBottom: 10 }]}
                 >
@@ -219,7 +214,7 @@ const AdminResident = () => {
                                     <Picker.Item
                                         key={user.id}
                                         label={`${user.first_name} ${user.last_name} (${user.email})`}
-                                        value={user.id} // Sử dụng user.id làm giá trị
+                                        value={user.id}
                                     />
                                 ))}
                             </Picker>
@@ -250,10 +245,10 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "rgba(0, 0, 0, 0.5)", // Làm mờ nền phía sau modal
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
     },
     modalContent: {
-        width: "90%", // Chiếm 90% chiều rộng màn hình
+        width: "90%",
         backgroundColor: "#fff",
         borderRadius: 10,
         padding: 20,
@@ -287,6 +282,26 @@ const styles = StyleSheet.create({
         marginHorizontal: 5,
     },
     modalButtonText: {
+        color: "#fff",
+        fontWeight: "bold",
+    },
+    avatar: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        marginRight: 15,
+        backgroundColor: "#eee",
+    },
+    placeholderAvatar: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        backgroundColor: "#ccc",
+        justifyContent: "center",
+        alignItems: "center",
+        marginRight: 15,
+    },
+    placeholderText: {
         color: "#fff",
         fontWeight: "bold",
     },

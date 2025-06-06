@@ -56,26 +56,24 @@ const ChatListScreen = ({ navigation, route }) => {
         }
     };
 
-    // Fetch info admin từ API, cache vào adminsInfo
     const fetchAdminInfo = async (adminId) => {
         if (adminsInfo[adminId]) return adminsInfo[adminId];
         try {
             const token = await AsyncStorage.getItem("token");
-            // const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
-            const response = await fetch(`http://192.168.44.106:8000/users/admins/`, {
+            const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
+            //const response = await fetch(`http://192.168.44.106:8000/users/admins/`, {
                 headers: {
                 Authorization: `Bearer ${token}`,
                 },
             });
         if (!response.ok) throw new Error("Lỗi tải thông tin admin");
         const data = await response.json();
-        // Nếu data là object thì dùng trực tiếp
         if (data && data.admin_id === adminId) {
             const adminData = {
                 id: data.admin_id,
-                first_name: data.admin_name, // hoặc tách nếu cần
-                last_name: "", // nếu tên có đủ phần
-                avatarUrl: data.avatar_url || null, // nếu có
+                first_name: data.admin_name,
+                last_name: "",
+                avatarUrl: data.avatar_url || null,
             };
             console.log(adminData)
             setAdminsInfo((prev) => ({ ...prev, [adminId]: adminData }));
@@ -118,7 +116,6 @@ const ChatListScreen = ({ navigation, route }) => {
                     (room) => room.residentId === currentUserId && room.adminId === adminId
                 );
 
-                // Lắng nghe toàn bộ messages mỗi lần rooms thay đổi
                 const messagesSnapshot = await get(messagesRef);
                 const allMessages = messagesSnapshot.exists() ? messagesSnapshot.val() : {};
 
@@ -156,7 +153,7 @@ const ChatListScreen = ({ navigation, route }) => {
         });
 
         return () => {
-            unsubscribeRooms(); // Dọn dẹp listener
+            unsubscribeRooms();
         };
     }, [currentUserId, adminId]);
 

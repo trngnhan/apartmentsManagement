@@ -141,7 +141,7 @@ const AdminHome = () => {
                 },
             });
             const data = await res.json();
-            console.log("Số lượng cư dân:", data.count);  // <- chỗ này phải đúng key
+            console.log("Số lượng cư dân:", data.count);
             setResidentCount(data.count);
         } catch (err) {
             console.error("Lỗi khi lấy số lượng cư dân:", err);

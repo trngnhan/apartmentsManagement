@@ -11,7 +11,7 @@ import { database2 } from "../../firebase/Configs";
 const database = database2;
 
 const LockerItems = () => {
-    const [lockerItems, setLockerItems] = useState([]); // State lưu danh sách món hàng trong tủ đồ
+    const [lockerItems, setLockerItems] = useState([]);
     const [lockerId, setLockerId] = useState(null);
     const navigation = useNavigation();
     const route = useRoute();
@@ -51,8 +51,8 @@ const LockerItems = () => {
                 }
 
                 const response = await fetch(
-                    // `http://192.168.44.103:8000/parcellockers/${user.resident_id}/items/`,
-                    `http://192.168.44.106:8000/parcellockers/${user.locker_id}/items/`,
+                    `http://192.168.44.103:8000/parcellockers/${user.locker_id}/items/`,
+                    //`http://192.168.44.106:8000/parcellockers/${user.locker_id}/items/`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -63,7 +63,7 @@ const LockerItems = () => {
                 if (response.ok) {
                     const data = await response.json();
                     console.log("Danh sách món hàng trong tủ đồ:", data);
-                    setLockerItems(data); // Lưu danh sách món hàng vào state
+                    setLockerItems(data);
                 } else {
                     console.error("Lỗi khi lấy danh sách món hàng:", response.status);
                 }
@@ -75,7 +75,6 @@ const LockerItems = () => {
         fetchLockerItems();
     }, []);
 
-    // Hàm xử lý khi bấm chuông
     const handleBellPress = async () => {
         let adminId = adminIdFromParams;
         if (!adminId) {
@@ -87,7 +86,7 @@ const LockerItems = () => {
         }
 
         try {
-            const db = database // hoặc dùng database2 nếu bạn dùng database thứ 2
+            const db = database
             const roomId = `${adminId}_${currentUserId}_${lockerId}`;
             const messagesRef = ref(db, `chatRooms/${roomId}/messages`);
             const snapshot = await get(messagesRef);

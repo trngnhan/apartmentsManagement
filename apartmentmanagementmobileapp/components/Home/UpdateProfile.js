@@ -11,7 +11,7 @@ const UpdateProfile = () => {
   const [password, setPassword] = useState('');
   const [must_change_password, setMustChangePassword] = useState(true);
   const [msg, setMsg] = useState(null);
-  const nav = useNavigation();  // dùng const ở đây
+  const nav = useNavigation();
 
   const handleUploadPhoto = async () => {
     let { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -58,12 +58,11 @@ const UpdateProfile = () => {
           });
         }
 
-        // const response = await fetch('http://192.168.44.103:8000/users/current-user/', {
-        const response = await fetch('http://192.168.44.106:8000/users/current-user/', {
+        const response = await fetch('http://192.168.44.103:8000/users/current-user/', {
+        // const response = await fetch('http://192.168.44.106:8000/users/current-user/', {
           method: 'PATCH',
           headers: {
             Authorization: `Bearer ${parsedUser.token}`,
-            // 'Content-Type': 'multipart/form-data',
           },
           body: formData,
         });
@@ -75,7 +74,7 @@ const UpdateProfile = () => {
           const updatedUser = {
             ...parsedUser,
             must_change_password: false,
-            profile_picture: responseJson.profile_picture, // cập nhật avatar mới nếu có
+            profile_picture: responseJson.profile_picture,
           };
 
           await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
@@ -104,8 +103,8 @@ const UpdateProfile = () => {
 
   return (
     <LinearGradient
-    colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
-    style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+    colors={['#fff', '#d7d2cc', '#FFBAC3']}
+    style={{ flex: 1 }}
     >
       <View style={[MyStyles.container, MyStyles.center]}>
         <Text style={MyStyles.title}>Update Your Profile</Text>

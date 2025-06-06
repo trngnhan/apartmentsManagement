@@ -106,7 +106,7 @@ const AdminParkingRegistrations = () => {
             <Text>Ngày gửi: {item.registration_date ? new Date(item.registration_date).toLocaleString("vi-VN") : ""}</Text>
             <Text>Trạng thái: 
                 <Text style={{color: item.approved ? "green" : "orange"}}>
-                    {item.approved ? " Đã duyệt" : " Chờ duyệt"}
+                    {item.approved ? " Đã duyệt" : " Chưa duyệt"}
                 </Text>
             </Text>
             {!item.approved && (
@@ -118,13 +118,13 @@ const AdminParkingRegistrations = () => {
                     >
                         <Text style={styles.buttonText}>Duyệt</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
+                    {/* <TouchableOpacity
                         style={[styles.button, { backgroundColor: "#FF5252", marginLeft: 10 }]}
                         onPress={() => rejectRegister(item.id)}
                         disabled={updatingId === item.id}
                     >
                         <Text style={styles.buttonText}>Từ chối</Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
                 </View>
             )}
         </View>

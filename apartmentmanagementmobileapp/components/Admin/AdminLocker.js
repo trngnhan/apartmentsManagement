@@ -45,7 +45,7 @@
         });
         if (response.ok) {
             const data = await response.json();
-            console.log("Danh sách tủ đồ:", data);  // debug
+            console.log("Danh sách tủ đồ:", data);
             setLockers(data.results || data);
         } else {
             setError("Không thể tải danh sách tủ đồ.");
@@ -72,7 +72,7 @@
         );
         if (response.ok) {
             const data = await response.json();
-            console.log("Danh sách cư dân chưa có tủ đồ:", data);  // debug
+            console.log("Danh sách cư dân chưa có tủ đồ:", data);
             setUnregisteredResidents(data);
         } else {
             console.error("Lỗi khi lấy cư dân:", response.status);
@@ -89,7 +89,6 @@
     useEffect(() => {
         if (showModal) {
             fetchUnregisteredResidents();
-            // Reset chọn cư dân mỗi lần mở modal
             setNewLocker({ resident_id: null });
         }
     }, [showModal]);
@@ -111,7 +110,7 @@
                 Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-                resident_id: newLocker.resident,
+                resident_id: newLocker.resident_id,
             }),
         });
 

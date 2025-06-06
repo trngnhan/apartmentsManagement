@@ -5,15 +5,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import MyStyles from "../../styles/MyStyles";
 
 const AdminSurveyResponses = ({ route }) => {
-    const { surveyId } = route.params; // Lấy surveyId từ params
-    const [responses, setResponses] = useState([]); // State lưu danh sách phản hồi
-    const [loading, setLoading] = useState(true); // State hiển thị trạng thái tải dữ liệu
-    const [error, setError] = useState(null); // State hiển thị lỗi
+    const { surveyId } = route.params;
+    const [responses, setResponses] = useState([]); 
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null); 
 
-    // Hàm gọi API để lấy danh sách phản hồi
     const fetchResponses = async () => {
         try {
-            const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
+            const token = await AsyncStorage.getItem("token");
             // const response = await fetch(`http://192.168.44.101:8000/surveys/${surveyId}/get-responses/`, {
             const response = await fetch(`http://192.168.44.103:8000/surveys/${surveyId}/get-responses/`, {
                 method: "GET",
@@ -22,27 +21,25 @@ const AdminSurveyResponses = ({ route }) => {
                 },
             });
             if (response.ok) {
-                const data = await response.json(); // Chuyển đổi dữ liệu trả về thành JSON
-                console.log("Danh sách phản hồi từ API:", data); // Log dữ liệu phản hồi
-                setResponses(data.results || data); // Lưu danh sách phản hồi vào state
+                const data = await response.json(); 
+                console.log("Danh sách phản hồi từ API:", data); 
+                setResponses(data.results || data);
             } else {
-                console.error("Lỗi khi lấy danh sách phản hồi:", response.status); // Log lỗi nếu có
-                setError("Không thể tải danh sách phản hồi."); // Cập nhật lỗi vào state
+                console.error("Lỗi khi lấy danh sách phản hồi:", response.status); 
+                setError("Không thể tải danh sách phản hồi."); 
             }
         } catch (error) {
-            console.error("Lỗi khi gọi API phản hồi:", error); // Log lỗi nếu có
-            setError("Đã xảy ra lỗi khi tải danh sách phản hồi."); // Cập nhật lỗi vào state
+            console.error("Lỗi khi gọi API phản hồi:", error); 
+            setError("Đã xảy ra lỗi khi tải danh sách phản hồi.");
         } finally {
-            setLoading(false); // Tắt trạng thái tải dữ liệu
+            setLoading(false);
         }
     };
 
-    // Gọi API khi component được mount
     useEffect(() => {
-        fetchResponses(); // Gọi hàm lấy danh sách phản hồi
-    }, []); // Chỉ chạy một lần khi component được mount
+        fetchResponses(); 
+    }, []);
 
-    // Hàm render từng phản hồi
     const renderResponse = ({ item }) => (
         <View style={MyStyles.card}>
             <Text style={MyStyles.resident}>
@@ -61,17 +58,17 @@ const AdminSurveyResponses = ({ route }) => {
 
     return (
         <LinearGradient
-        colors={['#fff', '#d7d2cc', '#FFBAC3']} // Màu gradient
-        style={{ flex: 1 }} // Đảm bảo gradient bao phủ toàn màn hình
+        colors={['#fff', '#d7d2cc', '#FFBAC3']} 
+        style={{ flex: 1 }}
         >
             <View style={styles.container}>
             <Text style={styles.header}>Phản hồi Khảo sát</Text>
                 {loading ? (
-                    <ActivityIndicator size="large" color="#FF6F61" /> // Hiển thị trạng thái đang tải
+                    <ActivityIndicator size="large" color="#FF6F61" /> 
                 ) : error ? (
-                    <Text style={MyStyles.error}>{error}</Text> // Hiển thị lỗi nếu có
+                    <Text style={MyStyles.error}>{error}</Text>
                 ) : responses.length === 0 ? (
-                    <Text style={MyStyles.noData}>Không có phản hồi nào để hiển thị.</Text> // Hiển thị khi danh sách rỗng
+                    <Text style={MyStyles.noData}>Không có phản hồi nào để hiển thị.</Text>
                 ) : (
                     <FlatList
                         data={responses}

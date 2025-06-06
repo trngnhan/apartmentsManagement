@@ -19,6 +19,26 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from .pagination import Pagination
 from apartments import serializers
 
+from rest_framework import viewsets, generics, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, IsAuthenticated, IsAdminUser
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from .models import PaymentCategory, PaymentTransaction, Apartment
+from .serializers import PaymentCategorySerializer, PaymentTransactionSerializer
+import hashlib
+import hmac
+import requests
+import time
+from decouple import config
+from django.utils import timezone
+import logging
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+import json
+
 from apartments.serializers import UserSerializer, ResidentSerializer, ApartmentSerializer, \
     ApartmentTransferHistorySerializer, ParcelItemSerializer, ParcelLockerSerializer, \
     FeedbackSerializer, SurveySerializer, SurveyOptionSerializer, SurveyResponseSerializer, \
@@ -31,74 +51,6 @@ from .models import (
 from .sms import send_sms
 
 User = get_user_model()
-
-@login_required
-def change_password(request):
-    if request.method == 'POST':
-        current = request.POST['current_password']
-        new = request.POST['new_password']
-        confirm = request.POST['confirm_password']
-
-        if len(new) < 8:
-            messages.error(request, 'Mật khẩu mới phải có ít nhất 8 ký tự.')
-            return render(request, 'change_password.html')
-
-        if not request.user.check_password(current):
-            messages.error(request, 'Mật khẩu hiện tại không đúng.')
-            return render(request, 'change_password.html')
-
-        if new != confirm:
-            messages.error(request, 'Mật khẩu xác nhận không trùng khớp.')
-            return render(request, 'change_password.html')
-
-        request.user.set_password(new)
-        request.user.must_change_password = False
-        request.user.save()
-        update_session_auth_hash(request, request.user)  # tránh logout sau khi đổi mật khẩu
-        messages.success(request, 'Đổi mật khẩu thành công.')
-        return redirect('resident_home')
-
-    return render(request, 'change_password.html')
-
-
-@login_required
-def upload_avatar(request):
-    if request.method == 'POST':
-        avatar = request.FILES.get('avatar')
-        if avatar.content_type not in ['image/jpeg', 'image/png']:
-            messages.error(request, 'Ảnh không hợp lệ. Chỉ chấp nhận JPEG hoặc PNG.')
-        if avatar:
-            request.user.profile_picture = avatar
-            request.user.save()
-            return redirect('home')  # hoặc chuyển đến trang chính
-
-    return render(request, 'upload_avatar.html')
-
-
-def resident_login_view(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        user = authenticate(request, username=email, password=password)
-
-        if user is not None and user.role == 'RESIDENT':
-            login(request, user)
-            if user.must_change_password:
-                return redirect(reverse('change_password'))
-            return redirect('resident_home')
-        else:
-            messages.error(request, "Email hoặc mật khẩu không đúng hoặc bạn không phải cư dân.")
-
-    return render(request, 'resident_login.html')
-
-@login_required
-def resident_home_view(request):
-    return render(request, 'resident_home.html')
-
-#ViewSet: Cho phép định nghĩa các hành động như list, retrieve, create, update...
-#ListAPIView: Trả về danh sách người dùng.
-#RetrieveAPIView: Trả về thông tin chi tiết của 1 người dùng (/users/1/)
-#CreateAPIView, UpdateAPIView: Cho phép tạo và cập nhật người dùng.
 
 class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView):
     queryset = User.objects.all()
@@ -474,15 +426,10 @@ class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     filterset_fields = ['is_recurring', 'active']
     search_fields = ['name', 'description']
 
-    # def get_permissions(self):
-    #     if self.action in ['create', 'update', 'partial_update', 'list']:
-    #         return [IsAdminUser()]
-    #     return [IsAdminOrManagement()]
-
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update']:
             return [IsAdminUser()]
-        return [IsAuthenticated()]  # Cho phép cư dân đã xác thực truy cập danh sách
+        return [IsAuthenticated()]
 
     def get_queryset(self):
         return self.queryset
@@ -562,27 +509,6 @@ class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 #             status=status.HTTP_200_OK
 #         )
 
-
-from rest_framework import viewsets, generics, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticated, IsAdminUser
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
-from .models import PaymentCategory, PaymentTransaction, Apartment
-from .serializers import PaymentCategorySerializer, PaymentTransactionSerializer
-import hashlib
-import hmac
-import requests
-import time
-from decouple import config
-from django.utils import timezone
-import logging
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
-import json
-
 logger = logging.getLogger('__name__')
 
 class IsAdminOrManagement(IsAuthenticated):
@@ -590,8 +516,8 @@ class IsAdminOrManagement(IsAuthenticated):
         return request.user.is_authenticated and (request.user.is_staff or
                 request.user.groups.filter(name='Management').exists())
 
-class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
-    queryset = PaymentCategory.objects.filter(active=True)
+class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView):
+    queryset = PaymentCategory.objects.filter()
     serializer_class = PaymentCategorySerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['is_recurring', 'active']
@@ -846,8 +772,8 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView)
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update']:
             return [IsAdminRole()]
-        if self.action in ['add-item', 'update-item-status', 'list', 'retrieve']:  # Management và Admin có thể đánh dấu đã nhận
-            return [IsAdminOrManagement()]  # Quyền cho cả Admin và Management
+        if self.action in ['add-item', 'update-item-status', 'list', 'retrieve']:
+            return [IsAdminOrManagement()]
         return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
@@ -916,7 +842,6 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView)
         serializer = ParcelItemSerializer(items, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # Thêm món đồ vào tủ đồ của cư dân
     @action(methods=['post'], detail=True, url_path='add-item')
     def add_item(self, request, pk=None):
         locker = self.get_object()
@@ -926,7 +851,6 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView)
             return Response({"detail": "Tên món đồ là bắt buộc."}, status=status.HTTP_400_BAD_REQUEST)
 
         item = locker.items.create(name=item_name, note=note)
-        notify_resident_about_new_item(locker.resident, item_name)
         serializer = ParcelItemSerializer(item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -1143,21 +1067,14 @@ class SurveyViewSet(viewsets.ViewSet, generics.ListAPIView):
     search_fields = ['title', 'description', 'deadline']
     ordering_fields = ['deadline', 'created_date']
 
-    # def get_permissions(self):
-    #     if self.action in ['create', 'destroy', 'update', 'partial_update', 'list', 'retrieve', 'post']:
-    #         return [IsAdminOrManagement()]  # Cho cả Admin và Management
-    #     elif self.action in ['get-responses']:
-    #         return [IsAdminOrManagement()]
-    #     return [permissions.IsAuthenticated()]  # Cư dân có thể tham gia khảo sát
-
     def get_permissions(self):
         if self.action in ['create', 'destroy', 'update', 'partial_update', 'post']:
-            return [IsAdminOrManagement()]  # Admin và Management mới có quyền
-        elif self.action == 'list':  # Công dân có quyền xem danh sách khảo sát
+            return [IsAdminOrManagement()]
+        elif self.action == 'list':
             return [permissions.IsAuthenticated()]
         elif self.action in ['get-responses']:
             return [IsAdminOrManagement()]
-        return [permissions.IsAuthenticated()]  # Mặc định là công dân có thể tham gia khảo sát
+        return [permissions.IsAuthenticated()]
 
     def get_object(self):
         try:
@@ -1176,28 +1093,22 @@ class SurveyViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     @action(detail=True, methods=['get'], url_path='response-rate')
     def response_rate(self, request, pk=None):
-        # Lấy khảo sát theo ID
         survey = self.get_object()
 
-        # Số lượng người tham gia khảo sát (phản hồi khảo sát)
         total_responses = SurveyResponse.objects.filter(survey=survey).count()
 
-        # Số lượng cư dân (hoặc tổng số người mời khảo sát)
         total_invited = Resident.objects.count()
 
-        # Tính tỷ lệ phản hồi
         response_rate = (total_responses / total_invited) * 100 if total_invited else 0
 
         return Response({'response_rate': response_rate})
 
-    # Trả về danh sách tùy chọn (VD: Hai long or Khong hai long) của khảo sát
     @action(methods=['get'], detail=True, url_path='get-options')
     def get_options(self, request, pk):
         survey = self.get_object()
         options = survey.options.filter(active=True)
         return Response(SurveyOptionSerializer(options, many=True).data)
 
-    # Trả về danh sách phản hồi của khảo sát (chỉ dành cho admin)
     @action(methods=['get'], detail=True, url_path='get-responses')
     def get_responses(self, request, pk):
         if not request.user.is_staff:
@@ -1213,7 +1124,7 @@ class SurveyViewSet(viewsets.ViewSet, generics.ListAPIView):
 
 # Survey Option ViewSet: Hiển thị các lựa chọn và tạo các lựa chọn trong khảo sát
 class SurveyOptionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
-    queryset = SurveyOption.objects.filter(active=True)
+    queryset = SurveyOption.objects.filter()
     serializer_class = SurveyOptionSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['survey', 'active']

@@ -52,7 +52,6 @@ const ChatListScreen = ({ route }) => {
         renderItem={({ item }) => {
         const isSender = item.senderId === currentUserId;
 
-        // Xử lý timestamp Firebase (Realtime Database: milliseconds hoặc Firestore: object có .seconds)
         let timeString = "";
         if (item.timestamp) {
           let utcDate;
