@@ -714,9 +714,13 @@ def momo_ipn(request):
     try:
         logger.info(f"IPN request received: {request.body}")
         data = json.loads(request.body)
-        secret_key = config('MOMO_SECRET_KEY', default='K951B6PE1waDMi640xX08PD3vg6EkVlz')
-        logger.info(f"IPN data: {json.dumps(data, indent=2)}")
-        logger.info(f"IPN data keys: {data.keys()}")
+        secret_key = settings.MOMO_SECRET_KEY
+
+        # Kiểm tra các trường bắt buộc
+        required_fields = ['partnerCode', 'orderId', 'requestId', 'amount', 'resultCode', 'signature']
+        if not all(field in data for field in required_fields):
+            logger.error(f"Missing required fields in IPN data: {data}")
+            return JsonResponse({"message": "Dữ liệu không đầy đủ"}, status=400)
 
         raw_signature = (
             f"accessKey={data.get('accessKey')}&amount={data.get('amount')}"
@@ -727,8 +731,6 @@ def momo_ipn(request):
             f"&responseTime={data.get('responseTime')}&resultCode={data.get('resultCode')}"
             f"&transId={data.get('transId')}"
         )
-        logger.info(f"Raw signature string: {raw_signature}")
-
         signature = hmac.new(
             key=secret_key.encode('utf-8'),
             msg=raw_signature.encode('utf-8'),
@@ -743,19 +745,16 @@ def momo_ipn(request):
             transaction = PaymentTransaction.objects.get(transaction_id=data.get('orderId'))
         except PaymentTransaction.DoesNotExist:
             logger.error(f"Transaction not found for orderId: {data.get('orderId')}")
-            return JsonResponse({"message": "Không tìm thấy giao dịch"}, status=404)
+            return JsonResponse({"message": "Giao dịch không tồn tại"}, status=404)
 
         logger.info(f"Processing IPN for transaction: {transaction.transaction_id}, resultCode: {data.get('resultCode')}")
-        if str(data.get('resultCode')) == '0':  # Chuyển thành string để an toàn
-            transaction.status = 'COMPLETED'
-            transaction.paid_date = timezone.now()
-        else:
-            transaction.status = 'FAILED'
+        transaction.status = 'COMPLETED' if str(data.get('resultCode')) == '0' else 'FAILED'
+        transaction.paid_date = timezone.now() if transaction.status == 'COMPLETED' else transaction.paid_date
         transaction.save()
         logger.info(f"Transaction updated: {transaction.transaction_id}, status: {transaction.status}")
 
         return JsonResponse({"message": "IPN nhận thành công"}, status=200)
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         logger.error(f"Invalid JSON in IPN: {str(e)}")
         return JsonResponse({"message": "Dữ liệu JSON không hợp lệ"}, status=400)
     except Exception as e:

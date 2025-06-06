@@ -29,5 +29,5 @@ urlpatterns = [
     path('', include(router.urls)),
 
     path('send-sms/', ParcelLockerViewSet.as_view({'post': 'send_sms'}), name='send-sms'),
-    path('paymenttransactions/momo-ipn/', momo_ipn, name='momo_ipn'),
+    path('paymenttransactions/momo-ipn/', views.momo_ipn, name='momo_ipn'),
 ]
