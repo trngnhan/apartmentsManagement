@@ -6,6 +6,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import MyStyles from "../../styles/MyStyles";
 import { Modal, TextInput } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const AdminApartment = () => {
     const [apartments, setApartments] = useState([]); 
@@ -28,35 +29,24 @@ const AdminApartment = () => {
     const [newNumber, setNewNumber] = useState("");
     const [newOwnerIdCreate, setNewOwnerIdCreate] = useState("");
 
-    // const fetchApartments = async (url = "http://192.168.44.101:8000/apartments/") => {
-    const fetchApartments = async (url = "http://192.168.44.103:8000/apartments/") => {
-    // const fetchApartments = async (url = "http://192.168.1.36:8000/apartments/") => {
+    const fetchApartments = async (url = endpoints.apartments) => {
         try {
-            if (!nextPage) setLoading(true); // Bật trạng thái tải dữ liệu ban đầu
+            if (!nextPage) setLoading(true);
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const api = authApis(token);
+            const response = await api.get(url);
+            const data = response.data;
+            console.log("Danh sách apartment từ API:", data); 
+            console.log("URL trang tiếp theo:", data.next); 
+
+            setApartments((prevApartments) => {
+                const newApartments = (data.results || []).filter(
+                    (apartment) => !prevApartments.some((prev) => prev.code === apartment.code)
+                );
+                return [...prevApartments, ...newApartments];
             });
-    
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Danh sách apartment từ API:", data); 
-                console.log("URL trang tiếp theo:", data.next); 
-    
-                setApartments((prevApartments) => {
-                    const newApartments = data.results.filter(
-                        (apartment) => !prevApartments.some((prev) => prev.code === apartment.code)
-                    );
-                    return [...prevApartments, ...newApartments];
-                });
-    
-                setNextPage(data.next);
-            } else {
-                console.error("Lỗi khi lấy danh sách apartment:", response.status);
-            }
+
+            setNextPage(data.next);
         } catch (error) {
             console.error("Lỗi khi gọi API apartment:", error);
         } finally {
@@ -88,27 +78,16 @@ const AdminApartment = () => {
     const fetchResidentsWithoutApartment = async () => {
         try {
             const token = await AsyncStorage.getItem("token");
-            // const response = await fetch("http://192.168.44.101:8000/apartments/resident-without-apartment/", {
-            const response = await fetch("http://192.168.44.103:8000/apartments/resident-without-apartment/", {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Danh sách cư dân từ API chưa có căn hộ:", data);
-                setResidents(data); 
-            } else {
-                console.error("Lỗi khi lấy danh sách cư dân:", response.status);
-            }
+            const api = authApis(token);
+            const response = await api.get(endpoints.residentsWithoutApartment);
+            const data = response.data;
+            console.log("Danh sách cư dân từ API chưa có căn hộ:", data);
+            setResidents(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
             console.error("Lỗi khi gọi API cư dân:", error);
         }
     };
 
-    // Hàm xử lý chuyển nhượng căn hộ
     const handleTransfer = async () => {
         if (!newOwnerId) {
             Alert.alert("Lỗi", "Vui lòng nhập ID người nhận.");
@@ -117,38 +96,27 @@ const AdminApartment = () => {
 
         try {
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch(
-                // `http://192.168.44.101:8000/apartments/${selectedApartment.id}/transfer/`,
-                `http://192.168.44.103:8000/apartments/${selectedApartment.id}/transfer/`,
+            const api = authApis(token);
+            const response = await api.post(
+                endpoints.transfer(selectedApartment.id),
                 {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        new_owner_id: newOwnerId,
-                        note: note,
-                    }),
+                    new_owner_id: newOwnerId,
+                    note: note,
                 }
             );
-
-            const data = await response.json();
+            const data = response.data;
             console.log("Phản hồi JSON:", data);
 
-            if (response.ok) {
-                Alert.alert("Thành công", data.detail);
-                setModalVisible(false); // Đóng Modal
-                setApartments([]); // Clear danh sách cũ
-                fetchApartments(); // Reload lại
-                setNewOwnerId(""); // Reset trường nhập liệu
-                setNote("");
-            } else {
-                Alert.alert("Lỗi", data.detail || "Không thể chuyển nhượng căn hộ.");
-            }
+            Alert.alert("Thành công", data.detail || "Chuyển nhượng thành công");
+            setModalVisible(false);
+            setApartments([]);
+            fetchApartments();
+            setNewOwnerId("");
+            setNote("");
         } catch (error) {
+            const data = error.response?.data || {};
+            Alert.alert("Lỗi", data.detail || "Không thể chuyển nhượng căn hộ.");
             console.error("Lỗi khi chuyển nhượng căn hộ:", error);
-            Alert.alert("Lỗi", "Đã xảy ra lỗi khi chuyển nhượng căn hộ.");
         }
     };
 
@@ -169,48 +137,37 @@ const AdminApartment = () => {
             };
             console.log("Body to be posted:", body);
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch("http://192.168.44.103:8000/apartments/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(body),
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                Alert.alert("Thành công", "Tạo căn hộ thành công");
-                setCreateModalVisible(false);
-                setNewCode("");
-                setNewBuilding("");
-                setNewFloor("");
-                setNewNumber("");
-                setNewOwnerIdCreate("");
-                setApartments([]); // Clear cũ
-                fetchApartments(); // Reload danh sách
-            } else {
-                Alert.alert("Lỗi", data.detail || "Tạo căn hộ thất bại");
-            }
+            const api = authApis(token);
+            const response = await api.post(endpoints.apartments, body);
+            const data = response.data;
+            Alert.alert("Thành công", "Tạo căn hộ thành công");
+            setCreateModalVisible(false);
+            setNewCode("");
+            setNewBuilding("");
+            setNewFloor("");
+            setNewNumber("");
+            setNewOwnerIdCreate("");
+            setApartments([]);
+            fetchApartments();
         } catch (error) {
+            const data = error.response?.data || {};
+            Alert.alert("Lỗi", data.detail || "Tạo căn hộ thất bại");
             console.error("Lỗi khi tạo căn hộ:", error);
-            Alert.alert("Lỗi", "Đã xảy ra lỗi khi tạo căn hộ.");
         }
     };
 
-    // Gọi API khi component được render
     useEffect(() => {
         const fetchUser = async () => {
             const userData = await AsyncStorage.getItem("user");
             if (userData) {
-                setUser(JSON.parse(userData)); // Lưu thông tin người dùng vào state
+                setUser(JSON.parse(userData));
             }
         };
 
-        fetchUser(); // Gọi hàm lấy thông tin người dùng
-        fetchApartments(); // Gọi API để tải dữ liệu ban đầu
+        fetchUser(); 
+        fetchApartments();
         if (createModalVisible) {
-            fetchResidentsWithoutApartment(); // Gọi API khi Modal mở
+            fetchResidentsWithoutApartment();
         }
     }, [createModalVisible]);
 

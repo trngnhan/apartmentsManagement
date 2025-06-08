@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MyStyles from '../../styles/MyStyles';
 import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from 'expo-linear-gradient';
+import { endpoints, authApis } from "../../configs/Apis";
 
 const UpdateProfile = () => {
   const [photo, setPhoto] = useState(null);
@@ -34,66 +35,63 @@ const UpdateProfile = () => {
   };
 
   const handleUpdateProfile = async () => {
-    if (password) {
-      try {
-        const userData = await AsyncStorage.getItem('user');
-        if (!userData) {
-          alert('User data not found. Please log in again.');
-          nav.navigate('Login');
-          return;
-        }
-
-        const parsedUser = JSON.parse(userData);
-
-        const formData = new FormData();
-        formData.append('password', password);
-        formData.append('must_change_password', 'False');
-
-        // Thêm ảnh nếu có
-        if (photo) {
-          formData.append('profile_picture', {
-            uri: photo.uri,
-            name: photo.fileName || 'avatar.jpg',
-            type: photo.type || 'image/jpeg',
-          });
-        }
-
-        const response = await fetch('http://192.168.44.103:8000/users/current-user/', {
-        // const response = await fetch('http://192.168.44.106:8000/users/current-user/', {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${parsedUser.token}`,
-          },
-          body: formData,
-        });
-
-        const responseJson = await response.json();
-        console.log('Server Response:', responseJson);
-
-        if (response.ok) {
-          const updatedUser = {
-            ...parsedUser,
-            must_change_password: false,
-            profile_picture: responseJson.profile_picture,
-          };
-
-          await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
-          if (parsedUser.is_superuser) {
-            nav.navigate("AdminHome");
-          } else {
-            nav.navigate("ResidentHome");
-          }
-        } else {
-          alert(`Failed to update profile: ${responseJson.detail || 'Unknown error'}`);
-        }
-      } catch (error) {
-        console.error('Error updating profile: ', error);
-        alert('An error occurred while updating your profile. Please try again.');
+  if (password) {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      if (!userData) {
+        alert('User data not found. Please log in again.');
+        nav.navigate('Login');
+        return;
       }
-    } else {
-      setMsg('Please enter a new password.');
+
+      const parsedUser = JSON.parse(userData);
+
+      const formData = new FormData();
+      formData.append('password', password);
+      formData.append('must_change_password', 'False');
+
+      // Thêm ảnh nếu có
+      if (photo) {
+        formData.append('profile_picture', {
+          uri: photo.uri,
+          name: photo.fileName || 'avatar.jpg',
+          type: photo.type || 'image/jpeg',
+        });
+      }
+
+      const api = authApis(parsedUser.token);
+      const res = await api.patch(endpoints["current-user"], formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      console.log('Server Response:', res.data);
+
+      if (res.status === 200) {
+        const updatedUser = {
+          ...parsedUser,
+          must_change_password: false,
+          profile_picture: res.data.profile_picture,
+        };
+
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        if (parsedUser.is_superuser) {
+          nav.navigate("AdminHome");
+        } else {
+          nav.navigate("ResidentHome");
+        }
+      } else {
+        alert(`Failed to update profile: ${res.data.detail || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('Error updating profile: ', error);
+      alert('An error occurred while updating your profile. Please try again.');
     }
-  };
+  } else {
+    setMsg('Please enter a new password.');
+  }
+};
   
   
 //   <TouchableOpacity onPress={handleUploadPhoto} style={MyStyles.button}>
@@ -113,9 +111,9 @@ const UpdateProfile = () => {
 
         {photo && <Image source={{ uri: photo.uri }} style={{ width: 100, height: 100, marginVertical: 10, borderRadius: 10 }} />}
 
-        <TouchableOpacity onPress={handleUploadPhoto} style={MyStyles.button}>
+        {/* <TouchableOpacity onPress={handleUploadPhoto} style={MyStyles.button}>
           <Text style={{ color: 'white', textAlign: 'center' }}>Upload Photo</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <TextInput
           style={MyStyles.input}

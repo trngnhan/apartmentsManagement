@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Card, Title, Paragraph } from "react-native-paper";
 import MyStyles from "../../styles/MyStyles";
 import { LinearGradient } from "expo-linear-gradient";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const ResidentHome = () => {
     const [user, setUser] = useState(null);
@@ -21,16 +22,14 @@ const ResidentHome = () => {
     const getAdminIdForResident = async (residentId) => {
         const token = await AsyncStorage.getItem("token");
         try {
-            const response = await fetch(`http://192.168.44.103:8000/users/admins/`, {
-            // const response = await fetch(`http://192.168.44.106:8000/users/admins/`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            if (response.ok) {
-                const data = await response.json();
+            const api = authApis(token);
+            const res = await api.get(endpoints.admin);
+            if (res.status === 200) {
+                const data = res.data;
                 console.log("Data admin API:", data);
                 return data.admin_id;
             } else {
-                console.error("Lỗi response admin:", response.status);
+                console.error("Lỗi response admin:", res.status);
                 return null;
             }
         } catch (error) {
@@ -95,61 +94,38 @@ const ResidentHome = () => {
                         setLockerId(lockerId);
                         console.log("Locker ID:", lockerId);
                         //---
-                        // Hàm lấy API căn hộ
                         const fetchApartments = async (token) => {
                             try {
-                                const response = await fetch(
-                                    "http://192.168.44.103:8000/apartments/get-apartment/",
-                                    //"http://192.168.44.106:8000/apartments/get-apartment/",
-                                    {
-                                        headers: {
-                                            Authorization: `Bearer ${token}`,
-                                        },
-                                    }
-                                );
-
-                                if (response.ok) {
-                                    const data = await response.json();
-                                    setApartments(data.results || data);
+                                const api = authApis(token);
+                                const res = await api.get(endpoints.getApartment);
+                                if (res.status === 200) {
+                                    setApartments(res.data.results || res.data);
                                 } else {
-                                    console.error(
-                                        "Lỗi khi lấy thông tin căn hộ:",
-                                        response.status
-                                    );
+                                    console.error("Lỗi khi lấy thông tin căn hộ:", res.status);
                                 }
                             } catch (error) {
                                 console.error("Lỗi khi gọi API căn hộ:", error);
                             }
                         };
 
-                        // Gọi API lấy danh sách đăng ký giữ xe
-                        const fetchRegistrations = async () => {
+                        const fetchRegistrations = async (token) => {
                             try {
-                                const response = await fetch(
-                                    "http://192.168.44.103:8000/visitorvehicleregistrations/my-registrations/",
-                                    //"http://192.168.44.106:8000/visitorvehicleregistrations/my-registrations/",
-                                    {
-                                        headers: {
-                                            Authorization: `Bearer ${token}`,
-                                        },
-                                    }
-                                );
-                        
-                                if (response.ok) {
-                                    const data = await response.json();
-                                    console.log("Dữ liệu trả về từ API:", data); 
-                                    setRegistrations(data);
+                                const api = authApis(token);
+                                const res = await api.get(endpoints.myVehicleRegistrations);
+                                if (res.status === 200) {
+                                    console.log("Dữ liệu trả về từ API:", res.data);
+                                    setRegistrations(res.data);
                                 } else {
-                                    console.error("Lỗi khi lấy danh sách đăng ký giữ xe:", response.status);
+                                    console.error("Lỗi khi lấy danh sách đăng ký giữ xe:", res.status);
                                 }
-                                } catch (error) {
-                                    console.error("Lỗi khi gọi API đăng ký giữ xe:", error);
-                                }
+                            } catch (error) {
+                                console.error("Lỗi khi gọi API đăng ký giữ xe:", error);
+                            }
                         };
 
                         // GỌI API ở đây!
                         await fetchApartments(token);
-                        await fetchRegistrations();
+                        await fetchRegistrations(token);
                         //---
                     } catch (error) {
                         console.error("Error parsing user data:", error);
@@ -180,32 +156,32 @@ const ResidentHome = () => {
     }
 
     return (
-      <LinearGradient
-      colors={['#fff', '#d7d2cc', '#FFBAC3']} 
-      style={{ flex: 1 }}
-      >
-          <ScrollView contentContainerStyle={{ padding: 16 }}>
-              <Text style={[MyStyles.text, MyStyles.padding]}>
-                  Welcome, {user.first_name} {user.last_name}
-              </Text>
-              <Text style={MyStyles.padding}>Căn hộ của bạn:</Text>
-              {apartments.length === 0 ? (
-                  <Text>Bạn chưa sở hữu căn hộ nào.</Text>
-              ) : (
-                  apartments.map((apartment, index) => (
-                      <Card key={index} style={{ marginBottom: 12 }}>
-                          <Card.Content>
-                              <Title style={MyStyles.text}>Căn hộ: {apartment.code}</Title>
-                              <Paragraph>Tòa: {apartment.building}</Paragraph>
-                              <Paragraph>Tầng: {apartment.floor}</Paragraph>
-                              <Paragraph>Căn số: {apartment.number}</Paragraph>
-                          </Card.Content>
-                      </Card>
-                  ))
-              )}
+    <LinearGradient
+    colors={['#fff', '#d7d2cc', '#FFBAC3']} 
+    style={{ flex: 1 }}
+    >
+        <ScrollView contentContainerStyle={{ padding: 16 }}>
+            <Text style={[MyStyles.text, MyStyles.padding]}>
+                Welcome, {user.first_name} {user.last_name}
+            </Text>
+            <Text style={MyStyles.padding}>Căn hộ của bạn:</Text>
+            {apartments.length === 0 ? (
+                <Text>Bạn chưa sở hữu căn hộ nào.</Text>
+            ) : (
+                apartments.map((apartment, index) => (
+                    <Card key={index} style={{ marginBottom: 12 }}>
+                        <Card.Content>
+                            <Title style={MyStyles.text}>Căn hộ: {apartment.code}</Title>
+                            <Paragraph>Tòa: {apartment.building}</Paragraph>
+                            <Paragraph>Tầng: {apartment.floor}</Paragraph>
+                            <Paragraph>Căn số: {apartment.number}</Paragraph>
+                        </Card.Content>
+                    </Card>
+                ))
+            )}
 
-              {/* Các chức năng chuyển trang để ở đây */}
-              <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
+            {/* Các chức năng chuyển trang để ở đây */}
+            <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
                 {/* Hình ảnh để chuyển đến trang RegisterVehicle */}
                 <TouchableOpacity onPress={() => nav.navigate("RegisterVehicle")}>
                     <View style={{ alignItems: "flex-start" }}>
@@ -227,7 +203,7 @@ const ResidentHome = () => {
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Tủ đồ</Text>
                     </View>
                 </TouchableOpacity>
-              
+            
                 {/* Hình ảnh để chuyển đến trang SubmitFeedback*/}
                 <TouchableOpacity onPress={() => nav.navigate("SubmitFeedback")}>
                     <View style={{ alignItems: "flex-end" }}>
@@ -239,9 +215,9 @@ const ResidentHome = () => {
                     </View>
                 </TouchableOpacity>
 
-              </View>
+            </View>
 
-              <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-around", marginVertical: 10 }}>
                 {/* Hình ảnh để chuyển đến trang SurveyList */}
                 <TouchableOpacity onPress={() => nav.navigate("SurveyList")}>
                     <View style={{ alignItems: "center" }}>
@@ -274,10 +250,10 @@ const ResidentHome = () => {
                         <Text style={[MyStyles.padding, MyStyles.textSmall]}>Thanh toán phí chung cư</Text>
                     </View>
                 </TouchableOpacity>
-              </View>
+            </View>
 
-              {/* Hiển thị danh sách đăng ký giữ xe */}
-              <Text style={MyStyles.sectionTitle}>Danh sách đăng ký giữ xe:</Text>
+            {/* Hiển thị danh sách đăng ký giữ xe */}
+            <Text style={MyStyles.sectionTitle}>Danh sách đăng ký giữ xe:</Text>
                 {registrations.length === 0 ? (
                     <Text style={MyStyles.padding}>Bạn chưa có đăng ký giữ xe nào.</Text>
                 ) : (
@@ -295,8 +271,8 @@ const ResidentHome = () => {
                     ))
                 )}
                 
-              <Button
-              style={{
+            <Button
+            style={{
                 backgroundColor: "#FF6F61",
                 borderRadius: 15, 
                 paddingVertical: 2,
@@ -304,15 +280,15 @@ const ResidentHome = () => {
                 alignSelf: "center",
                 elevation: 5, 
                 marginTop: 20,
-              }}
-              labelStyle={{
-                  color: "white", 
-                  fontSize: 16,
-                  fontWeight: "bold",
-              }}
-              title="Logout" onPress={logout} />
-          </ScrollView>
-      </LinearGradient>
+            }}
+            labelStyle={{
+                color: "white", 
+                fontSize: 16,
+                fontWeight: "bold",
+            }}
+            title="Logout" onPress={logout} />
+        </ScrollView>
+    </LinearGradient>
     );
 };
 

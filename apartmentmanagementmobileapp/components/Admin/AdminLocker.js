@@ -16,6 +16,7 @@
     import MyStyles from "../../styles/MyStyles";
     import { useNavigation, useRoute } from "@react-navigation/native";
     import { Picker } from "@react-native-picker/picker";
+    import { endpoints, authApis } from "../../configs/Apis";
 
     const AdminLocker = () => {
     const route = useRoute();
@@ -36,49 +37,31 @@
     // Lấy danh sách tủ đồ từ API
     const fetchLockers = async () => {
         try {
-        const token = await AsyncStorage.getItem("token");
-        const response = await fetch("http://192.168.44.103:8000/parcellockers/", {
-            method: "GET",
-            headers: {
-            Authorization: `Bearer ${token}`,
-            },
-        });
-        if (response.ok) {
-            const data = await response.json();
+            const token = await AsyncStorage.getItem("token");
+            const api = authApis(token);
+            const response = await api.get(endpoints.lockers);
+            const data = response.data;
             console.log("Danh sách tủ đồ:", data);
             setLockers(data.results || data);
-        } else {
-            setError("Không thể tải danh sách tủ đồ.");
-        }
         } catch (error) {
             console.error("Lỗi khi gọi API tủ đồ:", error);
             setError("Đã xảy ra lỗi khi tải danh sách tủ đồ.");
         } finally {
-        setLoading(false);
+            setLoading(false);
         }
     };
 
     // Lấy danh sách cư dân chưa có tủ đồ
     const fetchUnregisteredResidents = async () => {
         try {
-        const token = await AsyncStorage.getItem("token");
-        const response = await fetch(
-            "http://192.168.44.103:8000/parcellockers/resident-without-locker/",
-            {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-            }
-        );
-        if (response.ok) {
-            const data = await response.json();
+            const token = await AsyncStorage.getItem("token");
+            const api = authApis(token);
+            const response = await api.get(endpoints.unregisteredResidentsLocker);
+            const data = response.data;
             console.log("Danh sách cư dân chưa có tủ đồ:", data);
-            setUnregisteredResidents(data);
-        } else {
-            console.error("Lỗi khi lấy cư dân:", response.status);
-        }
+            setUnregisteredResidents(Array.isArray(data) ? data : data.results || []);
         } catch (error) {
-        console.error("Lỗi mạng:", error);
+            console.error("Lỗi mạng:", error);
         }
     };
 
@@ -97,34 +80,24 @@
     const createLocker = async () => {
         if (!newLocker.resident_id) {
             alert("Vui lòng chọn cư dân để tạo tủ đồ");
-        return;
-    }
+            return;
+        }
 
         try {
-        const token = await AsyncStorage.getItem("token");
-        console.log("Sending resident_id:", newLocker.resident_id);
-        const response = await fetch("http://192.168.44.103:8000/parcellockers/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({
+            const token = await AsyncStorage.getItem("token");
+            const api = authApis(token);
+            console.log("Sending resident_id:", newLocker.resident_id);
+            const response = await api.post(endpoints.lockers, {
                 resident_id: newLocker.resident_id,
-            }),
-        });
+            });
 
-        if (response.ok) {
-            const data = await response.json();
+            const data = response.data;
             setLockers((prev) => [data, ...prev]);
             setShowModal(false);
             Alert.alert("Thành công", "Tủ đồ mới đã được thêm.");
-        } else {
-            alert("Không thể tạo tủ đồ. Vui lòng thử lại.");
-        }
         } catch (error) {
-        console.error("Lỗi tạo tủ đồ:", error);
-        alert("Đã xảy ra lỗi khi tạo tủ đồ.");
+            alert("Không thể tạo tủ đồ. Vui lòng thử lại.");
+            console.error("Lỗi tạo tủ đồ:", error);
         }
     };
 

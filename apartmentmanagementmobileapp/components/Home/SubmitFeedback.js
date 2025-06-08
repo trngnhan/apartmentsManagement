@@ -3,6 +3,7 @@ import { View, ScrollView, Alert, Text } from "react-native";
 import { TextInput, Button, Title, Card } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MyStyles from "../../styles/MyStyles";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const SubmitFeedback = () => {
     const [title, setTitle] = useState("");
@@ -24,15 +25,10 @@ const SubmitFeedback = () => {
     // Gọi API lấy phản hồi của người dùng
     const fetchMyFeedbacks = async (tokenParam = token) => {
         try {
-            const res = await fetch("http://192.168.44.103:8000/feedbacks/my-feedbacks/", {
-            //const res = await fetch("http://192.168.44.106:8000/feedbacks/my-feedbacks/", {
-                headers: {
-                    Authorization: `Bearer ${tokenParam}`,
-                },
-            });
-            if (res.ok) {
-                const data = await res.json();
-                setMyFeedbacks(data);
+            const api = authApis(tokenParam);
+            const res = await api.get(endpoints.myFeedbacks);
+            if (res.status === 200) {
+                setMyFeedbacks(res.data);
             } else {
                 console.warn("Không thể tải danh sách phản hồi.");
             }
@@ -51,25 +47,16 @@ const SubmitFeedback = () => {
         setLoading(true);
 
         try {
-            const response = await fetch("http://192.168.44.103:8000/feedbacks/", {
-            //const response = await fetch("http://192.168.44.106:8000/feedbacks/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ title, content }),
-            });
-
-            if (response.ok) {
+            const api = authApis(token);
+            const res = await api.post(endpoints.feedbacks, { title, content });
+            if (res.status === 201 || res.status === 200) {
                 Alert.alert("Thành công", "Gửi phản hồi thành công.");
                 setTitle("");
                 setContent("");
-                fetchMyFeedbacks(); // reload danh sách phản hồi
+                fetchMyFeedbacks();
             } else {
-                const error = await response.json();
-                console.error("Lỗi gửi phản hồi:", error);
-                Alert.alert("Lỗi", error.detail || "Không thể gửi phản hồi.");
+                console.error("Lỗi gửi phản hồi:", res.data);
+                Alert.alert("Lỗi", res.data.detail || "Không thể gửi phản hồi.");
             }
         } catch (err) {
             console.error("Lỗi mạng:", err);

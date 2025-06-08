@@ -5,6 +5,7 @@ import MyStyles from "../../styles/MyStyles";
 import { LinearGradient } from "expo-linear-gradient";
 import { Button, Modal, TextInput } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const AdminUser = () => {
     const [users, setUsers] = useState([]); 
@@ -20,24 +21,14 @@ const AdminUser = () => {
     
     const createUser = async (newUser) => {
         try {
-            const token = await AsyncStorage.getItem("token"); 
-            // const response = await fetch("http://192.168.44.101:8000/users/", {
-            const response = await fetch("http://192.168.44.103:8000/users/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(newUser), // Gửi thông tin người dùng mới
-            });
-
-            if (response.ok) {
-                const createdUser = await response.json();
+            const token = await AsyncStorage.getItem("token");
+            const api = authApis(token);
+            const res = await api.post(endpoints.users, newUser);
+            if (res.status === 201 || res.status === 200) {
                 Alert.alert("Thành công", "Tài khoản đã được tạo.");
-                // Cập nhật danh sách người dùng
-                setUsers((prevUsers) => [...prevUsers, createdUser]);
+                setUsers((prevUsers) => [...prevUsers, res.data]);
             } else {
-                console.error("Lỗi khi tạo tài khoản:", response.status);
+                console.error("Lỗi khi tạo tài khoản:", res.status);
                 Alert.alert("Lỗi", "Không thể tạo tài khoản. Vui lòng thử lại.");
             }
         } catch (error) {
@@ -49,26 +40,17 @@ const AdminUser = () => {
     const fetchUsers = async (search = "") => {
         try {
             const token = await AsyncStorage.getItem("token");
-            const url = `http://192.168.44.103:8000/users/?search=${search}`; 
-            // const response = await fetch("http://192.168.44.101:8000/users/", {
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.ok) {
-                const data = await response.json(); 
-                console.log("Danh sách người dùng từ API:", data);
-                setUsers(data.results || data);
+            const api = authApis(token);
+            const res = await api.get(`${endpoints.users}?search=${search}`);
+            if (res.status === 200) {
+                setUsers(res.data.results || res.data);
             } else {
-                console.error("Lỗi khi lấy danh sách người dùng:", response.status)
+                console.error("Lỗi khi lấy danh sách người dùng:", res.status);
                 setError("Không thể tải danh sách người dùng.");
             }
         } catch (error) {
             console.error("Lỗi khi gọi API người dùng:", error);
-            setError("Đã xảy ra lỗi khi tải danh sách người dùng."); 
+            setError("Đã xảy ra lỗi khi tải danh sách người dùng.");
         } finally {
             setLoading(false);
         }
@@ -76,18 +58,10 @@ const AdminUser = () => {
 
     const lockUser = async (userId) => {
         try {
-            const token = await AsyncStorage.getItem("token"); // Lấy token từ AsyncStorage
-            // const response = await fetch(`http://192.168.44.101:8000/users/${userId}/`, {
-            const response = await fetch(`http://192.168.44.103:8000/users/${userId}/`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ active: false }),
-            });
-
-            if (response.ok) {
+            const token = await AsyncStorage.getItem("token");
+            const api = authApis(token);
+            const res = await api.patch(endpoints.userLock(userId), { active: false });
+            if (res.status === 200 || res.status === 204) {
                 Alert.alert("Thành công", "Tài khoản đã được khóa.");
                 setUsers((prevUsers) =>
                     prevUsers.map((user) =>
@@ -95,7 +69,7 @@ const AdminUser = () => {
                     )
                 );
             } else {
-                console.error("Lỗi khi khóa tài khoản:", response.status);
+                console.error("Lỗi khi khóa tài khoản:", res.status);
                 Alert.alert("Lỗi", "Không thể khóa tài khoản. Vui lòng thử lại.");
             }
         } catch (error) {

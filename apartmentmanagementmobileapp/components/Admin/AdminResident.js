@@ -15,6 +15,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import MyStyles from "../../styles/MyStyles";
 import { Modal } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const AdminResident = () => {
     const [residents, setResidents] = useState([]);
@@ -31,21 +32,13 @@ const AdminResident = () => {
     const fetchResidents = async (search = "") => {
         try {
             const token = await AsyncStorage.getItem("token");
-            // const url = `http://192.168.44.101:8000/residents/?search=${search}`;
-            const url = `http://192.168.44.103:8000/residents/?search=${search}`;
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                const filteredResidents = data.filter(item => item.user.role === 'RESIDENT');
+            const api = authApis(token);
+            const res = await api.get(`${endpoints.residents}?search=${search}`);
+            if (res.status === 200) {
+                const filteredResidents = res.data.filter(item => item.user.role === 'RESIDENT');
                 setResidents(filteredResidents);
             } else {
-                console.error("Lỗi khi lấy danh sách cư dân:", response.status);
+                console.error("Lỗi khi lấy danh sách cư dân:", res.status);
             }
         } catch (error) {
             console.error("Lỗi khi gọi API cư dân:", error);
@@ -61,60 +54,37 @@ const AdminResident = () => {
                 Alert.alert("Lỗi", "Vui lòng chọn một cư dân trước khi thêm.");
                 return;
             }
-
             const token = await AsyncStorage.getItem("token");
-            // const url = `http://192.168.44.101:8000/residents/`;
-            const url = `http://192.168.44.103:8000/residents/`;
-            const response = await fetch(url, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ user_id: newResident.user_id }),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Cư dân mới đã được thêm:", data);
+            const api = authApis(token);
+            const res = await api.post(endpoints.residents, { user_id: newResident.user_id });
+            if (res.status === 201 || res.status === 200) {
+                const data = res.data;
                 setResidents((prevResidents) => [data, ...prevResidents]);
                 setModalVisible(false);
                 setNewResident({ first_name: "", last_name: "", email: "", user_id: "" });
                 Alert.alert("Thành công", "Cư dân mới đã được thêm.");
             } else {
-                const errorData = await response.json();
-                console.error("Chi tiết lỗi từ API:", errorData);
-                Alert.alert("Lỗi", `Không thể thêm cư dân: ${errorData.detail || "Dữ liệu không hợp lệ"}`);
+                Alert.alert("Lỗi", `Không thể thêm cư dân: ${res.data.detail || "Dữ liệu không hợp lệ"}`);
             }
         } catch (error) {
-            console.error("Lỗi khi gọi API thêm cư dân:", error);
             Alert.alert("Lỗi", "Đã xảy ra lỗi khi thêm cư dân.");
         }
     };
 
     const fetchUnregisteredUsers = async () => {
-    try {
-        const token = await AsyncStorage.getItem("token");
-        // const url = `http://192.168.44.101:8000/users/unregistered-users/`;
-        const url = `http://192.168.44.103:8000/users/unregistered-users/`;
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            console.log("Danh sách user chưa đăng ký:", data);
-            setUnregisteredUsers(data);
-        } else {
-            console.error("Lỗi khi lấy danh sách user chưa đăng ký:", response.status);
+        try {
+            const token = await AsyncStorage.getItem("token");
+            const api = authApis(token);
+            const res = await api.get(endpoints.unregisteredUsers);
+            if (res.status === 200) {
+                setUnregisteredUsers(res.data);
+            } else {
+                console.error("Lỗi khi lấy danh sách user chưa đăng ký:", res.status);
+            }
+        } catch (error) {
+            console.error("Lỗi khi gọi API user chưa đăng ký:", error);
         }
-    } catch (error) {
-        console.error("Lỗi khi gọi API user chưa đăng ký:", error);
-    }
-};
+    };
 
     useEffect(() => {
         fetchResidents();

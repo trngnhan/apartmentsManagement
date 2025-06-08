@@ -4,8 +4,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Line } from "react-native-svg";
 import { LinearGradient } from "expo-linear-gradient";
 import { Picker } from "@react-native-picker/picker";
-
-const API_URL = "http://192.168.44.103:8000/paymenttransactions/";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const PaymentTransactionList = ({ route }) => {
     const { categoryId, categoryName } = route.params;
@@ -17,19 +16,37 @@ const PaymentTransactionList = ({ route }) => {
             setLoading(true);
             try {
                 const token = await AsyncStorage.getItem("token");
-                const res = await fetch(`${API_URL}?category=${categoryId}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const data = await res.json();
-                setTransactions(data.results || data);
+                const api = authApis(token);
+                const res = await api.get(`${endpoints.paymentsTransactions}?category=${categoryId}`);
+                setTransactions(res.data.results || res.data);
             } catch (err) {
-                // handle error
+                Alert.alert("Lỗi", "Không thể tải danh sách giao dịch.");
             } finally {
                 setLoading(false);
             }
         };
         fetchTransactions();
     }, [categoryId]);
+
+    const updateStatus = async (transactionId, newStatus) => {
+        try {
+            const token = await AsyncStorage.getItem("token");
+            const api = authApis(token);
+            const res = await api.patch(`${endpoints.updatePaymentStatus(transactionId)}`, { status: newStatus });
+            if (res.status === 200 || res.status === 204) {
+                setTransactions((prev) =>
+                    prev.map((item) =>
+                        item.id === transactionId ? { ...item, status: newStatus } : item
+                    )
+                );
+                Alert.alert("Thành công", "Cập nhật trạng thái thành công!");
+            } else {
+                Alert.alert("Lỗi", "Không thể cập nhật trạng thái.");
+            }
+        } catch (err) {
+            Alert.alert("Lỗi", "Có lỗi xảy ra khi cập nhật trạng thái.");
+        }
+    };
 
     const STATUS_OPTIONS = [
         { value: "PENDING", label: "Chờ xử lý" },
@@ -79,32 +96,6 @@ const PaymentTransactionList = ({ route }) => {
             </View>
         </View>
     );
-
-    const updateStatus = async (transactionId, newStatus) => {
-        try {
-            const token = await AsyncStorage.getItem("token");
-            const res = await fetch(`${API_URL}${transactionId}/update-payment/`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ status: newStatus }),
-            });
-            if (res.ok) {
-                setTransactions((prev) =>
-                    prev.map((item) =>
-                        item.id === transactionId ? { ...item, status: newStatus } : item
-                    )
-                );
-                Alert.alert("Thành công", "Cập nhật trạng thái thành công!");
-            } else {
-                Alert.alert("Lỗi", "Không thể cập nhật trạng thái.");
-            }
-        } catch (err) {
-            Alert.alert("Lỗi", "Có lỗi xảy ra khi cập nhật trạng thái.");
-        }
-    };
 
     return (
         <LinearGradient

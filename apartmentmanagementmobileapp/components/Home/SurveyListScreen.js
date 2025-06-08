@@ -3,6 +3,7 @@ import { View, ScrollView, Alert } from "react-native";
 import { Card, Title, Paragraph, Button, RadioButton, Text } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MyStyles from "../../styles/MyStyles";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const SurveyListScreen = () => {
     const [surveys, setSurveys] = useState([]);
@@ -10,17 +11,12 @@ const SurveyListScreen = () => {
     const [submittedSurveyIds, setSubmittedSurveyIds] = useState(new Set());
     const [token, setToken] = useState("");
 
-    // Gọi API danh sách khảo sát
     const fetchSurveys = async (tokenParam) => {
         try {
-            const res = await fetch("http://192.168.44.103:8000/surveys/", {
-            //const res = await fetch("http://192.168.44.106:8000/surveys/", {
-                headers: { Authorization: `Bearer ${tokenParam}` },
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                setSurveys(data);
+            const api = authApis(tokenParam);
+            const res = await api.get(endpoints.surveys || "/surveys/");
+            if (res.status === 200) {
+                setSurveys(res.data);
             } else {
                 Alert.alert("Lỗi", "Không thể tải danh sách khảo sát.");
             }
@@ -32,17 +28,14 @@ const SurveyListScreen = () => {
     // Gọi API phản hồi khảo sát của người dùng
     const fetchMyResponses = async (tokenParam) => {
         try {
-            const res = await fetch("http://192.168.44.103:8000/surveyresponses/my-responses/", {
-            //const res = await fetch("http://192.168.44.106:8000/surveyresponses/my-responses/", {
-                headers: { Authorization: `Bearer ${tokenParam}` },
-            });
-
-            if (res.ok) {
-                const data = await res.json();
+            const api = authApis(tokenParam);
+            const res = await api.get(endpoints.mySurveyResponses || "/surveyresponses/");
+            if (res.status === 200) {
+                const data = res.data;
+                console.log("Phản hồi khảo sát:", data);
                 const surveyIds = new Set(data.map((r) => r.survey));
                 setSubmittedSurveyIds(surveyIds);
 
-                // Đặt sẵn option đã chọn để hiện thị (nếu muốn)
                 const prefillResponses = {};
                 data.forEach((r) => {
                     prefillResponses[r.survey] = r.option.toString();

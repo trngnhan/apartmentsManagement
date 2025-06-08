@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, ActivityIndicator, StyleSheet, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const AdminParkingRegistrations = () => {
     const [registrations, setRegistrations] = useState([]);
@@ -18,18 +19,11 @@ const AdminParkingRegistrations = () => {
         setLoading(true);
         try {
             const token = await AsyncStorage.getItem("token");
-            const res = await fetch("http://192.168.44.103:8000/visitorvehicleregistrations/", {
-                headers: { 
-                    Authorization: `Bearer ${token}` 
-                }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                console.log("DATA:", data.results || data); // Thêm dòng này
-                setRegistrations(data.results || data);
-            } else {
-                setRegistrations([]);
-            }
+            const api = authApis(token);
+            const res = await api.get(endpoints.visitorVehicleRegistrations);
+            const data = res.data;
+            console.log("DATA:", data.results || data);
+            setRegistrations(data.results || data);
         } catch (err) {
             setRegistrations([]);
         }
@@ -47,50 +41,15 @@ const AdminParkingRegistrations = () => {
 
         try {
             const token = await AsyncStorage.getItem("token");
-            const res = await fetch(`http://192.168.44.103:8000/visitorvehicleregistrations/${id}/set-approval/`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ approved: true })
+            const api = authApis(token);
+            const res = await api.patch(endpoints.approveVisitorVehicleRegistration(id), {
+                approved: true
             });
-            if (res.ok) {
+            if (res.status === 200 || res.status === 204) {
                 Alert.alert("Thành công", "Đã duyệt đăng ký!");
                 fetchRegistrations();
             } else {
                 Alert.alert("Lỗi", "Không thể duyệt đăng ký.");
-            }
-        } catch (err) {
-            Alert.alert("Lỗi", "Có lỗi xảy ra.");
-        }
-        setUpdatingId(null);
-    };
-
-    const rejectRegister = async (id) => {
-        setUpdatingId(id);
-
-        setRegistrations(prev =>
-            prev.map(item =>
-                item.id === id ? { ...item, approved: false } : item
-            )
-        );
-
-        try {
-            const token = await AsyncStorage.getItem("token");
-            const res = await fetch(`http://192.168.44.103:8000/visitorvehicleregistrations/${id}/set-approval/`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ approved: false })
-            });
-            if (res.ok) {
-                Alert.alert("Thành công", "Đã từ chối đăng ký!");
-                fetchRegistrations();
-            } else {
-                Alert.alert("Lỗi", "Không thể từ chối đăng ký.");
             }
         } catch (err) {
             Alert.alert("Lỗi", "Có lỗi xảy ra.");
@@ -118,13 +77,6 @@ const AdminParkingRegistrations = () => {
                     >
                         <Text style={styles.buttonText}>Duyệt</Text>
                     </TouchableOpacity>
-                    {/* <TouchableOpacity
-                        style={[styles.button, { backgroundColor: "#FF5252", marginLeft: 10 }]}
-                        onPress={() => rejectRegister(item.id)}
-                        disabled={updatingId === item.id}
-                    >
-                        <Text style={styles.buttonText}>Từ chối</Text>
-                    </TouchableOpacity> */}
                 </View>
             )}
         </View>

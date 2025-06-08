@@ -12,6 +12,8 @@ from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAdminUser
 from rest_framework.views import APIView
 from django.utils.timezone import now
+
+from apartmentmanagement import settings
 from .permissions import IsAdminRole, IsAdminOrSelf, IsAdminOrManagement
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
@@ -88,13 +90,12 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateA
 
     @action(detail=False, methods=['get'], url_path='admins')
     def get_admins(self, request):
-        # Lọc các user có role là ADMIN
+        #  để lấy thông tin Admin trong chat user
         admins = User.objects.filter(role='ADMIN', active=True)
 
         if not admins.exists():
             return Response({"detail": "Không tìm thấy Admin nào."}, status=404)
 
-        # Nếu bạn chỉ cần ID của admin đầu tiên
         first_admin = admins.first()
         return Response({
             "admin_id": first_admin.id,
@@ -108,7 +109,6 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateA
     def get_current_user(self, request):
         u = request.user
 
-        # Xử lý PATCH nếu cần
         if request.method == 'PATCH':
             for k, v in request.data.items():
                 if k in ['first_name', 'last_name']:
@@ -118,20 +118,17 @@ class UserViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateA
                 elif k == 'must_change_password':
                     u.must_change_password = v.lower() == 'true' if isinstance(v, str) else bool(v)
 
-            # Xử lý file ảnh
             if 'profile_picture' in request.FILES:
                 u.profile_picture = request.FILES['profile_picture']
 
             u.save()
 
-        # Sử dụng UserSerializer để trả về dữ liệu
         serializer = UserSerializer(u)
         return Response(serializer.data)
 
 class ResidentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     queryset = Resident.objects.filter(active=True)
     serializer_class = ResidentSerializer
-    pagination_class = PageNumberPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['active']
     search_fields = ['user__email', 'user__first_name', 'user__last_name', 'id_number']
@@ -419,20 +416,20 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
 #         )
 
 # Payment Category ViewSet
-class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
-    queryset = PaymentCategory.objects.filter(active=True)
-    serializer_class = serializers.PaymentCategorySerializer
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['is_recurring', 'active']
-    search_fields = ['name', 'description']
-
-    def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update']:
-            return [IsAdminUser()]
-        return [IsAuthenticated()]
-
-    def get_queryset(self):
-        return self.queryset
+# class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
+#     queryset = PaymentCategory.objects.filter(active=True)
+#     serializer_class = serializers.PaymentCategorySerializer
+#     filter_backends = [DjangoFilterBackend, SearchFilter]
+#     filterset_fields = ['is_recurring', 'active']
+#     search_fields = ['name', 'description']
+#
+#     def get_permissions(self):
+#         if self.action in ['create', 'update', 'partial_update']:
+#             return [IsAdminUser()]
+#         return [IsAuthenticated()]
+#
+#     def get_queryset(self):
+#         return self.queryset
 
 
 # Payment Transaction ViewSet
@@ -531,7 +528,7 @@ class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView, gener
     def get_queryset(self):
         return self.queryset
 
-class PaymentTransactionViewSet(viewsets.GenericViewSet):
+class PaymentTransactionViewSet(viewsets.GenericViewSet, generics.ListAPIView):
     queryset = PaymentTransaction.objects.filter(active=True)
     serializer_class = PaymentTransactionSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -1122,7 +1119,7 @@ class SurveyViewSet(viewsets.ViewSet, generics.ListAPIView):
 
 
 # Survey Option ViewSet: Hiển thị các lựa chọn và tạo các lựa chọn trong khảo sát
-class SurveyOptionViewSet(viewsets.ViewSet, generics.ListAPIView, generics.RetrieveAPIView):
+class SurveyOptionViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.RetrieveAPIView):
     queryset = SurveyOption.objects.filter()
     serializer_class = SurveyOptionSerializer
     filter_backends = [DjangoFilterBackend]

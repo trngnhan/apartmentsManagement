@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import MyStyles from "../../styles/MyStyles";
+import { endpoints, authApis } from "../../configs/Apis";
 import { Picker } from "@react-native-picker/picker";
 
 const AdminFeedback = () => {
@@ -16,16 +17,10 @@ const AdminFeedback = () => {
     const fetchFeedbacks = async () => {
         try {
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch("http://192.168.44.103:8000/feedbacks/", {
-                method: "GET",
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setFeedbacks(data.results || data);
-            } else {
-                setError("Không thể tải danh sách phản ánh.");
-            }
+            const api = authApis(token);
+            const response = await api.get("/feedbacks/");
+            const data = response.data;
+            setFeedbacks(data.results || data);
         } catch (err) {
             console.error(err);
             setError("Đã xảy ra lỗi khi tải phản ánh.");
@@ -37,27 +32,18 @@ const AdminFeedback = () => {
     const handleUpdateStatus = async (id, newStatus) => {
         try {
             const token = await AsyncStorage.getItem("token");
-
-            const response = await fetch(
-            `http://192.168.44.103:8000/feedbacks/${id}/update-status/`,
-            {
-                method: "PATCH",
-                headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ status: newStatus })
-            }
+            const api = authApis(token);
+            const response = await api.patch(
+                `/feedbacks/${id}/update-status/`,
+                { status: newStatus }
             );
-
-            if (response.ok) {
+            if (response.status === 200 || response.status === 204) {
                 Alert.alert("Thành công", "Đã cập nhật trạng thái.");
                 fetchFeedbacks();
             } else {
-                const errorData = await response.json();
-                console.error("Lỗi:", errorData);
+                console.error("Lỗi:", response.data);
                 Alert.alert("Lỗi", "Không thể cập nhật trạng thái.");
-                }
+            }
         } catch (error) {
             console.error("Lỗi mạng:", error);
             Alert.alert("Lỗi", "Đã xảy ra lỗi khi kết nối.");

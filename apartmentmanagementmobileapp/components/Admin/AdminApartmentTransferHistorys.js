@@ -9,6 +9,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import MyStyles from "../../styles/MyStyles";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const AdminApartmentTransferHistorys = () => {
     const [transferHistory, setTransferHistory] = useState([]); 
@@ -16,33 +17,20 @@ const AdminApartmentTransferHistorys = () => {
     const [nextPage, setNextPage] = useState(null); 
     const [loadingMore, setLoadingMore] = useState(false); 
 
-    // const fetchTransferHistory = async (url = "http://192.168.44.101:8000/apartmentstranshistories/") => {
-    const fetchTransferHistory = async (url = "http://192.168.44.103:8000/apartmentstranshistories/") => {
+    const fetchTransferHistory = async (url = endpoints.apartmentTransferHistories) => {
         try {
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+            const api = authApis(token);
+            const response = await api.get(url);
+            const data = response.data;
+            setTransferHistory((prevHistory) => {
+                const newHistory = [...prevHistory, ...(data.results || [])];
+                const uniqueHistory = newHistory.filter(
+                    (item, index, self) => item?.id && self.findIndex((i) => i.id === item.id) === index
+                );
+                return uniqueHistory;
             });
-
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Lịch sử chuyển nhượng từ API:", data);
-
-                setTransferHistory((prevHistory) => {
-                    const newHistory = [...prevHistory, ...data.results];
-                    const uniqueHistory = newHistory.filter(
-                        (item, index, self) => item?.id && self.findIndex((i) => i.id === item.id) === index
-                    );
-                    return uniqueHistory;
-                });
-
-                setNextPage(data.next);
-            } else {
-                console.error("Lỗi khi lấy lịch sử chuyển nhượng:", response.status);
-            }
+            setNextPage(data.next);
         } catch (error) {
             console.error("Lỗi khi gọi API lịch sử chuyển nhượng:", error);
         } finally {

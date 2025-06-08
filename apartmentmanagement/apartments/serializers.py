@@ -1,4 +1,4 @@
-from rest_framework import serializers
+from rest_framework import serializers, generics
 from django.contrib.auth import get_user_model
 from rest_framework.serializers import ModelSerializer
 
@@ -127,7 +127,7 @@ class PaymentCategorySerializer(serializers.ModelSerializer):
         return value
 
 # Payment Transaction Serializer
-class PaymentTransactionSerializer(serializers.ModelSerializer):
+class PaymentTransactionSerializer(serializers.ModelSerializer, generics.ListAPIView):
     apartment_code = serializers.CharField(source='apartment.code', read_only=True)
     category_name = serializers.CharField(source='category.name', read_only=True)
     payment_proof_url = serializers.SerializerMethodField()

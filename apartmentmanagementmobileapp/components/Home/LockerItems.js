@@ -7,6 +7,7 @@ import MyStyles from "../../styles/MyStyles";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { getDatabase, ref, update, get } from "firebase/database";
 import { database2 } from "../../firebase/Configs";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const database = database2;
 
@@ -50,22 +51,13 @@ const LockerItems = () => {
                     return;
                 }
 
-                const response = await fetch(
-                    `http://192.168.44.103:8000/parcellockers/${user.locker_id}/items/`,
-                    //`http://192.168.44.106:8000/parcellockers/${user.locker_id}/items/`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    }
-                );
-
-                if (response.ok) {
-                    const data = await response.json();
-                    console.log("Danh sách món hàng trong tủ đồ:", data);
-                    setLockerItems(data);
+                const api = authApis(token);
+                const res = await api.get(endpoints.lockerItems(user.locker_id));
+                if (res.status === 200) {
+                    console.log("Danh sách món hàng trong tủ đồ:", res.data);
+                    setLockerItems(res.data);
                 } else {
-                    console.error("Lỗi khi lấy danh sách món hàng:", response.status);
+                    console.error("Lỗi khi lấy danh sách món hàng:", res.status);
                 }
             } catch (error) {
                 console.error("Lỗi khi gọi API món hàng:", error);

@@ -5,7 +5,7 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import MyStyles from "../../styles/MyStyles";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Picker } from "@react-native-picker/picker";
-import { chatServiceLockers } from "../../firebase/ChatServices";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const AdminLockerItems = () => {
     const route = useRoute();
@@ -29,24 +29,9 @@ const AdminLockerItems = () => {
     const fetchLockerItems = async () => {
         try {
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch(
-                `http://192.168.44.103:8000/parcellockers/${lockerId}/items/`,
-                {
-                    method: "GET",
-                    headers: {
-                        "Authorization": `Bearer ${token}`,
-                        "Content-Type": "application/json",
-                    },
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`HTTP status ${response.status}`);
-            }
-
-            const data = await response.json();
-            setItems(data);
-
+            const api = authApis(token);
+            const response = await api.get(endpoints.lockerItems(lockerId));
+            setItems(response.data);
         } catch (error) {
             console.error("Lỗi khi tải danh sách món đồ:", error);
             Alert.alert("Lỗi", "Không thể tải dữ liệu món đồ từ máy chủ.");
@@ -58,29 +43,20 @@ const AdminLockerItems = () => {
     const handleUpdateStatus = async (lockerId, itemId, newStatus) => {
         try {
             const token = await AsyncStorage.getItem("token");
-
-            const response = await fetch(
-                `http://192.168.44.103:8000/parcellockers/${lockerId}/update-item-status/`,
+            const api = authApis(token);
+            const response = await api.patch(
+                endpoints.updateLockerItemStatus(lockerId, itemId),
                 {
-                    method: "PATCH",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        item_id: itemId,
-                        status: newStatus
-                    })
+                    item_id: itemId,
+                    status: newStatus
                 }
             );
-
-            if (response.ok) {
+            if (response.status === 200 || response.status === 204) {
                 Alert.alert("Thành công", "Đã cập nhật trạng thái.");
                 fetchLockerItems();
             } else {
-                const errorData = await response.json();
-                console.error("Lỗi:", errorData);
-                Alert.alert("Lỗi", errorData.detail || "Không thể cập nhật trạng thái.");
+                console.error("Lỗi:", response.data);
+                Alert.alert("Lỗi", response.data.detail || "Không thể cập nhật trạng thái.");
             }
         } catch (error) {
             console.error("Lỗi mạng:", error);
@@ -108,22 +84,15 @@ const AdminLockerItems = () => {
         setAdding(true);
         try {
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch(
-                `http://192.168.44.103:8000/parcellockers/${lockerId}/add-item/`,
+            const api = authApis(token);
+            const response = await api.post(
+                endpoints.addLockerItem(lockerId),
                 {
-                    method: "POST",
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        item_name: newItemName,
-                        note: newItemNote
-                    })
+                    item_name: newItemName,
+                    note: newItemNote
                 }
             );
-            console.log("newItemNote", newItemNote);
-            if (response.ok) {
+            if (response.status === 200 || response.status === 201) {
                 setAddModalVisible(false);
                 const noteToSend = newItemNote;
                 setNewItemName("");
@@ -137,8 +106,7 @@ const AdminLockerItems = () => {
                 });
                 Alert.alert("Thành công", "Đã thêm món đồ mới!");
             } else {
-                const errorData = await response.json();
-                Alert.alert("Lỗi", errorData.detail || "Không thể thêm món đồ.");
+                Alert.alert("Lỗi", response.data.detail || "Không thể thêm món đồ.");
             }
         } catch (error) {
             Alert.alert("Lỗi", "Đã xảy ra lỗi khi kết nối.");

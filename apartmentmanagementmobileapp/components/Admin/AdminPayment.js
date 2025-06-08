@@ -6,8 +6,7 @@ import { Modal, TextInput } from "react-native-paper";
 import { Modal as RNModal } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { useNavigation } from "@react-navigation/native";
-
-const API_URL = "http://192.168.44.103:8000/paymentcategories/";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const AdminPayment = () => {
     const [payments, setPayments] = useState([]);
@@ -29,39 +28,12 @@ const AdminPayment = () => {
         setLoading(true);
         try {
             const token = await AsyncStorage.getItem("token");
-            let url = API_URL;
-            if (active === "ACTIVE") {
-                url += "?active=true";
-                const res = await fetch(url, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const data = await res.json();
-                setPayments(data.results || data);
-            } else if (active === "INACTIVE") {
-                url += "?active=false";
-                const res = await fetch(url, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const data = await res.json();
-                setPayments(data.results || data);
-            } else {
-                // Gọi cả hai trạng thái và gộp lại
-                const resActive = await fetch(API_URL + "?active=true", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const resInactive = await fetch(API_URL + "?active=false", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const dataActive = await resActive.json();
-                const dataInactive = await resInactive.json();
-                // Gộp hai mảng lại
-                const allPayments = [
-                    ...(dataActive.results || dataActive || []),
-                    ...(dataInactive.results || dataInactive || [])
-                ];
-                console.log("All payments:", allPayments); // Thêm dòng này
-                setPayments(allPayments);
-            }
+            const api = authApis(token);
+            let url = endpoints.paymentCategories;
+            if (active === "ACTIVE") url += "?active=true";
+            else if (active === "INACTIVE") url += "?active=false";
+            const res = await api.get(url);
+            setPayments(res.data.results || res.data);
         } catch (err) {
             Alert.alert("Lỗi", "Không thể tải danh sách giao dịch.");
         } finally {
@@ -73,40 +45,54 @@ const AdminPayment = () => {
         setCreating(true);
         try {
             const token = await AsyncStorage.getItem("token");
-            const res = await fetch("http://192.168.44.103:8000/paymentcategories/", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    name: newName,
-                    amount: newAmount,
-                    frequency: newFrequency,
-                    tax_percentage: newTax,
-                    grace_period: newGrace,
-                    category_type: newCategoryType,
-                    active: true
-                })
+            const api = authApis(token);
+            const res = await api.post(endpoints.paymentCategories, {
+                name: newName,
+                amount: newAmount,
+                frequency: newFrequency,
+                tax_percentage: newTax,
+                grace_period: newGrace,
+                category_type: newCategoryType,
+                active: true
             });
-            if (res.ok) {
+            if (res.status === 201 || res.status === 200) {
                 setCreateModalVisible(false);
-                setNewName("");
-                setNewAmount("");
-                setNewFrequency("");
-                setNewTax("");
-                setNewGrace("");
+                setNewName(""); 
+                setNewAmount(""); 
+                setNewFrequency(""); 
+                setNewTax(""); 
+                setNewGrace(""); 
                 setNewCategoryType("");
                 fetchPayments(activeFilter);
                 Alert.alert("Thành công", "Đã tạo hóa đơn mới!");
             } else {
-                const data = await res.json();
-                Alert.alert("Lỗi", data.detail || "Không thể tạo hóa đơn.");
+                Alert.alert("Lỗi", res.data.detail || "Không thể tạo hóa đơn.");
             }
         } catch (err) {
             Alert.alert("Lỗi", "Có lỗi xảy ra khi tạo hóa đơn.");
         } finally {
             setCreating(false);
+        }
+    };
+
+    const lockPayment = async (paymentId) => {
+        try {
+            const token = await AsyncStorage.getItem("token");
+            const api = authApis(token);
+            const res = await api.patch(endpoints.paymentCategoryLock(paymentId), 
+                { active: false });
+            if (res.status === 200 || res.status === 204) {
+                Alert.alert("Thành công", "Hóa đơn đã được khóa.");
+                setPayments((prevPayments) =>
+                    prevPayments.map((payment) =>
+                        payment.id === paymentId ? { ...payment, active: false } : payment
+                    )
+                );
+            } else {
+                Alert.alert("Lỗi", "Không thể khóa hóa đơn. Vui lòng thử lại.");
+            }
+        } catch (error) {
+            Alert.alert("Lỗi", "Đã xảy ra lỗi khi khóa hóa đơn.");
         }
     };
 
@@ -135,37 +121,6 @@ const AdminPayment = () => {
                 return "Dịch vụ";
             default:
                 return code;
-        }
-    };
-
-    const lockPayment = async (paymentId) => {
-        console.log("Lock payment id:", paymentId);
-        console.log("All payments:", payments);
-        try {
-            const token = await AsyncStorage.getItem("token");
-            const response = await fetch(`http://192.168.44.103:8000/paymentcategories/${paymentId}/`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ active: false }),
-            });
-
-            if (response.ok) {
-                Alert.alert("Thành công", "Hóa đơn đã được khóa.");
-                setPayments((prevPayments) =>
-                    prevPayments.map((payment) =>
-                        payment.id === paymentId ? { ...payment, active: false } : payment
-                    )
-                );
-            } else {
-                console.error("Lỗi khi khóa hóa đơn:", response.status);
-                Alert.alert("Lỗi", "Không thể khóa hóa đơn. Vui lòng thử lại.");
-            }
-        } catch (error) {
-            console.error("Lỗi khi gọi API khóa hóa đơn:", error);
-            Alert.alert("Lỗi", "Đã xảy ra lỗi khi khóa hóa đơn.");
         }
     };
 

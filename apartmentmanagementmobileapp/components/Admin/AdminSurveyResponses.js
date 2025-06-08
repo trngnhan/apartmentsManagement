@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, ActivityIndicator } from "react-nativ
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { LinearGradient } from "expo-linear-gradient";
 import MyStyles from "../../styles/MyStyles";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const AdminSurveyResponses = ({ route }) => {
     const { surveyId } = route.params;
@@ -13,21 +14,10 @@ const AdminSurveyResponses = ({ route }) => {
     const fetchResponses = async () => {
         try {
             const token = await AsyncStorage.getItem("token");
-            // const response = await fetch(`http://192.168.44.101:8000/surveys/${surveyId}/get-responses/`, {
-            const response = await fetch(`http://192.168.44.103:8000/surveys/${surveyId}/get-responses/`, {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (response.ok) {
-                const data = await response.json(); 
-                console.log("Danh sách phản hồi từ API:", data); 
-                setResponses(data.results || data);
-            } else {
-                console.error("Lỗi khi lấy danh sách phản hồi:", response.status); 
-                setError("Không thể tải danh sách phản hồi."); 
-            }
+            const api = authApis(token);
+            const res = await api.get(endpoints.surveyResponses(surveyId));
+            setResponses(res.data.results || res.data);
+            setError(null);
         } catch (error) {
             console.error("Lỗi khi gọi API phản hồi:", error); 
             setError("Đã xảy ra lỗi khi tải danh sách phản hồi.");

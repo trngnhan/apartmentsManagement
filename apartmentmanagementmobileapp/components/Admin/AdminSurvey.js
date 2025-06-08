@@ -5,6 +5,8 @@ import { useNavigation } from "@react-navigation/native";
 import { LinearGradient } from "expo-linear-gradient";
 import {Picker} from '@react-native-picker/picker';
 import MyStyles from "../../styles/MyStyles";
+import axios from "axios";
+import { endpoints, authApis } from "../../configs/Apis";
 
 const AdminSurvey = () => {
     const [surveys, setSurveys] = useState([]); 
@@ -19,57 +21,33 @@ const AdminSurvey = () => {
 
     // Hàm gọi API để lấy danh sách khảo sát
     const fetchSurveys = async () => {
+        setLoading(true);
         try {
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch("http://192.168.44.103:8000/surveys/", {
-                method: "GET",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            if (response.ok) {
-                const data = await response.json(); 
-                console.log("Danh sách khảo sát từ API:", data); 
-                setSurveys(data.results || data); 
-            } else {
-                console.error("Lỗi khi lấy danh sách khảo sát:", response.status); 
-                setError("Không thể tải danh sách khảo sát.");
-            }
+            const api = authApis(token);
+            const res = await api.get(endpoints.surveys || "/surveys/");
+            setSurveys(res.data.results || res.data);
+            setError(null);
         } catch (error) {
-            console.error("Lỗi khi gọi API khảo sát:", error); 
-            setError("Đã xảy ra lỗi khi tải danh sách khảo sát.");
+            setError("Không thể tải danh sách khảo sát.");
         } finally {
             setLoading(false);
         }
     };
 
-    useEffect(() => {
-        fetchSurveys();
-    }, []);
-    
     const createSurvey = async () => {
         try {
             const token = await AsyncStorage.getItem("token");
-            const response = await fetch("http://192.168.44.103:8000/surveys/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(newSurvey),
-            });
-            if (response.ok) {
-                const data = await response.json();
-                console.log("Khảo sát mới được tạo:", data);
-                setSurveys((prevSurveys) => [data, ...prevSurveys]);
+            const api = authApis(token);
+            const res = await api.post(endpoints.surveys || "/surveys/", newSurvey);
+            if (res.status === 201 || res.status === 200) {
+                setSurveys((prevSurveys) => [res.data, ...prevSurveys]);
                 setShowModal(false);
-                setNewSurvey({ title: "", description: "", deadline: "" })
+                setNewSurvey({ title: "", description: "", deadline: "" });
             } else {
-                console.error("Lỗi khi tạo khảo sát:", response.status);
                 alert("Không thể tạo khảo sát. Vui lòng thử lại.");
             }
         } catch (error) {
-            console.error("Lỗi khi gọi API tạo khảo sát:", error);
             alert("Đã xảy ra lỗi khi tạo khảo sát.");
         }
     };
@@ -77,40 +55,41 @@ const AdminSurvey = () => {
     const createSurveyOption = async () => {
         try {
             const token = await AsyncStorage.getItem("token");
+            const api = authApis(token);
             const payload = {
-                surveyId: selectedSurveyId,
+                id: Number(selectedSurveyId),
                 option_text: newOption.option_text,
             };
-            const response = await fetch("http://192.168.44.103:8000/surveyoptions/", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (response.ok) {
-                console.log("Option mới được tạo:", await response.json());
+            const res = await api.post(endpoints.surveyOptions, payload);
+            if (res.status === 201 || res.status === 200) {
+                console.log("Option mới được tạo:", res.data);
                 alert("Tùy chọn khảo sát đã được tạo thành công!");
-                setShowOptionModal(false); 
+                setShowOptionModal(false);
                 setNewOption({ surveyId: "", option_text: "" });
             } else {
-                const errorData = await response.json();
-                console.error("Lỗi khi tạo option:", response.status);
-                alert("Không thể tạo tùy chọn khảo sát. Vui lòng thử lại.\n"  + JSON.stringify(errorData));
+                console.error("Lỗi khi tạo option:", res.status);
+                alert("Không thể tạo tùy chọn khảo sát. Vui lòng thử lại.\n" + JSON.stringify(res.data));
             }
         } catch (error) {
-            console.error("Lỗi khi gọi API tạo option:", error);
-            alert("Đã xảy ra lỗi khi tạo tùy chọn khảo sát.");
+            if (error.response) {
+                console.error("Lỗi khi gọi API tạo option:", error.response.data);
+                alert("Lỗi: " + JSON.stringify(error.response.data));
+            } else {
+                console.error("Lỗi khi gọi API tạo option:", error);
+                alert("Đã xảy ra lỗi khi tạo tùy chọn khảo sát.");
+            }
         }
-        // Log dữ liệu gửi lên để debug
-        console.log("Dữ liệu gửi lên:", {
-            survey: selectedSurveyId,
-            option_text: newOption.option_text,
-        });
-        console.log("Survey ID được chọn:", selectedSurveyId);
     };
+
+    console.log("Dữ liệu gửi lên:", {
+        id: Number(selectedSurveyId),
+        option_text: newOption.option_text,
+    });
+    console.log("Survey ID được chọn:", selectedSurveyId);
+
+    useEffect(() => {
+        fetchSurveys();
+    }, []);
 
     // Hàm render từng khảo sát
     const renderSurvey = ({ item }) => (
