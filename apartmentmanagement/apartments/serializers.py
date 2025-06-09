@@ -1,7 +1,5 @@
 from rest_framework import serializers, generics
 from django.contrib.auth import get_user_model
-from rest_framework.serializers import ModelSerializer
-
 from .models import (Resident, Apartment,ApartmentTransferHistory, PaymentCategory, PaymentTransaction,
                      ParcelLocker, ParcelItem, Feedback, Survey, SurveyOption, SurveyResponse,
                      VisitorVehicleRegistration)
@@ -108,7 +106,6 @@ class PaymentCategorySerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         #Kiểm tra giá trị amount phải là số dương.
-
         if value <= 0:
             raise serializers.ValidationError("Số tiền phải lớn hơn 0.")
         return value
@@ -134,7 +131,6 @@ class PaymentTransactionSerializer(serializers.ModelSerializer, generics.ListAPI
 
     def get_payment_proof_url(self, obj):
        # Trả về URL của payment_proof nếu có.
-
         if obj.payment_proof:
             return obj.payment_proof.url
         return None
@@ -181,7 +177,7 @@ class ParcelLockerSerializer(serializers.ModelSerializer):
         fields = ['id', 'resident_id', 'resident_email', 'first_name', 'last_name', 'active', 'resident']
         read_only_fields = ['created_date', 'updated_date']
         extra_kwargs = {
-            'resident': {'read_only': True}  # để không bị lỗi
+            'resident': {'read_only': True}
         }
 
 # Feedback Serializer

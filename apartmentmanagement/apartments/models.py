@@ -131,15 +131,15 @@ class PaymentTransaction(BaseModel):
         CASH = 'CASH', 'Cash Payment'
 
     apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name='payments')
-    category = models.ForeignKey(PaymentCategory, on_delete=models.SET_NULL, null=True)  # Loại phí này thuộc về đâu
-    amount = models.DecimalField(max_digits=10, decimal_places=2)  # Số tiền giao dịch
-    method = models.CharField(max_length=20, choices=Method.choices)  # Phương thức thanh toán (MoMo, VNPay, v.v.)
+    category = models.ForeignKey(PaymentCategory, on_delete=models.SET_NULL, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    method = models.CharField(max_length=20, choices=Method.choices)
     transaction_id = models.CharField(max_length=100, blank=True,
-                                      null=True)  # ID giao dịch (tùy theo phương thức thanh toán)
-    status = models.CharField(max_length=20, default='PENDING')  # Trạng thái thanh toán (Chờ xử lý, Đã thanh toán...)
-    payment_proof = CloudinaryField(null=True, blank=True)  # Hình ảnh chứng từ thanh toán (chứng từ thanh toán)
-    paid_date = models.DateTimeField(null=True, blank=True)  # Thời gian thanh toán (nếu đã thanh toán)
-    transaction_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Phí giao dịch (nếu có)
+                                      null=True)
+    status = models.CharField(max_length=20, default='PENDING')
+    payment_proof = CloudinaryField(null=True, blank=True)
+    paid_date = models.DateTimeField(null=True, blank=True)
+    transaction_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     STATUS_CHOICES = [
         ('PENDING', 'Chờ xử lý'),
@@ -148,7 +148,7 @@ class PaymentTransaction(BaseModel):
         ('REFUNDED', 'Đã hoàn lại'),
     ]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES,
-                              default='PENDING')  # Trạng thái giao dịch thanh toán
+                              default='PENDING')
 
     def __str__(self):
         # Định dạng số tiền
@@ -156,8 +156,6 @@ class PaymentTransaction(BaseModel):
         return f"Transaction {self.transaction_id} - {self.status} - {formatted_amount} VND"
 
     def process_payment(self):
-        # Phương thức này có thể được sử dụng để xử lý logic thanh toán, ví dụ như chuyển trạng thái giao dịch
-        # từ PENDING sang COMPLETED nếu thanh toán thành công.
         if self.status == 'PENDING':
             self.status = 'COMPLETED'
             self.paid_date = now()
