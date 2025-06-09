@@ -74,7 +74,8 @@ const SurveyListScreen = () => {
         try {
             // const res = await fetch("http://192.168.44.103:8000/surveyresponses/", {
             // const res = await fetch("http://192.168.44.106:8000/surveyresponses/", {
-            const res = await fetch("http://192.168.44.103:8000/surveyresponses/", {
+            // const res = await fetch("http://192.168.44.103:8000/surveyresponses/", {
+            const res = await fetch("http://10.17.36.153:8000/surveyresponses/", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

@@ -9,6 +9,7 @@ import { BarChart } from "react-native-chart-kit";
 import { Dimensions } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { endpoints, authApis } from "../../configs/Apis";
+import axios from "axios";
 
 const AdminHome = () => {
     const nav = useNavigation(); // Điều hướng
@@ -16,7 +17,6 @@ const AdminHome = () => {
     const [apartmentCount, setApartmentCount] = useState(null);
     const [surveys, setSurveys] = useState([]);
     const [surveyChartData, setSurveyChartData] = useState([]);
-
 
     // Hàm điều hướng
     const navigateToAdminUser = () => {
@@ -332,6 +332,7 @@ const AdminHome = () => {
                     <Text style={{ fontSize: 30, fontWeight: 'bold', color: '#007AFF' }}>
                         {residentCount !== null ? residentCount : '...'}
                     </Text>
+                    
                 </View>
             </View>
 

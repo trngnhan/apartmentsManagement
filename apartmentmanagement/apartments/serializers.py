@@ -2,8 +2,9 @@ from rest_framework import serializers, generics
 from django.contrib.auth import get_user_model
 from rest_framework.serializers import ModelSerializer
 
-from .models import (Resident, Apartment,ApartmentTransferHistory, PaymentCategory, PaymentTransaction, FirebaseToken, ParcelLocker, ParcelItem,
-                    Feedback, Survey, SurveyOption, SurveyResponse, VisitorVehicleRegistration)
+from .models import (Resident, Apartment,ApartmentTransferHistory, PaymentCategory, PaymentTransaction,
+                     ParcelLocker, ParcelItem, Feedback, Survey, SurveyOption, SurveyResponse,
+                     VisitorVehicleRegistration)
 
 User = get_user_model()
 
@@ -83,9 +84,9 @@ class ResidentSerializer(serializers.ModelSerializer):
 
 # Apartment Serializer
 class ApartmentSerializer(serializers.ModelSerializer):
-    owner_email = serializers.EmailField(source='owner.email', read_only=True)
-    first_name = serializers.CharField(source='owner.first_name', read_only=True)
-    last_name = serializers.CharField(source='owner.last_name', read_only=True)
+    owner_email = serializers.EmailField(source='owner.user.email', read_only=True)
+    first_name = serializers.CharField(source='owner.user.first_name', read_only=True)
+    last_name = serializers.CharField(source='owner.user.last_name', read_only=True)
 
     class Meta:
         model = Apartment
@@ -94,14 +95,16 @@ class ApartmentSerializer(serializers.ModelSerializer):
 
 # Apartment Transfer History Serializer
 class ApartmentTransferHistorySerializer(serializers.ModelSerializer):
-    previous_owner_email = serializers.EmailField(source='previous_owner.email', read_only=True)
-    new_owner_email = serializers.EmailField(source='new_owner.email', read_only=True)
+    previous_owner_email = serializers.EmailField(source='previous_owner.user.email', read_only=True)
+    new_owner_email = serializers.EmailField(source='new_owner.user.email', read_only=True)
     apartment_code = serializers.CharField(source='apartment.code', read_only=True)
 
     class Meta:
         model = ApartmentTransferHistory
-        fields = ['id', 'apartment', 'apartment_code', 'previous_owner', 'previous_owner_email',
-                  'new_owner', 'new_owner_email', 'transfer_date']
+        fields = [
+            'id', 'apartment', 'apartment_code', 'previous_owner', 'previous_owner_email',
+            'new_owner', 'new_owner_email', 'transfer_date'
+        ]
         read_only_fields = ['created_date', 'updated_date']
 
 

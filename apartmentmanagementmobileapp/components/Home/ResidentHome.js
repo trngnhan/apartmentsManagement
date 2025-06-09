@@ -6,6 +6,7 @@ import { Card, Title, Paragraph } from "react-native-paper";
 import MyStyles from "../../styles/MyStyles";
 import { LinearGradient } from "expo-linear-gradient";
 import { endpoints, authApis } from "../../configs/Apis";
+import { useFocusEffect } from "@react-navigation/native";
 
 const ResidentHome = () => {
     const [user, setUser] = useState(null);
@@ -69,39 +70,29 @@ const ResidentHome = () => {
         nav.navigate("LockerItems", { currentUserId, adminId });
     };
 
-    useEffect(() => {
+    useFocusEffect(
+    React.useCallback(() => {
         const checkToken = async () => {
             const token = await AsyncStorage.getItem("token");
-            console.log("Token: ", token)
             setToken(token);
 
             if (!token) {
-                console.log("No token, redirecting to Login");
                 nav.navigate("Login");
             } else {
                 const userData = await AsyncStorage.getItem("user");
-                console.log("User data: ", userData);
-
                 if (userData) {
                     try {
                         const parsedUser = JSON.parse(userData);
-                        console.log("Parsed User:", parsedUser);
                         setCurrentUserId(parsedUser.resident_id);
-
                         setUser(parsedUser);
+                        setLockerId(parsedUser.locker_id);
 
-                        const lockerId = parsedUser.locker_id;
-                        setLockerId(lockerId);
-                        console.log("Locker ID:", lockerId);
-                        //---
                         const fetchApartments = async (token) => {
                             try {
                                 const api = authApis(token);
                                 const res = await api.get(endpoints.getApartment);
                                 if (res.status === 200) {
                                     setApartments(res.data.results || res.data);
-                                } else {
-                                    console.error("Lỗi khi lấy thông tin căn hộ:", res.status);
                                 }
                             } catch (error) {
                                 console.error("Lỗi khi gọi API căn hộ:", error);
@@ -113,33 +104,27 @@ const ResidentHome = () => {
                                 const api = authApis(token);
                                 const res = await api.get(endpoints.myVehicleRegistrations);
                                 if (res.status === 200) {
-                                    console.log("Dữ liệu trả về từ API:", res.data);
                                     setRegistrations(res.data);
-                                } else {
-                                    console.error("Lỗi khi lấy danh sách đăng ký giữ xe:", res.status);
                                 }
                             } catch (error) {
                                 console.error("Lỗi khi gọi API đăng ký giữ xe:", error);
                             }
                         };
 
-                        // GỌI API ở đây!
                         await fetchApartments(token);
                         await fetchRegistrations(token);
-                        //---
                     } catch (error) {
-                        console.error("Error parsing user data:", error);
                         nav.navigate("Login");
                     }
                 } else {
-                    console.log("No user data, redirecting to Login");
                     nav.navigate("Login");
                 }
             }
         };
 
         checkToken();
-    }, [nav]);
+    }, [nav])
+);
 
     const logout = async () => {
         await AsyncStorage.removeItem("token");
@@ -264,7 +249,8 @@ const ResidentHome = () => {
                                 <Paragraph>Biển số xe: {registration.vehicle_number}</Paragraph>
                                 <Paragraph>Ngày đăng ký: {registration.registration_date}</Paragraph>
                                 <Paragraph>
-                                    Trạng thái: {registration.approved ? "Đã duyệt" : "Chưa duyệt"}
+                                    Trạng thái:
+                                    <Text style={{color: registration.approved ? "green" : "orange"}}> {registration.approved ? "Đã duyệt" : "Chưa duyệt"}</Text>
                                 </Paragraph>
                             </Card.Content>
                         </Card>

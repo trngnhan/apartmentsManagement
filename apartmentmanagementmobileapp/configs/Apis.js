@@ -45,7 +45,7 @@ export const endpoints = {
     paymentCategories: "/paymentcategories/",
     paymentCategoryLock: (id) => `/paymentcategories/${id}/`,
     paymentsTransactions: "/paymenttransactions/",
-    updatePaymentStatus: (id) => "/paymenttransactions/update-payment/",
+    updatePaymentStatus: (id) => `/paymenttransactions/${id}/update-payment/`,
 
     surveys: "/surveys/",
     surveyOptions: "/surveyoptions/",

@@ -87,9 +87,11 @@ const Login = () => {
                 let res = await Apis.post(endpoints["login"], {
                     ...user,
                     // client_id: "BV96e0rWzsGyZU0MFMjT1u19m5j0MXrJVCQaEQAZ",
-                    client_id: "aRgWqcaZzcRboHVnz6xZp5VR30eeiV4gBTC3cud6",
+                    // client_id: "aRgWqcaZzcRboHVnz6xZp5VR30eeiV4gBTC3cud6",4
+                    client_id: "5cniiEqy7JtaONRehHdkeeGy8mOGaDj3DJJw1Ezf",
                     //client_id: "1nYlsTyukqBsyGyb7dhLVQcly1KeT4dmTObAf4lk",
-                    client_secret: "jwA8QVO1jqScm0taMdfbTDLBfqovrqvQKXQo0L8fbd9CzEJWdbRfww4yFMpSSZjt3e9jG9V3S8fHcKFnrTo8lUwbFyAliMAsKAdgmXzccGZiwGFCzyt0DyFNz6jHHYRB",
+                    //client_secret: "jwA8QVO1jqScm0taMdfbTDLBfqovrqvQKXQo0L8fbd9CzEJWdbRfww4yFMpSSZjt3e9jG9V3S8fHcKFnrTo8lUwbFyAliMAsKAdgmXzccGZiwGFCzyt0DyFNz6jHHYRB",
+                    client_secret: "CKcFnIjBVK1eDFimILXPduPEG0tLBY8HsoJjfURUtEsaNt6OO0V7SlmzhGzUZkLIySyrWkL2pEEb1iAd7jlQw1SHwk8XBTSqmKoHEEk6P6pkhlBKZlwiloqswJBozcjj",
                     grant_type: "password",
                 });
 
@@ -164,7 +166,7 @@ const Login = () => {
             <View>
             <ScrollView>
                 <Image
-                    source={require("../../assets/logo.png")}
+                    source={require("../../assets/avtApartment.png")}
                     style={{
                         marginTop: 50,
                         width: 300,
@@ -244,20 +246,20 @@ const Login = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 30,
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#4A90E2',
-    letterSpacing: 1.5,
-    textTransform: 'capitalize',
-    textShadowColor: '#00000055',
-    textShadowOffset: { width: 1, height: 2 },
-    textShadowRadius: 4,
-  },
+    container: {
+        marginTop: 30,
+        alignItems: 'center',
+    },
+    text: {
+        fontSize: 26,
+        fontWeight: '700',
+        color: '#4A90E2',
+        letterSpacing: 1.5,
+        textTransform: 'capitalize',
+        textShadowColor: '#00000055',
+        textShadowOffset: { width: 1, height: 2 },
+        textShadowRadius: 4,
+    },
 });
 
 export default Login;

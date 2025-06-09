@@ -77,7 +77,7 @@ class Apartment(BaseModel):
     building = models.CharField(max_length=1, choices=Building.choices)
     floor = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(20)])
     number = models.CharField(max_length=10)
-    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='owned_apartments')
+    owner = models.ForeignKey(Resident, on_delete=models.SET_NULL, null=True, related_name='owned_apartments')
 
     def __str__(self):
         return f'{self.building} - Tầng {self.floor} - Căn {self.number}'
@@ -85,8 +85,8 @@ class Apartment(BaseModel):
 # Apartment Transfer
 class ApartmentTransferHistory(BaseModel):
     apartment = models.ForeignKey(Apartment, on_delete=models.CASCADE, related_name='transfer_history')
-    previous_owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='previous_apartment_owners')
-    new_owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='new_apartment_owners')
+    previous_owner = models.ForeignKey(Resident, on_delete=models.SET_NULL, null=True, related_name='previous_apartment_owners')
+    new_owner = models.ForeignKey(Resident, on_delete=models.SET_NULL, null=True, related_name='new_apartment_owners')
     transfer_date = models.DateField(default=datetime.now)
     note = models.TextField(blank=True, null=True)
 
@@ -157,11 +157,6 @@ class PaymentTransaction(BaseModel):
             self.status = 'COMPLETED'
             self.paid_date = now()
             self.save()
-
-# Firebase Token
-class FirebaseToken(BaseModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='firebase_token')
-    token = models.CharField(max_length=255)
 
 # Parcel Locker
 class ParcelLocker(BaseModel):

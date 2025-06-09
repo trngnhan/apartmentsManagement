@@ -36,9 +36,11 @@ import time
 from decouple import config
 from django.utils import timezone
 import logging
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 import json
 
 from apartments.serializers import UserSerializer, ResidentSerializer, ApartmentSerializer, \
@@ -206,15 +208,15 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
     @action(methods=['get'], detail=False, url_path='resident-without-apartment')
     def get_resident_without_apartment(self, request):
         # Lọc cư dân chưa sở hữu căn hộ
-        residents = User.objects.filter(owned_apartments__isnull=True, role=User.Role.RESIDENT, active=True)
+        residents = Resident.objects.filter(owned_apartments__isnull=True, active=True)
 
-        # Serialize dữ liệu
+        # Serialize dữ liệu từ user liên kết
         data = [
             {
                 "id": resident.id,
-                "first_name": resident.first_name,
-                "last_name": resident.last_name,
-                "email": resident.email,
+                "first_name": resident.user.first_name,
+                "last_name": resident.user.last_name,
+                "email": resident.user.email,
             }
             for resident in residents
         ]
@@ -225,7 +227,12 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
 
     @action(methods=['get'], detail=False, url_path='get-apartment')
     def get_apartments(self, request):
-        apartments = Apartment.objects.filter(owner=request.user, active=True)
+        try:
+            resident = Resident.objects.get(user=request.user)
+        except Resident.DoesNotExist:
+            return Response({"detail": "Không tìm thấy thông tin cư dân."}, status=404)
+
+        apartments = Apartment.objects.filter(owner=resident, active=True)
         page = self.paginate_queryset(apartments)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
@@ -248,14 +255,14 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Kiểm tra xem người nhận có tồn tại trong hệ thống không
+        # Kiểm tra xem người nhận có tồn tại trong hệ thống không (Resident)
         try:
-            new_owner = User.objects.get(id=new_owner_id)
-        except User.DoesNotExist:
+            new_owner = Resident.objects.get(id=new_owner_id)
+        except Resident.DoesNotExist:
             return Response({"detail": "Người nhận không tồn tại."},
                             status=status.HTTP_404_NOT_FOUND)
 
-        # Kiểm tra xem người nhận có phải là chủ sở hữu hiện tại căn hộ khác không
+        # Kiểm tra xem người nhận có phải là chủ sở hữu hiện tại căn hộ này không
         if new_owner == apartment.owner:
             return Response({"detail": "Người nhận đã là chủ sở hữu căn hộ này."},
                             status=status.HTTP_400_BAD_REQUEST)
@@ -273,10 +280,15 @@ class ApartmentViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
         apartment.owner = new_owner
         apartment.save()
 
-        # Trả về thông tin căn hộ sau khi chuyển nhượng
+        # Trả về thông tin cư dân mới sau khi chuyển nhượng
         return Response({
             "detail": "Chuyển nhượng căn hộ thành công.",
-            "new_owner": UserSerializer(new_owner).data
+            "new_owner": {
+                "id": new_owner.id,
+                "first_name": new_owner.user.first_name,
+                "last_name": new_owner.user.last_name,
+                "email": new_owner.user.email,
+            }
         }, status=status.HTTP_200_OK)
 
 
@@ -307,16 +319,15 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
 
         apartment = Apartment.objects.get(id=pk)
         new_owner_id = request.data.get('new_owner_id')
-        previous_owner_id = apartment.owner.id
 
         if not new_owner_id:
             return Response({"detail": "Vui lòng cung cấp ID người nhận."},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # Kiểm tra người nhận có tồn tại
+        # Kiểm tra người nhận có tồn tại (Resident)
         try:
-            new_owner = User.objects.get(id=new_owner_id)
-        except User.DoesNotExist:
+            new_owner = Resident.objects.get(id=new_owner_id)
+        except Resident.DoesNotExist:
             return Response({"detail": "Người nhận không tồn tại."},
                             status=status.HTTP_404_NOT_FOUND)
 
@@ -336,6 +347,7 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
         return Response(ApartmentTransferHistorySerializer(transfer_history).data, status=status.HTTP_201_CREATED)
 
 
+
 # # Payment Category ViewSet
 # class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView):
 #     queryset = PaymentCategory.objects.filter()
@@ -348,8 +360,8 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
 #         if self.action in ['create', 'update', 'partial_update', 'list']:
 #             return [IsAdminUser()]
 #         return [IsAdminOrManagement()]
-#
-#
+
+
 # # Payment Transaction ViewSet
 # class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
 #     queryset = PaymentTransaction.objects.filter(active=True)
@@ -415,9 +427,9 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
 #             status=status.HTTP_200_OK
 #         )
 
-# Payment Category ViewSet
+#Payment Category ViewSet
 # class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
-#     queryset = PaymentCategory.objects.filter(active=True)
+#     queryset = PaymentCategory.objects.filter()
 #     serializer_class = serializers.PaymentCategorySerializer
 #     filter_backends = [DjangoFilterBackend, SearchFilter]
 #     filterset_fields = ['is_recurring', 'active']
@@ -430,11 +442,11 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
 #
 #     def get_queryset(self):
 #         return self.queryset
-
-
-# Payment Transaction ViewSet
-# class PaymentTransactionViewSet(viewsets.ViewSet):
-#     queryset = PaymentTransaction.objects.filter(active=True)
+#
+#
+# # Payment Transaction ViewSet
+# class PaymentTransactionViewSet(viewsets.ViewSet, generics.ListAPIView):
+#     queryset = PaymentTransaction.objects.filter()
 #     serializer_class = serializers.PaymentTransactionSerializer
 #     filter_backends = [DjangoFilterBackend, OrderingFilter]
 #     filterset_fields = ['apartment', 'category', 'method', 'status', 'active']
@@ -505,7 +517,6 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
 #             {"detail": "Giao dịch đã được đánh dấu là hoàn tất."},
 #             status=status.HTTP_200_OK
 #         )
-
 logger = logging.getLogger('__name__')
 
 class IsAdminOrManagement(IsAuthenticated):
@@ -752,7 +763,7 @@ def momo_ipn(request):
 
         return JsonResponse({"message": "IPN nhận thành công"}, status=200)
     except json.JSONDecodeError:
-        logger.error(f"Invalid JSON in IPN: {str(e)}")
+        logger.error(f"Invalid JSON in IPN: {str()}")
         return JsonResponse({"message": "Dữ liệu JSON không hợp lệ"}, status=400)
     except Exception as e:
         logger.error(f"IPN error: {str(e)}")

@@ -30,6 +30,7 @@ const PaymentTransactionList = ({ route }) => {
 
     const updateStatus = async (transactionId, newStatus) => {
         try {
+            console.log("transactionId", transactionId)
             const token = await AsyncStorage.getItem("token");
             const api = authApis(token);
             const res = await api.patch(`${endpoints.updatePaymentStatus(transactionId)}`, { status: newStatus });
