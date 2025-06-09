@@ -143,7 +143,7 @@ const AdminPayment = () => {
         >
             <Text>Loại phí: {item.name}</Text>
             <Text>
-                Số tiền: {parseInt(item.amount).toLocaleString("vi-VN")} VNĐ
+                Số tiền: {parseInt(item.total_amount).toLocaleString("vi-VN")} VNĐ
             </Text>
             <Text>Tần suất thanh toán: {frequencyDisplay(item.frequency)}</Text>
             <Text>VAT: {item.tax_percentage}</Text>

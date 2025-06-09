@@ -377,8 +377,8 @@ class IsAdminOrManagement(IsAuthenticated):
                 request.user.groups.filter(name='Management').exists())
 
 # Payment Category ViewSet
-class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView):
-    queryset = PaymentCategory.objects.filter(active=True)
+class PaymentCategoryViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.UpdateAPIView):
+    queryset = PaymentCategory.objects.filter()
     serializer_class = PaymentCategorySerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_fields = ['is_recurring', 'active']
@@ -442,12 +442,6 @@ class PaymentTransactionViewSet(viewsets.GenericViewSet, generics.ListAPIView):
         return queryset
 
     @action(methods=['get'], detail=False, url_path='my-payments')
-    # def my_payments(self, request):
-    #     payments = PaymentTransaction.objects.filter(apartment__owner=request.user)
-    #     serializer = self.get_serializer(payments, many=True)
-    #     logger.info(f"Retrieved {len(payments)} transactions for user {request.user.username}")
-    #     return Response(serializer.data)
-
     def my_payments(self, request):
         try:
             resident = Resident.objects.get(user=request.user)
@@ -581,6 +575,21 @@ class PaymentTransactionViewSet(viewsets.GenericViewSet, generics.ListAPIView):
             logger.error(f"Transaction {transaction_id} not found for user {request.user.username}")
             return Response({"detail": "Không tìm thấy giao dịch"}, status=status.HTTP_404_NOT_FOUND)
 
+    @action(methods=['patch'], detail=True, url_path='update-payment', permission_classes=[IsAdminUser])
+    def update_payment(self, request, pk=None):
+        transaction = self.get_object()
+        new_status = request.data.get("status")
+        if new_status not in ["PENDING", "COMPLETED", "FAILED", "REFUNDED"]:
+            return Response(
+                {"detail": "Trạng thái không hợp lệ."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        transaction.status = new_status
+        transaction.save()
+        return Response(
+            {"detail": f"Trạng thái đã được cập nhật thành {new_status}."},
+            status=status.HTTP_200_OK
+        )
 
 @csrf_exempt
 @require_POST

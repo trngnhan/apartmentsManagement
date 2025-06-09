@@ -8,17 +8,6 @@ from .models import (Resident, Apartment,ApartmentTransferHistory, PaymentCatego
 
 User = get_user_model()
 
-class ItemSerializer(ModelSerializer):
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        resident = getattr(instance, 'resident_profile', None)
-        if resident and resident.user and resident.user.profile_picture:
-            data['profile_picture'] = resident.user.profile_picture.url
-        else:
-            data['profile_picture'] = ''
-        return data
-
-
 # User Serializer
 class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True, use_url=True)
@@ -110,10 +99,11 @@ class ApartmentTransferHistorySerializer(serializers.ModelSerializer):
 
 # Payment Category Serializer
 class PaymentCategorySerializer(serializers.ModelSerializer):
+
     class Meta:
         model = PaymentCategory
         fields = ['id', 'name', 'amount', 'is_recurring', 'description', 'active', 'frequency',
-                  'tax_percentage', 'grace_period', 'category_type', 'created_date']
+                  'tax_percentage', 'grace_period', 'category_type', 'created_date', 'total_amount']
         read_only_fields = ['created_date', 'updated_date']
 
     def validate_amount(self, value):

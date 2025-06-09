@@ -106,15 +106,20 @@ class PaymentCategory(BaseModel):
     frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, default='MONTHLY')  # Tần suất thanh toán
     tax_percentage = models.DecimalField(max_digits=5, decimal_places=2,
                                          default=0)  # Phần trăm thuế phải trả cho loại phí này
-    grace_period = models.IntegerField(default=0)  # Thời gian ân hạn sau ngày hết hạn thanh toán (đơn vị: ngày)
+    grace_period = models.IntegerField(default=0)
     category_type = models.CharField(
         max_length=50,
         choices=[('MAINTENANCE', 'Bảo trì'), ('UTILITY', 'Tiện ích'), ('SERVICE', 'Dịch vụ')],
         default='MAINTENANCE'
-    )  # Loại phí, ví dụ phí bảo trì, tiện ích, dịch vụ...
+    )
+    total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        self.total_amount = self.amount + (self.amount * self.tax_percentage / 100)
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        formatted_amount = f"{self.amount:,.0f}".replace(',', '.')
+        formatted_amount = f"{self.total_amount:,.0f}".replace(',', '.')
         return f"{self.name} - {formatted_amount} VND"
 
 # Payment Transaction

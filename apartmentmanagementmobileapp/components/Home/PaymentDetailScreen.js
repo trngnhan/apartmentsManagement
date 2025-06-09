@@ -43,7 +43,7 @@ const PaymentDetailScreen = ({ route }) => {
       }
       console.log('categoryId:', categoryId, 'categoryName:', categoryName, 'amount:', amount);
       // const url = `http://192.168.44.103:8000/paymenttransactions/${categoryId}/create-momo-payment/`;
-      const url = `http://192.168.44.106:8000/paymenttransactions/${categoryId}/create-momo-payment/`;
+      const url = `http://192.168.44.103:8000/paymenttransactions/${categoryId}/create-momo-payment/`;
       console.log('Calling URL:', url);
       const response = await axios.post(
         url,
@@ -87,7 +87,7 @@ const PaymentDetailScreen = ({ route }) => {
       console.log(`Updating transaction ${transactionId} with resultCode ${resultCode}`);
       const response = await axios.post(
         // `http://192.168.44.103:8000/paymenttransactions/update-status/`,
-        `http://192.168.44.106:8000/paymenttransactions/update-status/`,
+        `http://192.168.44.103:8000/paymenttransactions/update-status/`,
         { transaction_id: transactionId, result_code: resultCode },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -121,7 +121,7 @@ const PaymentDetailScreen = ({ route }) => {
         }
         const response = await axios.get(
           // `http://192.168.44.103:8000/paymenttransactions/transaction/${transactionId}/`,
-          `http://192.168.44.106:8000/paymenttransactions/transaction/${transactionId}/`,
+          `http://192.168.44.103:8000/paymenttransactions/transaction/${transactionId}/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const transaction = response.data;
