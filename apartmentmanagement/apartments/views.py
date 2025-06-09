@@ -414,7 +414,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class PaymentTransactionViewSet(viewsets.GenericViewSet):
+class PaymentTransactionViewSet(viewsets.GenericViewSet, generics.ListAPIView):
     queryset = PaymentTransaction.objects.filter(active=True)
     serializer_class = PaymentTransactionSerializer
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -431,8 +431,12 @@ class PaymentTransactionViewSet(viewsets.GenericViewSet):
     def get_queryset(self):
         queryset = self.queryset
         if not self.request.user.is_staff:
-            queryset = queryset.filter(apartment__owner=self.request.user)
-            # queryset = queryset.filter(apartment__owner=self.request.resident)
+            try:
+                resident = Resident.objects.get(user=self.request.user)
+                queryset = queryset.filter(apartment__owner=resident)
+            except Resident.DoesNotExist:
+                queryset = queryset.none()
+
         if status := self.request.query_params.get('status'):
             queryset = queryset.filter(status=status)
         return queryset
@@ -457,12 +461,14 @@ class PaymentTransactionViewSet(viewsets.GenericViewSet):
     @action(methods=['get'], detail=False, url_path='transaction/(?P<transaction_id>[^/.]+)')
     def get_transaction(self, request, transaction_id=None):
         try:
+            resident = Resident.objects.get(user=request.user)
             transaction = PaymentTransaction.objects.get(
-                transaction_id=transaction_id, apartment__owner=request.user)
-                # transaction_id = transaction_id, apartment__owner = request.resident)
+                transaction_id=transaction_id, apartment__owner=resident)
             serializer = self.get_serializer(transaction)
             logger.info(f"Retrieved transaction {transaction_id} for user {request.user.username}")
             return Response(serializer.data)
+        except Resident.DoesNotExist:
+            return Response({"detail": "Tài khoản không phải cư dân."}, status=status.HTTP_400_BAD_REQUEST)
         except PaymentTransaction.DoesNotExist:
             logger.error(f"Transaction {transaction_id} not found for user {request.user.username}")
             return Response({"detail": "Không tìm thấy giao dịch"}, status=status.HTTP_404_NOT_FOUND)
@@ -471,7 +477,8 @@ class PaymentTransactionViewSet(viewsets.GenericViewSet):
     def create_momo_payment(self, request, pk=None):
         try:
             category = PaymentCategory.objects.get(pk=pk, active=True)
-            apartment = Apartment.objects.get(owner=request.user)
+            resident = Resident.objects.get(user=request.user)
+            apartment = Apartment.objects.get(owner=resident)
 
             if category.is_recurring and category.frequency == 'MONTHLY':
                 if PaymentTransaction.objects.filter(
@@ -559,15 +566,17 @@ class PaymentTransactionViewSet(viewsets.GenericViewSet):
         transaction_id = request.data.get('transaction_id')
         result_code = request.data.get('result_code')
         try:
+            resident = Resident.objects.get(user=request.user)
             transaction = PaymentTransaction.objects.get(
-                transaction_id=transaction_id, apartment__owner=request.user)
-                # transaction_id = transaction_id, apartment__owner = request.resident)
+                transaction_id=transaction_id, apartment__owner=resident)
             transaction.status = 'COMPLETED' if result_code == '0' else 'FAILED'
             if transaction.status == 'COMPLETED':
                 transaction.paid_date = timezone.now()
             transaction.save()
             logger.info(f"Transaction {transaction_id} updated to {transaction.status}")
             return Response({"message": "Cập nhật trạng thái thành công"}, status=status.HTTP_200_OK)
+        except Resident.DoesNotExist:
+            return Response({"detail": "Tài khoản không phải cư dân."}, status=status.HTTP_400_BAD_REQUEST)
         except PaymentTransaction.DoesNotExist:
             logger.error(f"Transaction {transaction_id} not found for user {request.user.username}")
             return Response({"detail": "Không tìm thấy giao dịch"}, status=status.HTTP_404_NOT_FOUND)
