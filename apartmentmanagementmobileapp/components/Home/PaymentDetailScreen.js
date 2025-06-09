@@ -4,7 +4,6 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import MyStyles from '../../styles/MyStyles';
-import QRCode from 'react-native-qrcode-svg';
 
 const Storage = {
   getItem: async (key) => {
@@ -43,9 +42,8 @@ const PaymentDetailScreen = ({ route }) => {
         return;
       }
       console.log('categoryId:', categoryId, 'categoryName:', categoryName, 'amount:', amount);
-      //const url = `http://192.168.44.106:8000/paymenttransactions/${categoryId}/create-momo-payment/`;
-      //const url = `http://192.168.44.101:8000/paymenttransactions/${categoryId}/create-momo-payment/`;
-      const url = `http://192.168.44.103:8000/paymenttransactions/${categoryId}/create-momo-payment/`;
+      // const url = `http://192.168.44.103:8000/paymenttransactions/${categoryId}/create-momo-payment/`;
+      const url = `http://192.168.44.106:8000/paymenttransactions/${categoryId}/create-momo-payment/`;
       console.log('Calling URL:', url);
       const response = await axios.post(
         url,
@@ -87,13 +85,9 @@ const PaymentDetailScreen = ({ route }) => {
         return;
       }
       console.log(`Updating transaction ${transactionId} with resultCode ${resultCode}`);
-      // const response = await axios.post(
-      //   `http://192.168.44.106:8000/paymenttransactions/update-status/`,
-      //   { transaction_id: transactionId, result_code: resultCode },
-      //   { headers: { Authorization: `Bearer ${token}` } }
-      // );
       const response = await axios.post(
-        `http://192.168.44.103:8000/paymenttransactions/update-status/`,
+        // `http://192.168.44.103:8000/paymenttransactions/update-status/`,
+        `http://192.168.44.106:8000/paymenttransactions/update-status/`,
         { transaction_id: transactionId, result_code: resultCode },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -125,16 +119,9 @@ const PaymentDetailScreen = ({ route }) => {
           if (timeoutRef.current) clearTimeout(timeoutRef.current);
           return;
         }
-        // const response = await axios.get(
-        //   `http://192.168.44.106:8000/paymenttransactions/transaction/${transactionId}/`,
-        //   { headers: { Authorization: `Bearer ${token}` } }
-        // );
-        // const response = await axios.get(
-        //   `http://192.168.44.101:8000/paymenttransactions/transaction/${transactionId}/`,
-        //   { headers: { Authorization: `Bearer ${token}` } }
-        // );
         const response = await axios.get(
-          `http://192.168.44.103:8000/paymenttransactions/transaction/${transactionId}/`,
+          // `http://192.168.44.103:8000/paymenttransactions/transaction/${transactionId}/`,
+          `http://192.168.44.106:8000/paymenttransactions/transaction/${transactionId}/`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const transaction = response.data;
@@ -257,7 +244,7 @@ const PaymentDetailScreen = ({ route }) => {
         color="#FF6F61"
       />
       {loading && <ActivityIndicator size="large" color="#0000ff" style={{ marginTop: 20 }} />}
-      {/* {qrCodeUrl && !imageError ? (
+      {qrCodeUrl && !imageError ? (
         <View style={{ alignItems: 'center', marginTop: 20 }}>
           <Image
             key={qrCodeUrl}
@@ -279,15 +266,7 @@ const PaymentDetailScreen = ({ route }) => {
         <Text style={{ marginTop: 20, color: 'red', textAlign: 'center' }}>
           Lỗi: Không thể hiển thị mã QR
         </Text>
-      ) : null} */}
-      {qrCodeUrl && (
-        <View style={{ alignItems: 'center', marginTop: 20 }}>
-          <QRCode value={qrCodeUrl} size={200} />
-          <Text style={{ marginTop: 10, textAlign: 'center' }}>
-            Quét mã QR bằng ứng dụng MoMo Test để thanh toán
-          </Text>
-        </View>
-      )}
+      ) : null}
     </View>
   );
 };

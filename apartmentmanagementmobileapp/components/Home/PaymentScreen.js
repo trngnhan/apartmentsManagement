@@ -24,17 +24,13 @@ const PaymentScreen = () => {
 
       // Lấy danh sách khoản phí
       // const categoriesResponse = await axios.get('http://192.168.44.106:8000/paymentcategories/', {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-      const categoriesResponse = await axios.get('http://192.168.44.103:8000/paymentcategories/', {
+      const categoriesResponse = await axios.get('http://192.168.44.106:8000/paymentcategories/', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       // Lấy danh sách giao dịch
       // const transactionsResponse = await axios.get('http://192.168.44.106:8000/paymenttransactions/my-payments/', {
-      //   headers: { Authorization: `Bearer ${token}` },
-      // });
-      const transactionsResponse = await axios.get('http://192.168.44.103:8000/paymenttransactions/my-payments/', {
+      const transactionsResponse = await axios.get('http://192.168.44.106:8000/paymenttransactions/my-payments/', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
