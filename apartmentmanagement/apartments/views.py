@@ -1,47 +1,42 @@
-from cloudinary.utils import now
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import update_session_auth_hash, authenticate, login, get_user_model
+import json
+import time
+import hmac
+import hashlib
+import logging
+import requests
+
+from decouple import config
+from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
 from django.urls import reverse
-from rest_framework import viewsets, generics, permissions, status, parsers, renderers
+from django.contrib import messages
+from django.contrib.auth import (
+    authenticate, login, update_session_auth_hash, get_user_model
+)
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.utils import timezone
+
+from rest_framework import viewsets, generics, permissions, status, parsers
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.response import Response
 from rest_framework.views import APIView
-from django.utils.timezone import now
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+from django_filters.rest_framework import DjangoFilterBackend
 
 from apartmentmanagement import settings
 from .permissions import IsAdminRole, IsAdminOrSelf, IsAdminOrManagement
-from rest_framework.response import Response
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
 from .pagination import Pagination
-from apartments import serializers
-
-from rest_framework import viewsets, generics, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticated, IsAdminUser
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
 from .models import PaymentCategory, PaymentTransaction, Apartment
 from .serializers import PaymentCategorySerializer, PaymentTransactionSerializer
-import hashlib
-import hmac
-import requests
-import time
-from decouple import config
-from django.utils import timezone
-import logging
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-import json
+
+logger = logging.getLogger('__name__')
 
 from apartments.serializers import UserSerializer, ResidentSerializer, ApartmentSerializer, \
     ApartmentTransferHistorySerializer, ParcelItemSerializer, ParcelLockerSerializer, \
@@ -52,7 +47,6 @@ from .models import (
     PaymentTransaction, ParcelLocker, ParcelItem,
     Feedback, Survey, SurveyOption, SurveyResponse, VisitorVehicleRegistration
 )
-from .sms import send_sms
 from .models import Resident
 
 User = get_user_model()
@@ -346,30 +340,6 @@ class ApartmentTransferHistoryViewSet(viewsets.ViewSet, generics.ListCreateAPIVi
         apartment.save()
 
         return Response(ApartmentTransferHistorySerializer(transfer_history).data, status=status.HTTP_201_CREATED)
-
-
-
-from rest_framework import viewsets, generics, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticated, IsAdminUser
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
-from .models import PaymentCategory, PaymentTransaction, Apartment
-from .serializers import PaymentCategorySerializer, PaymentTransactionSerializer
-import hashlib
-import hmac
-import requests
-import time
-from decouple import config
-from django.utils import timezone
-import logging
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
-import json
-
-logger = logging.getLogger('__name__')
 
 class IsAdminOrManagement(IsAuthenticated):
     def has_permission(self, request, view):
@@ -781,31 +751,32 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView)
 
         return Response(data, status=status.HTTP_200_OK)
 
-    @action(methods=['get'], detail=False, url_path='my-locker')
-    def my_locker(self, request):
-        # Trả về tủ đồ của người dùng hiện tại
-        try:
-            # Tìm cư dân của người dùng hiện tại
-            resident = Resident.objects.get(user=request.user)
-            locker = ParcelLocker.objects.get(resident=resident)
-            serializer = self.get_serializer(locker)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Resident.DoesNotExist:
-            return Response(
-                {"detail": "Cư dân không tồn tại."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        except ParcelLocker.DoesNotExist:
-            return Response(
-                {"detail": "Không tìm thấy tủ đồ cho người dùng này."},
-                status=status.HTTP_404_NOT_FOUND
-            )
+    # @action(methods=['get'], detail=False, url_path='my-locker')
+    # def my_locker(self, request):
+    #     # Trả về tủ đồ của người dùng hiện tại
+    #     try:
+    #         # Tìm cư dân của người dùng hiện tại
+    #         resident = Resident.objects.get(user=request.user)
+    #         locker = ParcelLocker.objects.get(resident=resident)
+    #         serializer = self.get_serializer(locker)
+    #         return Response(serializer.data, status=status.HTTP_200_OK)
+    #     except Resident.DoesNotExist:
+    #         return Response(
+    #             {"detail": "Cư dân không tồn tại."},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
+    #     except ParcelLocker.DoesNotExist:
+    #         return Response(
+    #             {"detail": "Không tìm thấy tủ đồ cho người dùng này."},
+    #             status=status.HTTP_404_NOT_FOUND
+    #         )
 
     @action(methods=['get'], detail=True, url_path='items')
     def get_items(self, request, pk=None):
         # Trả về danh sách đồ trong tủ
         locker = self.get_object()
-        items = locker.items.all()  # Quan hệ related_name='items' từ model
+        # Quan hệ related_name='items' từ model
+        items = locker.items.all()
         serializer = ParcelItemSerializer(items, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -820,25 +791,6 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView)
         item = locker.items.create(name=item_name, note=note)
         serializer = ParcelItemSerializer(item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @action(methods=['post'], detail=False, url_path='send-sms')
-    def send_sms(self, request):
-        """
-        API để gửi SMS.
-        """
-        phone_number = request.data.get('phone_number')
-        message = request.data.get('message')
-
-        if not phone_number or not message:
-            return Response({"detail": "Số điện thoại và nội dung tin nhắn là bắt buộc."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            # Gửi SMS (giả sử bạn đã có hàm send_sms)
-            send_sms(phone_number, message)
-            return Response({"detail": "SMS đã được gửi thành công."}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(methods=['patch'], detail=True, url_path='update-item-status')
     def update_item_status(self, request, pk=None):
@@ -867,12 +819,6 @@ class ParcelLockerViewSet(viewsets.ViewSet, generics.ListCreateAPIView, APIView)
         try:
             locker = self.get_object()  # Lấy tủ đồ hiện tại
             item = locker.items.get(id=item_id)  # Tìm món đồ trong tủ đồ
-
-            # if item.status != 'PENDING':
-            #     return Response(
-            #         {"detail": "Chỉ có thể chuyển trạng thái từ PENDING sang trạng thái khác."},
-            #         status=status.HTTP_400_BAD_REQUEST
-            #     )
 
             # Cập nhật trạng thái món đồ
             item.status = new_status
@@ -992,39 +938,6 @@ class FeedbackViewSet(viewsets.ViewSet, generics.ListAPIView):
 
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(methods=['delete'], detail=True, url_path='delete-my-feedback')
-    def soft_delete(self, request, pk=None):
-        """
-        Xoá mềm phản hồi (đặt active=False).
-        - Cư dân chỉ được xoá phản hồi của chính họ.
-        - Admin được xoá tất cả phản hồi.
-        """
-        try:
-            feedback = self.get_queryset().get(pk=pk)
-        except Feedback.DoesNotExist:
-            return Response(
-                {"detail": "Không tìm thấy phản hồi."},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-        # Kiểm tra quyền sở hữu nếu không phải admin
-        if not request.user.is_staff:
-            if feedback.resident.user != request.user:
-                return Response(
-                    {"detail": "Bạn không có quyền xoá phản hồi này."},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-
-        # Xoá mềm: thay vì xoá ra khỏi database ta sử dụng ẩn các feedback khỏi giao diện
-        feedback.active = False
-        feedback.save()
-
-        return Response(
-            {"detail": "Phản hồi đã được xoá."},
-            status=status.HTTP_204_NO_CONTENT
-        )
-
-
 # Survey ViewSet: Phiếu khảo sát: hiển thị phiếu khảo sát và tạo khảo sát
 class SurveyViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Survey.objects.filter(active=True)
@@ -1058,6 +971,7 @@ class SurveyViewSet(viewsets.ViewSet, generics.ListAPIView):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    #Phần trăm tỷ lệ phản hồi các khảo sát của cư dân
     @action(detail=True, methods=['get'], url_path='response-rate')
     def response_rate(self, request, pk=None):
         survey = self.get_object()
@@ -1216,10 +1130,6 @@ class VisitorVehicleRegistrationViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     @action(methods=['patch'], detail=True, url_path='set-approval')
     def set_approval(self, request, pk):
-        """
-        Cập nhật trạng thái approved (duyệt hoặc từ chối) cho đăng ký giữ xe.
-        Truyền {"approved": true} hoặc {"approved": false} trong body.
-        """
         registration = self.get_object()
 
         # Kiểm tra quyền

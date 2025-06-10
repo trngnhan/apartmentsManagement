@@ -18,7 +18,7 @@ const AdminFeedback = () => {
         try {
             const token = await AsyncStorage.getItem("token");
             const api = authApis(token);
-            const response = await api.get("/feedbacks/");
+            const response = await api.get(endpoints.feedbacks);
             const data = response.data;
             setFeedbacks(data.results || data);
         } catch (err) {
@@ -33,8 +33,7 @@ const AdminFeedback = () => {
         try {
             const token = await AsyncStorage.getItem("token");
             const api = authApis(token);
-            const response = await api.patch(
-                `/feedbacks/${id}/update-status/`,
+            const response = await api.patch(endpoints.updateFeedbackStatus(id),
                 { status: newStatus }
             );
             if (response.status === 200 || response.status === 204) {

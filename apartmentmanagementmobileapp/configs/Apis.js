@@ -42,6 +42,9 @@ export const endpoints = {
     visitorVehicleRegistrations: "/visitorvehicleregistrations/",
     approveVisitorVehicleRegistration: (id) => `/visitorvehicleregistrations/${id}/set-approval/`,
 
+    feedbacks: "/feedbacks/",
+    updateFeedbackStatus: (id) => `/feedbacks/${id}/update-status/`,
+
     paymentCategories: "/paymentcategories/",
     paymentCategoryLock: (id) => `/paymentcategories/${id}/`,
     paymentsTransactions: "/paymenttransactions/",
